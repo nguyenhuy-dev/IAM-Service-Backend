@@ -1,0 +1,2 @@
+﻿global using IAMService.Infrastructure.Data;
+global using IAMService.Infrastructure.DatabaseMigrationHelpers;
