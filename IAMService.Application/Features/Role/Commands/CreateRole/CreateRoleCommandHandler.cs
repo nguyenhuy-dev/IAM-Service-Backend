@@ -42,7 +42,18 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
             }
 
             // Validate privileges exist if any are provided
-            var privilegeIds = request.PrivilegeIds?.ToList() ?? new List<int>();
+            var privilegeIds = new List<int>();
+            if (request.PrivilegeIds?.ToList().Count <= 0)
+            {
+                // Add default if PrivilegeIds in request is empty
+                privilegeIds.Add(1);
+            }
+            else
+            {
+                // Add all PrivilegeIds if not empty
+                privilegeIds.AddRange(request.PrivilegeIds!);
+            }
+            
             if (privilegeIds.Count != 0 && !await privilegeRepository.AllExistAsync(privilegeIds))
             {
                 var failure = new ValidationFailure(nameof(request.PrivilegeIds), "One or more privilege IDs are invalid.");
