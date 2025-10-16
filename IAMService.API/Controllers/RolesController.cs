@@ -1,7 +1,8 @@
-using IAMService.API.Common;
+﻿using IAMService.API.Common;
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.Role.Commands.CreateRole;
+using IAMService.Application.Features.Role.Queries.GetRole;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,8 @@ namespace IAMService.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreateRole(
             [FromBody] CreateRoleCommand command,
             CancellationToken cancellationToken)
@@ -37,6 +40,36 @@ namespace IAMService.API.Controllers
                 StatusCodes.Status201Created
             );
             return StatusCode(StatusCodes.Status201Created, response);
+        }
+
+        /// <summary>
+        /// Gets the roles.
+        /// </summary>
+        /// <param name="query">The query.</param>
+        /// <returns></returns>
+        /// PaginatedList<GetRoleRequest>
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetRoles([FromQuery] GetRoleQuery query)
+        {
+            var result = await sender.Send(query);
+
+            var message = "No Roles found.";
+            if (result.Items.Count > 0)
+            {
+                message = "Get roles successfully.";
+            }
+            var response = ApiResponse<PaginatedList<GetRoleRequest>>.Success(
+                result,
+                message,
+                StatusCodes.Status200OK
+            );
+            
+            return Ok(response);
+
         }
 
     }

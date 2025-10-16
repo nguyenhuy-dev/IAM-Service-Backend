@@ -1,4 +1,4 @@
-namespace IAMService.Application.DTOs
+﻿namespace IAMService.Application.DTOs
 {
     /// <summary>
     /// The privilege dto class

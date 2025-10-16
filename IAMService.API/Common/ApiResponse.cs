@@ -13,7 +13,7 @@ namespace IAMService.API.Common
         /// <summary>
         /// A developer-friendly message.
         /// </summary>
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         /// <summary>
         /// The actual data payload of the response.

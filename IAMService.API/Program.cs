@@ -22,11 +22,9 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(IAssemblyReference).Assembly);
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 });
-
 builder.Services.AddProblemDetails(); // Optional
 builder.Services.AddValidatorsFromAssembly(typeof(IAssemblyReference).Assembly);
 builder.Services.AddAutoMapper(typeof(MappingProfile));
-
 
 var app = builder.Build();
 
