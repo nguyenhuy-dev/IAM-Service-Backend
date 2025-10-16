@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 namespace IAMService.Application.Behaviors
 {
@@ -16,6 +16,10 @@ namespace IAMService.Application.Behaviors
         /// <param name="request">The request</param>
         /// <param name="next">The next</param>
         /// <param name="cancellationToken">The cancellation token</param>
+        /// <returns>
+        /// A task containing the response
+        /// </returns>
+        /// <exception cref="FluentValidation.ValidationException"></exception>
         /// <exception cref="ValidationException"></exception>
         /// <returns>A task containing the response</returns>
         public async Task<TResponse> Handle(

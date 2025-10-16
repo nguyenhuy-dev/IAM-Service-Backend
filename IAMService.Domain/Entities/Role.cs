@@ -1,4 +1,4 @@
-namespace IAMService.Domain.Entities;
+﻿namespace IAMService.Domain.Entities;
 
 /// <summary>
 /// Role entity representing a user role in the system.
@@ -48,6 +48,7 @@ public class Role
     /// </value>
     public ICollection<Privilege> Privileges { get; set; } = [];
 
+    public Role() { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Role"/> class

@@ -1,4 +1,8 @@
-using IAMService.Domain.Entities;
+﻿using IAMService.Domain.Entities;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace IAMService.Application.Interfaces
 {
     /// <summary>
@@ -27,5 +31,10 @@ namespace IAMService.Application.Interfaces
         /// <param name="roleName">The role name.</param>
         /// <returns>True if the role exists; otherwise, false.</returns>
         Task<bool> ExistsByNameAsync(string roleName);
+        /// <summary>
+        /// Gets the role with privileges.
+        /// </summary>
+        /// <returns></returns>
+        IQueryable<Role> GetRoleWithPrivileges();    
     }
 }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using IAMService.Application.DTOs;
 using IAMService.Domain.Entities;
+
 namespace IAMService.Application.Mappings
 {
     /// <summary>
@@ -14,8 +15,10 @@ namespace IAMService.Application.Mappings
         /// </summary>
         public MappingProfile()
         {
-            CreateMap<Role, RoleDto>();
             CreateMap<Privilege, PrivilegeDto>();
+            CreateMap<Role, GetRoleRequest>();
+            CreateMap<Role, RoleDto>();
         }
+
     }
 }

@@ -11,7 +11,7 @@ public class Privilege
     /// <value>
     /// The privilege identifier.
     /// </value>
-    public int PrivilegeId { get; }
+    public int PrivilegeId { get; set; }
     /// <summary>
     /// Gets or sets the name of the privilege.
     /// </summary>

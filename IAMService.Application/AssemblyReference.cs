@@ -1,7 +1,7 @@
-namespace IAMService.Application
+﻿namespace IAMService.Application
 {
     /// <summary>
-    /// The assembly reference class
+    /// assemblyReference for referencing
     /// </summary>
     public interface IAssemblyReference
     {

@@ -82,6 +82,13 @@ namespace IAMService.API.Middleware
 
                     logger.LogWarning(unauthorizedException, "Unauthorized access attempt");
                     break;
+                case ForbiddenAccessException forbiddenException:
+                    context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    response.Message = "User does not have permission to access this resource.";
+
+                    logger.LogWarning(forbiddenException, "Forbidden access attempt");
+                    break;
 
                 default:
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

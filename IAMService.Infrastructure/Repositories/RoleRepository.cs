@@ -1,7 +1,8 @@
+﻿using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
-using IAMService.Application.Interfaces;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace IAMService.Infrastructure.Repositories
 {
@@ -60,6 +61,16 @@ namespace IAMService.Infrastructure.Repositories
 
 
             return await query.AnyAsync();
+        }
+
+        /// <summary>
+        /// Gets the role asynchronous.
+        /// </summary>
+        /// <returns></returns>
+        public IQueryable<Role> GetRoleWithPrivileges()
+        {
+            return _context.Roles
+                .Include(r => r.Privileges);
         }
     }
 }
