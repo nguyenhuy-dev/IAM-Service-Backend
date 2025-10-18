@@ -1,4 +1,4 @@
-﻿namespace IAMService.Domain.Entities;
+namespace IAMService.Domain.Entities;
 
 /// <summary>
 /// Role entity representing a user role in the system.
@@ -75,5 +75,41 @@ public class Role
         RoleName = roleName;
         RoleCode = roleCode;
         Description = description;
+    }
+
+    /// <summary>
+    /// Updates the role name using the specified new role name
+    /// </summary>
+    /// <param name="newRoleName">The new role name</param>
+    /// <exception cref="ArgumentException">Role name cannot be null or empty </exception>
+    public void UpdateRoleName(string newRoleName)
+    {
+        if (string.IsNullOrWhiteSpace(newRoleName))
+            throw new ArgumentException("Role name cannot be null or empty", nameof(newRoleName));
+        RoleName = newRoleName;
+    }
+
+    /// <summary>
+    /// Updates the role code using the specified new role code
+    /// </summary>
+    /// <param name="newRoleCode">The new role code</param>
+    /// <exception cref="ArgumentException">Role code cannot be null or empty </exception>
+    public void UpdateRoleCode(string newRoleCode)
+    {
+        if (string.IsNullOrWhiteSpace(newRoleCode))
+            throw new ArgumentException("Role code cannot be null or empty", nameof(newRoleCode));
+        RoleCode = newRoleCode;
+    }
+
+    /// <summary>
+    /// Updates the description using the specified new description
+    /// </summary>
+    /// <param name="newDescription">The new description</param>
+    /// <exception cref="ArgumentException">Description cannot be null or empty </exception>
+    public void UpdateDescription(string newDescription)
+    {
+        if (string.IsNullOrWhiteSpace(newDescription))
+            throw new ArgumentException("Description cannot be null or empty", nameof(newDescription));
+        Description = newDescription;
     }
 }

@@ -1,7 +1,8 @@
-﻿using IAMService.API.Common;
+using IAMService.API.Common;
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.Role.Commands.CreateRole;
+using IAMService.Application.Features.Role.Commands.UpdateRole;
 using IAMService.Application.Features.Role.Queries.GetRole;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,43 @@ namespace IAMService.API.Controllers
                 StatusCodes.Status201Created
             );
             return StatusCode(StatusCodes.Status201Created, response);
+        }
+
+        /// <summary>
+        /// Updates the role using the specified role id
+        /// </summary>
+        /// <param name="roleId">The role id</param>
+        /// <param name="request">The request</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <returns>A task containing the action result</returns>
+        [HttpPut("{roleId}")]
+        [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateRole(
+            [FromRoute] int roleId,
+            [FromBody] UpdateRoleRequest request,
+            CancellationToken cancellationToken)
+        {
+            var command = new UpdateRoleCommand(
+                roleId,
+                request.RoleName,
+                request.RoleCode,
+                request.Description,
+                request.PrivilegeIds
+            );
+            
+            var roleDto = await sender.Send(command, cancellationToken);
+            
+            var response = ApiResponse<RoleDto>.Success(
+                roleDto, 
+                "Role updated successfully.", 
+                StatusCodes.Status200OK
+            );
+            
+            return Ok(response);
         }
 
         /// <summary>

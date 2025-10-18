@@ -1,7 +1,4 @@
 ﻿using IAMService.Domain.Entities;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace IAMService.Application.Interfaces
 {
@@ -17,6 +14,22 @@ namespace IAMService.Application.Interfaces
         /// <param name="privilegeIds">The privilege identifiers to associate with the role.</param>
         /// <returns>The created role with its associated privileges.</returns>
         Task<Role> CreateAsync(Role role, IEnumerable<int> privilegeIds);
+
+        /// <summary>
+        /// Gets a role by identifier including its privileges.
+        /// </summary>
+        /// <param name="roleId">The role identifier.</param>
+        /// <returns>The role if found; otherwise, null.</returns>
+        Task<Role?> GetByIdAsync(int roleId);
+
+
+        /// <summary>
+        /// Updates an existing role with the privileges
+        /// </summary>
+        /// <param name="role">The role to update.</param>
+        /// <param name="privilegeIds">The new set of privilege identifiers.</param>
+        /// <returns>The updated role.</returns>
+        Task<Role> UpdateAsync(Role role, IEnumerable<int> privilegeIds);
 
         /// <summary>
         /// Checks if a role with the specified code exists.
