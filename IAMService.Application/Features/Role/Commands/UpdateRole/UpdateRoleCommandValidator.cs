@@ -1,30 +1,31 @@
 using FluentValidation;
 using IAMService.Application.Features.Role.Validators;
 using IAMService.Application.Interfaces;
-namespace IAMService.Application.Features.Role.Commands.CreateRole
+namespace IAMService.Application.Features.Role.Commands.UpdateRole
 {
     /// <summary>
-    /// The create role command validator class
+    /// The update role command validator class
     /// </summary>
-    /// <seealso cref="AbstractValidator{CreateRoleCommand}"/>
-    public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
+    /// <seealso cref="AbstractValidator{UpdateRoleCommand}"/>
+    public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CreateRoleCommandValidator"/> class
-        /// </summary>
-        public CreateRoleCommandValidator(
+        public UpdateRoleCommandValidator(
             IRoleRepository roleRepository,
             IPrivilegeRepository privilegeRepository)
         {
+
+            RuleFor(r => r.RoleId)
+                .GreaterThan(0).WithMessage("RoleId must be greater than zero.");
+
             RuleFor(r => r.RoleName)
                 .NotEmpty().WithMessage("RoleName is required.")
                 .MaximumLength(50).WithMessage("RoleName must not exceed 50 characters.")
-                .MustBeUniqueRoleName(roleRepository);
+                .MustBeUniqueRoleName(roleRepository, cmd => cmd.RoleId);
 
             RuleFor(r => r.RoleCode)
                 .NotEmpty().WithMessage("RoleCode is required.")
                 .MaximumLength(50).WithMessage("RoleCode must not exceed 50 characters.")
-                .MustBeUniqueRoleCode(roleRepository);
+                .MustBeUniqueRoleCode(roleRepository, cmd => cmd.RoleId);
 
             RuleFor(r => r.Description)
                 .NotEmpty().WithMessage("Description is required.")

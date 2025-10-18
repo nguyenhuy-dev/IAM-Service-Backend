@@ -1,8 +1,9 @@
-﻿using IAMService.Application.Interfaces;
+﻿using FluentValidation;
+using IAMService.Application.Exceptions;
+using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace IAMService.Infrastructure.Repositories
 {
@@ -27,7 +28,7 @@ namespace IAMService.Infrastructure.Repositories
                     .ToListAsync();
 
                 if (privileges.Count != privilegeIdsList.Count)
-                    throw new FluentValidation.ValidationException("One or more privilege IDs are invalid.");
+                    throw new ValidationException("One or more privilege IDs are invalid.");
 
                 foreach (var privilege in privileges)
                 {
@@ -39,6 +40,45 @@ namespace IAMService.Infrastructure.Repositories
             await _context.SaveChangesAsync();
 
             return role;
+        }
+
+        /// <inheritdoc />
+        public async Task<Role?> GetByIdAsync(int roleId)
+        {
+            return await _context.Roles
+                .Include(r => r.Privileges)
+                .FirstOrDefaultAsync(r => r.RoleId == roleId);
+        }
+
+        /// <inheritdoc />
+        public async Task<Role> UpdateAsync(Role role, IEnumerable<int> privilegeIds)
+        {
+            // Check if role id exists
+            var existingRole = await _context.Roles.FindAsync(role.RoleId);
+            if (existingRole == null) throw new NotFoundException("Role Id not found", role.RoleId);
+
+            // Check privilege list validity
+            var privilegeIdsList = privilegeIds.ToList();
+            if (privilegeIdsList.Count == 0) throw new ValidationException("Empty privilege list");
+            var privileges = await _context.Privileges
+                .Where(p => privilegeIdsList.Contains(p.PrivilegeId))
+                .ToListAsync();
+            if (privileges.Count != privilegeIdsList.Count)
+                throw new ValidationException("One or more privilege IDs are invalid.");
+
+            // Clear privilege list
+            existingRole.Privileges.Clear();
+            
+            // Add new privilege
+            foreach (var privilege in privileges)
+            {
+                existingRole.Privileges.Add(privilege);
+            }
+            
+            _context.Roles.Update(existingRole);
+            await _context.SaveChangesAsync();
+            
+            return existingRole;
         }
 
         /// <inheritdoc/>
