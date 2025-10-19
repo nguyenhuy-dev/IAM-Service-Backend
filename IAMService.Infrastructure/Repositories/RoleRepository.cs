@@ -112,5 +112,12 @@ namespace IAMService.Infrastructure.Repositories
             return _context.Roles
                 .Include(r => r.Privileges);
         }
+        /// <summary>
+        /// Deletes the specified role.
+        /// </summary>
+        public void DeleteAsync(Role role)
+        {
+            _context.Roles.Remove(role);
+        }
     }
 }

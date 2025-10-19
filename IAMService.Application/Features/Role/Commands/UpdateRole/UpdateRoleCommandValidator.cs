@@ -9,13 +9,23 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
     /// <seealso cref="AbstractValidator{UpdateRoleCommand}"/>
     public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
     {
+        /// <summary>
+        /// The role repository
+        /// </summary>
+        private readonly IRoleRepository _roleRepository;
+        /// <summary>
+        /// The read only code
+        /// </summary>
+        private const string ReadOnlyCode = "ReadOnly";
         public UpdateRoleCommandValidator(
             IRoleRepository roleRepository,
             IPrivilegeRepository privilegeRepository)
         {
+            _roleRepository = roleRepository;
 
             RuleFor(r => r.RoleId)
-                .GreaterThan(0).WithMessage("RoleId must be greater than zero.");
+                .GreaterThan(0).WithMessage("RoleId must be greater than zero.")
+                .CustomAsync(ValidateRoleAsync);
 
             RuleFor(r => r.RoleName)
                 .NotEmpty().WithMessage("RoleName is required.")
@@ -34,6 +44,29 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
             RuleFor(r => r.PrivilegeIds)
                 .MustHaveValidPrivileges(privilegeRepository)
                 .When(r => r.PrivilegeIds.Any());
+        }
+        
+        /// <summary>
+        /// Validates all role-related business rules in a single database call.
+        /// </summary>
+        private async Task ValidateRoleAsync(
+            int roleId,
+            ValidationContext<UpdateRoleCommand> context,
+            CancellationToken cancellationToken)
+        {
+            var role = await _roleRepository.GetByIdAsync(roleId);
+
+            // Check if role exists
+            if (role == null)
+            {
+                context.AddFailure("RoleId", "Role not found.");
+            }
+
+            // Check if it's a default role
+            if (role.IsDefault)
+            {
+                context.AddFailure("RoleId", "Default roles cannot be updated.");
+            }
         }
     }
 }

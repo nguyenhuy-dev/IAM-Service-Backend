@@ -2,6 +2,7 @@ using IAMService.API.Common;
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.Role.Commands.CreateRole;
+using IAMService.Application.Features.Role.Commands.DeleteRole;
 using IAMService.Application.Features.Role.Commands.UpdateRole;
 using IAMService.Application.Features.Role.Queries.GetRole;
 using MediatR;
@@ -109,6 +110,30 @@ namespace IAMService.API.Controllers
             return Ok(response);
 
         }
-
+        /// <summary>Deletes the role.</summary>
+        /// <param name="roleId">The role identifier.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>
+        ///   <br />
+        /// </returns>
+        [HttpDelete("{roleId}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteRole(
+            [FromRoute] int roleId,
+            CancellationToken cancellationToken)
+        {
+            var command = new DeleteRoleCommand(roleId);
+            await sender.Send(command);
+            var response = ApiResponse<bool>.Success (
+                true,
+                "Role deleted successfully.",
+                StatusCodes.Status200OK
+            );
+            return Ok(response);
+        }
     }
 }
