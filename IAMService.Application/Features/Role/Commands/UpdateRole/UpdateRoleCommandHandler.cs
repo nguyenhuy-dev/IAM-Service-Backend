@@ -1,4 +1,6 @@
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
 using IAMService.Application.DTOs;
 using IAMService.Application.Exceptions;
 using IAMService.Application.Interfaces;
@@ -30,7 +32,10 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
             {
                 throw new NotFoundException("RoleId", request.RoleId);
             }
-
+            if (existingRole.IsDefault)
+            {
+                throw new ValidationException("Default roles cannot be deleted.");
+            }
             // Update entity
             existingRole.UpdateRoleCode(request.RoleCode);
             existingRole.UpdateRoleName(request.RoleName);

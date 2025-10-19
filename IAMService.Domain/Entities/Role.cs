@@ -34,6 +34,13 @@ public class Role
     /// </value>
     public string Description { get; private set; } = default!;
     /// <summary>
+    /// Check if the role is default or not.
+    /// </summary>
+    /// <value>
+    /// The isDefault.
+    /// </value>
+    public bool IsDefault { get; set; } = false;
+    /// <summary>
     /// Gets or sets the users.
     /// </summary>
     /// <value>

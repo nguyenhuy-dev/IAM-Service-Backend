@@ -14,6 +14,10 @@ namespace IAMService.Application.Interfaces
         /// <param name="privilegeIds">The privilege identifiers to associate with the role.</param>
         /// <returns>The created role with its associated privileges.</returns>
         Task<Role> CreateAsync(Role role, IEnumerable<int> privilegeIds);
+        /// <summary>
+        /// Delete the specified role with RoleId.
+        /// </summary>
+        void DeleteAsync(Role role);
 
         /// <summary>
         /// Gets a role by identifier including its privileges.

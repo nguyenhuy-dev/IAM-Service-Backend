@@ -2,6 +2,7 @@ using FluentValidation;
 using IAMService.Application.Exceptions;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 namespace IAMService.API.Middleware
 {
     /// <summary>
@@ -129,7 +130,8 @@ namespace IAMService.API.Middleware
         /// <summary>
         /// Gets or sets the value of the errors
         /// </summary>
-        public List<ErrorDetail> Errors { get; set; } = new();
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<ErrorDetail>? Errors { get; set; }
     }
 
     /// <summary>

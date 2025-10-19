@@ -15,6 +15,7 @@
         public required string RoleName { get; set; }
         public required string RoleCode { get; set; }
         public string? Description { get; set; }
+        public bool IsDefault { get; set; }
         public ICollection<PrivilegeDto> Privileges { get; set; } = [];
     }
 }
