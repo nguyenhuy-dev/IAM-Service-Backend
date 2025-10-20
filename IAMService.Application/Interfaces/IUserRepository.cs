@@ -24,5 +24,14 @@ namespace IAMService.Application.Interfaces
         /// A task that represents the asynchronous update operation.
         /// </returns>
         Task UpdateAsync(User user);
+
+        /// <summary>Gets the by role identifier asynchronous.</summary>
+        /// <param name="roleId">The role identifier.</param>
+        Task<List<User>> GetByRoleIdAsync(int roleId);
+        /// <summary>
+        /// Marks a collection of user entities for update in the change tracker.
+        /// </summary>
+        /// <param name="users">The collection of users to update.</param>
+        void UpdateRange(IEnumerable<User> users);
     }
 }

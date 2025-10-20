@@ -48,5 +48,25 @@ namespace IAMService.Infrastructure.Repositories
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
         }
+
+        /// <summary>Gets the by role identifier asynchronous.</summary>
+        /// <param name="roleId">The role identifier.</param>
+        /// <returns>
+        ///   <br />
+        /// </returns>
+        public async Task<List<User>> GetByRoleIdAsync(int roleId)
+        {
+            return await _context.Users
+                .Where(u => u.RoleId == roleId)
+                .ToListAsync();
+        }
+        /// <summary>
+        /// Marks a collection of user entities for update. This does NOT save to the database.
+        /// </summary>
+        /// <param name="users">The collection of users to update.</param>
+        public void UpdateRange(IEnumerable<User> users)
+        {
+            _context.Users.UpdateRange(users);
+        }
     }
 }
