@@ -33,10 +33,24 @@ namespace IAMService.Infrastructure.Repositories
         /// </returns>
         public async Task<User?> GetByIdAsync(Guid userId)
         {
-            return await _context.Users
+            var user = await _context.Users
                 .Include(u => u.Role)
-                    .ThenInclude(r => r.Privileges)
+                    .ThenInclude(r => r.Privileges) 
                 .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user != null)
+            {
+                user.Age = CalculateAge(user.DateOfBirth);
+            }
+
+            return user;
+        }
+        private int CalculateAge(DateOnly dob)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            int age = today.Year - dob.Year;
+            if (dob > today.AddYears(-age)) age--;
+            return age;
         }
 
         /// <summary>
