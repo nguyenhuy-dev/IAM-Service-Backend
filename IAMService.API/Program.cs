@@ -5,6 +5,7 @@ using IAMService.Application.Behaviors;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Mappings;
 using IAMService.Infrastructure.Repositories;
+using IAMService.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -18,6 +19,8 @@ builder.Services.AddDbContext<IAMServiceDbContext>(options => options.UseNpgsql(
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPrivilegeRepository, PrivilegeRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoleCloneService, RoleCloneService>();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(IAssemblyReference).Assembly);
