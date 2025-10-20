@@ -49,7 +49,12 @@ namespace IAMService.Infrastructure.Repositories
                 .Include(r => r.Privileges)
                 .FirstOrDefaultAsync(r => r.RoleId == roleId);
         }
-
+        /// <inheritdoc />
+        public async Task<Role?> GetByCodeAsync(string roleCode)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.RoleCode == roleCode);
+        }
         /// <inheritdoc />
         public async Task<Role> UpdateAsync(Role role, IEnumerable<int> privilegeIds)
         {
@@ -115,9 +120,11 @@ namespace IAMService.Infrastructure.Repositories
         /// <summary>
         /// Deletes the specified role.
         /// </summary>
-        public void DeleteAsync(Role role)
+        public Task DeleteAsync(Role role)
         {
             _context.Roles.Remove(role);
+            // Return a completed task to make the method signature valid and awaitable.
+            return Task.CompletedTask;
         }
     }
 }

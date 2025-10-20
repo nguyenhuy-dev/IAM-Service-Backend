@@ -11,10 +11,11 @@ namespace IAMService.Application.Features.Role.Commands.DeleteRole
     /// <seealso cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.Role.Commands.DeleteRole.DeleteRoleCommand&gt;" />
     public class DeleteRoleCommandHandler(
         IRoleRepository roleRepository,
+        IUserRepository userRepository,
         IUnitOfWork unitOfWork
         ) : IRequestHandler<DeleteRoleCommand, bool>
     {
-        private const string ReadOnlyCode = "ReadOnly";
+        private const string ReadOnlyCode = "READ_ONLY";
         /// <summary>
         /// The read only code
         /// </summary>
@@ -40,7 +41,18 @@ namespace IAMService.Application.Features.Role.Commands.DeleteRole
             {
                 throw new ValidationException("The ReadOnly role cannot be deleted.");
             }
-            roleRepository.DeleteAsync(roleToDelete);
+            var usersToUpdate = await userRepository.GetByRoleIdAsync(request.RoleId);
+            var readOnlyRole = await roleRepository.GetByCodeAsync(ReadOnlyCode);
+            if (readOnlyRole == null)
+            {
+                throw new InvalidOperationException($"System configuration error: The '{ReadOnlyCode}' role was not found.");
+            }
+            foreach (var user in usersToUpdate)
+            {
+                user.RoleId = readOnlyRole.RoleId;
+            }
+            userRepository.UpdateRange(usersToUpdate);
+            await roleRepository.DeleteAsync(roleToDelete);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return true;

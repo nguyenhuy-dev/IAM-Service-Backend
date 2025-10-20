@@ -17,7 +17,7 @@ namespace IAMService.Application.Interfaces
         /// <summary>
         /// Delete the specified role with RoleId.
         /// </summary>
-        void DeleteAsync(Role role);
+        Task DeleteAsync(Role role);
 
         /// <summary>
         /// Gets a role by identifier including its privileges.
@@ -25,8 +25,12 @@ namespace IAMService.Application.Interfaces
         /// <param name="roleId">The role identifier.</param>
         /// <returns>The role if found; otherwise, null.</returns>
         Task<Role?> GetByIdAsync(int roleId);
-
-
+        /// <summary>
+        /// Gets a role by its unique code.
+        /// </summary>
+        /// <param name="roleCode">The unique role code.</param>
+        /// <returns>The Role entity if found; otherwise, null.</returns>
+        Task<Role?> GetByCodeAsync(string roleCode);
         /// <summary>
         /// Updates an existing role with the privileges
         /// </summary>
