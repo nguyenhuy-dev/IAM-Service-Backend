@@ -9,6 +9,7 @@ using IAMService.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using IAMService.Infrastructure.Settings;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -18,8 +19,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<IAMServiceDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPrivilegeRepository, PrivilegeRepository>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IRoleCloneService, RoleCloneService>();
 builder.Services.AddMediatR(cfg =>
 {

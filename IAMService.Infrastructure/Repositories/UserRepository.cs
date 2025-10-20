@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace IAMService.Infrastructure.Repositories
 {
     /// <summary>
-    /// Repository implementation for managing user data.
+    /// Repository implementation for User entity
+    /// Handles all database operations related to users
     /// </summary>
     /// <seealso cref="IAMService.Application.Interfaces.IUserRepository" />
     public class UserRepository : IUserRepository
@@ -19,38 +20,64 @@ namespace IAMService.Infrastructure.Repositories
         /// Initializes a new instance of the <see cref="UserRepository"/> class.
         /// </summary>
         /// <param name="context">The context.</param>
+        /// <exception cref="System.ArgumentNullException">context</exception>
         public UserRepository(IAMServiceDbContext context)
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
-
-        /// <summary>
-        /// Gets a user by their unique identifier.
-        /// </summary>
-        /// <param name="userId">The user identifier (GUID).</param>
-        /// <returns>
-        /// The <see cref="T:IAMService.Domain.Entities.User" /> entity if found; otherwise, <c>null</c>.
-        /// </returns>
-        public async Task<User?> GetByIdAsync(Guid userId)
+        
+        /// <inheritdoc/>
+        public async Task<User> CreateAsync(User user)
         {
-            var user = await _context.Users
-                .Include(u => u.Role)
-                    .ThenInclude(r => r.Privileges) 
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            ArgumentNullException.ThrowIfNull(user);
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+            var createdUser = await _context.Users
+                .Include(u => u.Role)                    
+                    .ThenInclude(r => r.Privileges)      
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
-            if (user != null)
+            if (createdUser == null)
             {
-                user.Age = CalculateAge(user.DateOfBirth);
+                throw new InvalidOperationException($"Failed to retrieve created user with ID {user.UserId}");
             }
-
             return user;
         }
-        private int CalculateAge(DateOnly dob)
+        /// <inheritdoc/>
+        public async Task<bool> ExistsByEmailAsync(string email)
         {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            int age = today.Year - dob.Year;
-            if (dob > today.AddYears(-age)) age--;
-            return age;
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            return await _context.Users
+                .AnyAsync(u => u.Email.ToLower() == email.ToLower());
+        }
+        /// <inheritdoc/>
+        public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber)
+        {
+            if (string.IsNullOrWhiteSpace(identityNumber))
+                throw new ArgumentException("Identity number cannot be null or empty", nameof(identityNumber));
+            return await _context.Users
+                .AnyAsync(u => u.IdentityNumber == identityNumber);
+        }
+
+        /// <inheritdoc/>
+        public async Task<User?> GetByIdAsync(Guid userId)
+        {
+            return await _context.Users
+                .Include(u => u.Role)              
+                    .ThenInclude(r => r.Privileges) 
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+        }
+
+        /// <inheritdoc/>
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            return await _context.Users
+                .Include(u => u.Role)              
+                    .ThenInclude(r => r.Privileges) 
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
         }
 
         /// <summary>
