@@ -73,8 +73,6 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 user.DateOfBirth = DateOnly.FromDateTime(dob);
             }
 
-            user.Age = CalculateAge(user.DateOfBirth);
-
             // If admin → update privileges (create custom role)
             if (request.IsAdmin && request.Dto.PrivilegeIds?.Any() == true)
             {
@@ -133,18 +131,6 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 PrivilegeNames = privilegeNames
             };
         }
-
-        /// <summary>
-        /// Calculates the age.
-        /// </summary>
-        /// <param name="dob">The dob.</param>
-        /// <returns></returns>
-        private static int CalculateAge(DateOnly dob)
-        {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            int age = today.Year - dob.Year;
-            if (dob > today.AddYears(-age)) age--;
-            return age;
-        }
+        
     }
 }

@@ -18,6 +18,11 @@ namespace IAMService.Application.Mappings
             CreateMap<Privilege, PrivilegeDto>();
             CreateMap<Role, GetRoleRequest>();
             CreateMap<Role, RoleDto>();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.Gender,
+                    opt => opt.MapFrom(src => src.Gender ? "Male" : "Female"))
+                .ForMember(dest => dest.GeneratedPassword,
+                    opt => opt.Ignore());
 
             // Add mapping for View Information User
             CreateMap<User, UserResponseDto>()

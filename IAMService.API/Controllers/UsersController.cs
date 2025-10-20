@@ -1,6 +1,7 @@
 ﻿using IAMService.API.Common;
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
+using IAMService.Application.Features.User.Commands.CreateUser;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Features.User.Queries.ViewUserInformation;
 using MediatR;
@@ -11,28 +12,53 @@ using System.Security.Claims;
 namespace IAMService.API.Controllers
 {
     /// <summary>
-    /// API controller for managing user-related operations.
+    /// Controller for user management operations
+    /// Handles user creation, retrieval, and management
     /// </summary>
-    /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
     public class UsersController : ControllerBase
     {
-        /// <summary>
-        /// The sender
-        /// </summary>
         private readonly ISender _sender;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UsersController" /> class.
+        /// Constructor with dependency injection
         /// </summary>
-        /// <param name="sender">The sender.</param>
+        /// <param name="sender">MediatR sender instance</param>
         public UsersController(ISender sender)
         {
             _sender = sender;
         }
 
+        /// <summary>
+        /// Creates a new user account
+        /// </summary>
+        /// <param name="command">User creation command containing all required information</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Created user information</returns>
+        [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateUser(
+            [FromBody] CreateUserCommand command,
+            CancellationToken cancellationToken)
+        {
+            var userDto = await _sender.Send(command, cancellationToken);
+            var message = command.IsPatient
+                ? "Patient account created successfully. An email with login credentials has been sent."
+                : "Employee account created successfully. Manual verification is required before activation.";
+            var response = ApiResponse<UserDto>.Success(
+                userDto,
+                message,
+                StatusCodes.Status201Created
+            );
+            return StatusCode(StatusCodes.Status201Created, response);
+        }
+        
         /// <summary>
         /// Updates the user information.
         /// Only the owner, Admin, or Manager can update user information.
@@ -144,6 +170,7 @@ namespace IAMService.API.Controllers
 
             return Ok(response);
         }
+        
         /// <summary>
         /// View detailed information of a specific user.
         /// </summary>
@@ -222,7 +249,5 @@ namespace IAMService.API.Controllers
 
             return Ok(response);
         }
-
     }
 }
-    
