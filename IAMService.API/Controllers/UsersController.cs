@@ -4,6 +4,7 @@ using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.CreateUser;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Features.User.Queries.ViewUserInformation;
+using IAMService.Application.Features.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -170,7 +171,7 @@ namespace IAMService.API.Controllers
 
             return Ok(response);
         }
-        
+
         /// <summary>
         /// View detailed information of a specific user.
         /// </summary>
@@ -190,8 +191,8 @@ namespace IAMService.API.Controllers
             {
                 var fakeClaims = new List<Claim>
         {
-            new Claim("sub", "a9b86d50-0b26-4526-99cc-07fdb3b78f98"), 
-            new Claim("role", "Admin"), 
+            new Claim("sub", "a9b86d50-0b26-4526-99cc-07fdb3b78f98"),
+            new Claim("role", "Admin"),
             new Claim("email", "mockuser@example.com"),
             new Claim("fullName", "Mock Admin User")
         };
@@ -249,5 +250,25 @@ namespace IAMService.API.Controllers
 
             return Ok(response);
         }
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        /// <summary>
+        /// Get All User
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> GetUsers([FromQuery] GetUsersQuery query)
+        {
+            var result = await _sender.Send(query);
+            return Ok(result);
+        }
+
     }
 }
