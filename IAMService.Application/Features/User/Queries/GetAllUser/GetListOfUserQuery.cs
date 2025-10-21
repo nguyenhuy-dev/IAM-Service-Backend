@@ -1,6 +1,6 @@
 using IAMService.Application.DTOs;
 using MediatR;
-namespace IAMService.Application.Features.Users.Queries
+namespace IAMService.Application.Features.User.Queries.GetAllUser
 {
     /// <summary>
     /// 

@@ -3,8 +3,7 @@ using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
 using MediatR;
 using System.Linq.Expressions;
-
-namespace IAMService.Application.Features.Users.Queries
+namespace IAMService.Application.Features.User.Queries.GetAllUser
 {
     /// <summary>
     /// Handles fetching and filtering users with pagination and sorting.

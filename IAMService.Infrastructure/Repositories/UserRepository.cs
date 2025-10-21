@@ -101,6 +101,7 @@ namespace IAMService.Infrastructure.Repositories
                 .Where(u => u.RoleId == roleId)
                 .ToListAsync();
         }
+        
         /// <summary>
         /// Marks a collection of user entities for update. This does NOT save to the database.
         /// </summary>
@@ -109,6 +110,16 @@ namespace IAMService.Infrastructure.Repositories
         {
             _context.Users.UpdateRange(users);
         }
+        
+        /// <summary>
+        /// Deletes a user from the database
+        /// </summary>
+        /// <param name="user">The user entity to delete</param>
+        public void Delete(User user)
+        {
+            _context.Users.Remove(user);
+        }
+        
         /// <summary>
         /// Retrieves all users with their associated roles
         /// </summary>
@@ -119,7 +130,6 @@ namespace IAMService.Infrastructure.Repositories
                 .Include(u => u.Role)
                 .AsQueryable();
         }
-
-
+        
     }
 }
