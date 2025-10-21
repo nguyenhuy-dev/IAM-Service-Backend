@@ -25,7 +25,7 @@ namespace IAMService.Infrastructure.Repositories
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
-        
+
         /// <inheritdoc/>
         public async Task<User> CreateAsync(User user)
         {
@@ -33,8 +33,8 @@ namespace IAMService.Infrastructure.Repositories
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
             var createdUser = await _context.Users
-                .Include(u => u.Role)                    
-                    .ThenInclude(r => r.Privileges)      
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.Privileges)
                 .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
             if (createdUser == null)
@@ -64,8 +64,8 @@ namespace IAMService.Infrastructure.Repositories
         public async Task<User?> GetByIdAsync(Guid userId)
         {
             return await _context.Users
-                .Include(u => u.Role)              
-                    .ThenInclude(r => r.Privileges) 
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.Privileges)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
@@ -75,8 +75,8 @@ namespace IAMService.Infrastructure.Repositories
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or empty", nameof(email));
             return await _context.Users
-                .Include(u => u.Role)              
-                    .ThenInclude(r => r.Privileges) 
+                .Include(u => u.Role)
+                    .ThenInclude(r => r.Privileges)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
         }
 
@@ -109,5 +109,17 @@ namespace IAMService.Infrastructure.Repositories
         {
             _context.Users.UpdateRange(users);
         }
+        /// <summary>
+        /// Retrieves all users with their associated roles
+        /// </summary>
+        /// <returns></returns>
+        public IQueryable<User> GetUsersQueryable()
+        {
+            return _context.Users
+                .Include(u => u.Role)
+                .AsQueryable();
+        }
+
+
     }
 }
