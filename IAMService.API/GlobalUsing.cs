@@ -1,2 +1,15 @@
 ﻿global using IAMService.Infrastructure.Data;
 global using IAMService.Infrastructure.DatabaseMigrationHelpers;
+global using IAMService.Infrastructure.AuthenticationHelpers;
+global using IAMService.Application.Interfaces.AuthenticationServices;
+global using IAMService.API.Bootstraping;
+global using IAMService.API.Middleware.Authorization;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Tokens;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using System.Text;
+global using System.Text.Encodings.Web;
