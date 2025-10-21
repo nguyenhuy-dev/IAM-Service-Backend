@@ -4,7 +4,8 @@ using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.CreateUser;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Features.User.Queries.ViewUserInformation;
-using IAMService.Application.Features.Users.Queries;
+using IAMService.Application.Features.User.Commands.DeleteUser;
+using IAMService.Application.Features.User.Queries.GetAllUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -251,6 +252,40 @@ namespace IAMService.API.Controllers
             return Ok(response);
         }
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns> <summary>
+        /// Delete one user
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteUser(
+            [FromRoute] Guid id,
+            CancellationToken cancellationToken)
+        {
+            var command = new DeleteUserCommand(id);
+
+            var result = await _sender.Send(command, cancellationToken);
+
+            var response = ApiResponse<bool>.Success(
+                result,
+                "User deleted successfully.",
+                StatusCodes.Status200OK
+            );
+
+            return Ok(response);
+        }
+
+        /// <summary>
         /// Get
         /// </summary>
         /// <param name="query"></param>
@@ -259,11 +294,6 @@ namespace IAMService.API.Controllers
         [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        /// <summary>
-        /// Get All User
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
         public async Task<IActionResult> GetUsers([FromQuery] GetUsersQuery query)
         {
             var result = await _sender.Send(query);

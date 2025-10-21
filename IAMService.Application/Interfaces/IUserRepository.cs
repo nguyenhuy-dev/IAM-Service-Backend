@@ -65,6 +65,12 @@ namespace IAMService.Application.Interfaces
         /// <param name="users">The collection of users to update.</param>
         void UpdateRange(IEnumerable<User> users);
         /// <summary>
+        /// Removes a user from the repository
+        /// </summary>
+        /// <param name="user">The user to delete</param>
+        void Delete(User user);
+
+        /// <summary>
         /// Gets a queryable collection of users with their roles
         /// </summary>
         /// <returns>IQueryable of users for deferred execution</returns>
