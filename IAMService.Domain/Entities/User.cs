@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IAMService.Domain.Entities;
 
@@ -118,6 +118,23 @@ public class User
     ///   <c>true</c> if this instance is patient; otherwise, <c>false</c>.
     /// </value>
     public bool IsPatient { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the number of failed login attempts.
+    /// </summary>
+    public int FailedLoginAttempts { get; private set; } = 0;
+
+    /// <summary>
+    /// Gets or sets the date and time when the account lockout ends.
+    /// </summary>
+    public DateTimeOffset? LockoutEnd { get; private set; }
+    
+    public ICollection<UserToken> UserTokens { get; set; } = [];
+    /// <summary>
+    /// Gets a value indicating whether the user account is currently locked out.
+    /// </summary>
+    [NotMapped]
+    public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTimeOffset.UtcNow;
     /// <summary>
     /// Parameterless constructor required by EF Core
     /// </summary>
@@ -315,6 +332,37 @@ public class User
             throw new ArgumentException("Address cannot be null or empty", nameof(address));
     }
 
+    /// <summary>
+    /// Increments the count of failed login attempts.
+    /// </summary>
+    public void IncrementFailedAttempts()
+    {
+        FailedLoginAttempts++;
+    }
+    
+    /// <summary>
+    /// Resets the count of failed login attempts to zero.
+    /// </summary>
+    public void ResetAttempts()
+    {
+        FailedLoginAttempts = 0;
+    }
 
-    public ICollection<UserToken> UserTokens { get; set; } = [];
+    /// <summary>
+    /// Locks the user account until a specified time.
+    /// </summary>
+    /// <param name="until">The time until which the account is locked.</param>
+    public void LockAccount(DateTimeOffset until)
+    {
+        LockoutEnd = until;
+    }
+
+    /// <summary>
+    /// Unlocks the user account and resets failed attempts.
+    /// </summary>
+    public void UnlockAccount()
+    {
+        LockoutEnd = null;
+        ResetAttempts();
+    }
 }
