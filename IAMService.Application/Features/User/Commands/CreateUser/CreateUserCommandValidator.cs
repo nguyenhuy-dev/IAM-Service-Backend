@@ -186,6 +186,9 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             // Must contain at least one digit
             if (!Regex.IsMatch(password, @"\d"))
                 return false;
+            // Must contain at least one special character
+            if (!Regex.IsMatch(password, @"[!@#$%^&*(),.?""':{}|<>]"))
+                return false;
 
             return true;
         }
