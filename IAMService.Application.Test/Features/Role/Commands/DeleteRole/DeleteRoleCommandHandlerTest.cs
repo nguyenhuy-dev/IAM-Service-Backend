@@ -6,18 +6,35 @@ using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-using NUnit.Framework;
 
-namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
+namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 {
+    /// <summary>
+    /// Unit Test for <see cref="DeleteRoleCommandHandler"/>
+    /// </summary>
     [TestFixture]
     public class DeleteRoleCommandHandlerTests
     {
+        /// <summary>
+        /// The role repository
+        /// </summary>
         private IRoleRepository _roleRepository;
+        /// <summary>
+        /// The user repository
+        /// </summary>
         private IUserRepository _userRepository;
+        /// <summary>
+        /// The unit of work
+        /// </summary>
         private IUnitOfWork _unitOfWork;
+        /// <summary>
+        /// The handler
+        /// </summary>
         private DeleteRoleCommandHandler _handler;
 
+        /// <summary>
+        /// Setups this instance.
+        /// </summary>
         [SetUp]
         public void Setup()
         {
@@ -27,6 +44,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             _handler = new DeleteRoleCommandHandler(_roleRepository, _userRepository, _unitOfWork);
         }
 
+        /// <summary>
+        /// Handles the valid role deletes role and reassigns users.
+        /// </summary>
         [Test]
         public async Task Handle_ValidRole_DeletesRoleAndReassignsUsers()
         {
@@ -69,6 +89,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             await _unitOfWork.Received(1).SaveChangesAsync(CancellationToken.None);
         }
 
+        /// <summary>
+        /// Handles the role not found throws not found exception.
+        /// </summary>
         [Test]
         public async Task Handle_RoleNotFound_ThrowsNotFoundException()
         {
@@ -86,6 +109,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
                 .WithMessage("*RoleId*");
         }
 
+        /// <summary>
+        /// Handles the default role throws validation exception.
+        /// </summary>
         [Test]
         public async Task Handle_DefaultRole_ThrowsValidationException()
         {
@@ -110,6 +136,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
                 .WithMessage("Default roles cannot be deleted.");
         }
 
+        /// <summary>
+        /// Handles the read only role throws validation exception.
+        /// </summary>
         [Test]
         public async Task Handle_ReadOnlyRole_ThrowsValidationException()
         {
@@ -134,6 +163,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
                 .WithMessage("The ReadOnly role cannot be deleted.");
         }
 
+        /// <summary>
+        /// Handles the read only role not found throws invalid operation exception.
+        /// </summary>
         [Test]
         public async Task Handle_ReadOnlyRoleNotFound_ThrowsInvalidOperationException()
         {
@@ -160,6 +192,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
                 .WithMessage("System configuration error: The 'READ_ONLY' role was not found.");
         }
 
+        /// <summary>
+        /// Handles the no users with role deletes role successfully.
+        /// </summary>
         [Test]
         public async Task Handle_NoUsersWithRole_DeletesRoleSuccessfully()
         {
@@ -196,6 +231,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             await _unitOfWork.Received(1).SaveChangesAsync(CancellationToken.None);
         }
 
+        /// <summary>
+        /// Handles the cancellation requested passes cancellation token.
+        /// </summary>
         [Test]
         public async Task Handle_CancellationRequested_PassesCancellationToken()
         {
@@ -224,7 +262,7 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             _userRepository.GetByRoleIdAsync(roleId).Returns(new List<User>());
 
             // Act
-            var result = await _handler.Handle(command, cancellationToken);
+            await _handler.Handle(command, cancellationToken);
 
             // Assert
             await _unitOfWork.Received(1).SaveChangesAsync(cancellationToken);
