@@ -6,8 +6,9 @@ using Microsoft.Extensions.Logging;
 namespace IAMService.Application.Features.User.Commands.UpdateUser
 {
     /// <summary>
-    /// Handles the update of user information.
+    /// Handles updating user information (basic info + privileges if admin).
     /// </summary>
+    /// <seealso cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserResponseDto>
     {
         /// <summary>
@@ -47,16 +48,20 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         /// <returns>
         /// Response from the request
         /// </returns>
-        /// <exception cref="System.Collections.Generic.KeyNotFoundException">User with ID {request.UserId} not found.</exception>
+        /// <exception cref="System.Collections.Generic.KeyNotFoundException">
+        /// User with ID {request.UserId} not found.
+        /// or
+        /// User with ID {user.UserId} not found after update.
+        /// </exception>
         public async Task<UserResponseDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Processing UpdateUserCommand for UserId: {UserId}", request.UserId);
+            _logger.LogInformation("➡️ Processing UpdateUserCommand for UserId: {UserId}", request.UserId);
 
-            // Retrieve user from database
+            // 1️⃣ Retrieve user
             var user = await _userRepository.GetByIdAsync(request.UserId)
                 ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
 
-            // Update basic information
+            // 2️⃣ Update basic info
             user.FullName = request.Dto.FullName ?? user.FullName;
             user.PhoneNumber = request.Dto.PhoneNumber ?? user.PhoneNumber;
             user.Email = request.Dto.Email ?? user.Email;
@@ -66,58 +71,75 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             if (request.Dto.Gender.HasValue)
                 user.Gender = request.Dto.Gender.Value;
 
-            // Convert DateOfBirth(MM/ dd / yyyy format)
+            // 3️⃣ Handle Date of Birth (convert "MM/dd/yyyy")
             if (!string.IsNullOrWhiteSpace(request.Dto.DateOfBirth) &&
-                DateTime.TryParseExact(request.Dto.DateOfBirth, "MM/dd/yyyy", null, System.Globalization.DateTimeStyles.None, out var dob))
+                DateTime.TryParseExact(request.Dto.DateOfBirth, "MM/dd/yyyy", null,
+                    System.Globalization.DateTimeStyles.None, out var dob))
             {
                 user.DateOfBirth = DateOnly.FromDateTime(dob);
             }
 
-            // If admin → update privileges (create custom role)
+            // 4️⃣ Handle Privileges (Admin only)
             if (request.IsAdmin && request.Dto.PrivilegeIds?.Any() == true)
             {
-                _logger.LogInformation("Admin updating privileges for user {UserId}", user.UserId);
+                var currentPrivileges = user.Role?.Privileges?
+                    .Select(p => p.PrivilegeId)
+                    .OrderBy(x => x)
+                    .ToList() ?? new List<int>();
 
+                var newPrivileges = request.Dto.PrivilegeIds
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
 
-                var newRole = await _roleCloneService.CloneRoleWithPrivilegesAsync(
-                    user,
-                    request.Dto.PrivilegeIds,
-                    cancellationToken
-                );
+                bool privilegesChanged = !currentPrivileges.SequenceEqual(newPrivileges);
 
-                // Assign new RoleId to the user
-                user.RoleId = newRole.RoleId;
+                if (privilegesChanged)
+                {
+                    _logger.LogInformation("⚙️ Privileges changed — cloning/reusing role for user {UserId}", user.UserId);
 
-                user.Role = null;
+                    var newRole = await _roleCloneService.CloneRoleWithPrivilegesAsync(
+                        user,
+                        newPrivileges,
+                        cancellationToken
+                    );
 
-                _logger.LogInformation(
-                    "✅ [UpdateUserCommandHandler] Admin updated privileges for user {UserId}. Assigned new RoleId: {RoleId}, RoleName: {RoleName}",
-                    user.UserId,
-                    newRole.RoleId,
-                    newRole.RoleName
-                );
+                    // ✅ Assign RoleId only (to ensure EF picks up change)
+                    user.RoleId = newRole.RoleId;
+                    user.Role = null; // ⚠️ Critical to force EF to update RoleId
+
+                    _logger.LogInformation("✅ User {UserId} now linked to RoleId={RoleId} ({RoleName})",
+                        user.UserId, newRole.RoleId, newRole.RoleName);
+                }
+                else
+                {
+                    _logger.LogInformation("🔁 Privileges unchanged — keeping current role for {UserId}", user.UserId);
+                }
             }
 
-            // Save changes to database
+            // 5️⃣ Preserve role if missing
+            if (user.RoleId == 0)
+            {
+                var existingUser = await _userRepository.GetByIdAsync(user.UserId);
+                if (existingUser?.RoleId > 0)
+                    user.RoleId = existingUser.RoleId;
+            }
+
+            // 6️⃣ Persist user (RoleId and basic info)
             await _userRepository.UpdateAsync(user);
+            _logger.LogInformation("💾 User {UserId} successfully updated.", user.UserId);
 
-            // Reload user to include updated Role and Privileges
-            var updatedUser = await _userRepository.GetByIdAsync(user.UserId);
+            // 7️⃣ Reload updated user
+            var updatedUser = await _userRepository.GetByIdAsync(user.UserId)
+                ?? throw new KeyNotFoundException($"User with ID {user.UserId} not found after update.");
 
-            // Log event (AC04)
-            _logger.LogInformation(
-                "📘 [EventLog] User {UserId} information updated successfully. Updated by {Actor} | IsAdmin={IsAdmin}",
-                user.UserId,
-                request.IsAdmin ? "Admin" : "Self",
-                request.IsAdmin
-            );
-
-            var privilegeIds = updatedUser?.Role?.Privileges?.Select(p => p.PrivilegeId).ToList() ?? new List<int>();
-            var privilegeNames = updatedUser?.Role?.Privileges?.Select(p => p.PrivilegeName).ToList() ?? new List<string>();
+            // 8️⃣ Map privileges
+            var privilegeIds = updatedUser.Role?.Privileges?.Select(p => p.PrivilegeId).ToList() ?? new List<int>();
+            var privilegeNames = updatedUser.Role?.Privileges?.Select(p => p.PrivilegeName).ToList() ?? new List<string>();
 
             return new UserResponseDto
             {
-                UserId = updatedUser!.UserId,
+                UserId = updatedUser.UserId,
                 FullName = updatedUser.FullName,
                 PhoneNumber = updatedUser.PhoneNumber,
                 Email = updatedUser.Email,
@@ -131,6 +153,5 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 PrivilegeNames = privilegeNames
             };
         }
-        
     }
 }

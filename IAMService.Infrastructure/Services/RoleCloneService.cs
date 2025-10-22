@@ -3,13 +3,11 @@ using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    /// Service responsible for creating a custom role for a user 
-    /// when an admin updates their privileges.
+    ///  Service responsible for creating a custom role for a user
     /// </summary>
     /// <seealso cref="IAMService.Application.Interfaces.IRoleCloneService" />
     public class RoleCloneService : IRoleCloneService
@@ -33,7 +31,6 @@ namespace IAMService.Infrastructure.Services
             _context = context;
             _logger = logger;
         }
-
         /// <summary>
         /// Clones an existing user's role and assigns a customized set of privileges.
         /// </summary>
@@ -43,103 +40,72 @@ namespace IAMService.Infrastructure.Services
         /// <returns>
         /// The newly created role that contains the customized set of privileges.
         /// </returns>
+        /// <exception cref="System.ArgumentNullException">user</exception>
         /// <exception cref="System.InvalidOperationException">
-        /// RoleId {user.RoleId} not found in database.
+        /// Privilege list cannot be empty.
         /// or
-        /// No valid privileges found for the provided IDs.
+        /// No valid privileges found for provided IDs.
         /// </exception>
         public async Task<Role> CloneRoleWithPrivilegesAsync(User user, List<int> privilegeIds, CancellationToken cancellationToken)
         {
-            // Load the user's current role including its privileges.
-            var currentRole = await _context.Roles
-                .Include(r => r.Privileges)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.RoleId == user.RoleId, cancellationToken);
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+            if (privilegeIds == null || privilegeIds.Count == 0)
+                throw new InvalidOperationException("Privilege list cannot be empty.");
 
-            if (currentRole == null)
-                throw new InvalidOperationException($"RoleId {user.RoleId} not found in database.");
+            var newPrivilegeIds = privilegeIds.Distinct().OrderBy(id => id).ToList();
 
-            // Load the privileges corresponding to the provided privilege IDs.s
+            //  Load privileges safely
             var privileges = await _context.Privileges
-                .Where(p => privilegeIds.Contains(p.PrivilegeId))
+                .Where(p => newPrivilegeIds.Contains(p.PrivilegeId))
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             if (!privileges.Any())
-                throw new InvalidOperationException("No valid privileges found for the provided IDs.");
+                throw new InvalidOperationException("No valid privileges found for provided IDs.");
 
-            // Load all roles in the system with their privileges for comparison.
-            // This is necessary to detect if an identical privilege combination already exists.
-            var allRoles = await _context.Roles
+            //  Check if identical role already exists (exact privilege match)
+            var existingRole = await _context.Roles
                 .Include(r => r.Privileges)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            foreach (var role in allRoles)
+            foreach (var role in existingRole)
             {
-                // Sort and normalize both privilege ID lists to ensure consistent comparison.
-                var existingPrivilegeIds = role.Privileges
-                    .Select(p => (int)p.PrivilegeId)
-                    .Distinct()
-                    .OrderBy(id => id)
-                    .ToList();
-
-                var newPrivilegeIds = privilegeIds
-                    .Distinct()
-                    .OrderBy(id => id)
-                    .ToList();
-
-               // Debug log to help developers trace role comparison behavior.
-                _logger.LogInformation(
-                    "[RoleCloneService] Comparing existing RoleId={RoleId} privileges: [{Existing}] vs new: [{New}]",
-                    role.RoleId,
-                    string.Join(",", existingPrivilegeIds),
-                    string.Join(",", newPrivilegeIds)
-                );
-
-                // If the privilege sets are identical, reuse the existing role instead of creating a duplicate.
-                if (existingPrivilegeIds.SequenceEqual(newPrivilegeIds))
+                var rolePrivilegeIds = role.Privileges.Select(p => p.PrivilegeId).OrderBy(x => x).ToList();
+                if (rolePrivilegeIds.SequenceEqual(newPrivilegeIds))
                 {
-                    _logger.LogInformation(
-                        "[RoleCloneService] ✅ Found existing RoleId={RoleId} with identical privileges. Reusing existing role.",
-                        role.RoleId
-                    );
-                    return role; // Reuse existing role
+                    _logger.LogInformation("♻️ Reusing existing role {RoleId} ({RoleName})", role.RoleId, role.RoleName);
+                    return role;
                 }
             }
 
-            // If no existing role matches, generate a new custom role name and code.
-            var shortId = user.UserId.ToString()[..6]; // first 6 chars
-            var privilegeKey = string.Join("_", privilegeIds.OrderBy(id => id)); // e.g. 1_3_5
+            //  Create new role safely (unique version)
+            var shortId = user.UserId.ToString()[..6];
+            var baseName = $"Custom_{shortId}";
+            var roleName = baseName;
+            int version = 1;
+            while (await _context.Roles.AnyAsync(r => r.RoleName == roleName, cancellationToken))
+                roleName = $"{baseName}_v{++version}";
 
-            // Ensure the role name remains readable even for long privilege combinations.
-            var safePrivilegeKey = privilegeKey.Length > 30
-                ? privilegeKey[..30] + "..."
-                : privilegeKey;
+            var newRole = new Role(0, roleName, $"CUST_{shortId}", $"Custom role for {user.FullName}");
 
-            var roleName = $"Custom_{shortId}";
-            var roleCode = $"CUST_{shortId}";
+            //  Properly attach privileges (no duplication)
+            newRole.Privileges = new List<Privilege>();
+            foreach (var privilege in privileges)
+            {
+                var trackedPrivilege = _context.Privileges.Local
+                    .FirstOrDefault(p => p.PrivilegeId == privilege.PrivilegeId)
+                    ?? _context.Privileges.Attach(privilege).Entity;
 
-            // Create a new Role entity and assign the privileges.
-            var newRole = new Role(
-                roleId: 0,
-                roleName: roleName,
-                roleCode: roleCode,
-                description: $"Custom role for user {user.FullName} ({user.UserId})"
-            );
+                newRole.Privileges.Add(trackedPrivilege);
+            }
 
-            newRole.Privileges = privileges;
-
-            // Save the new role in the database.
             _context.Roles.Add(newRole);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Log creation details for audit purposes.
-            _logger.LogInformation(
-                "[RoleCloneService] Created new custom Role: {RoleName} (RoleId: {RoleId}) for UserId: {UserId}. Privileges: {PrivilegeList}",
-                newRole.RoleName,
-                newRole.RoleId,
-                user.UserId,
-                string.Join(", ", privileges.Select(p => p.PrivilegeName))
-            );
+            _logger.LogInformation("✅ Created new role {RoleName} (RoleId={RoleId}) for user {UserId} with privileges: {Privileges}",
+                newRole.RoleName, newRole.RoleId, user.UserId, string.Join(", ", privileges.Select(p => p.PrivilegeName)));
 
             return newRole;
         }
