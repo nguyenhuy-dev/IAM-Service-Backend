@@ -30,10 +30,10 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
                 request.RoleCode,
                 request.Description
             );
-            
+
             // Handle privilege IDs
-            var privilegeIds = request.PrivilegeIds?.Any() == true 
-                ? request.PrivilegeIds.ToList() 
+            var privilegeIds = request.PrivilegeIds?.Any() == true
+                ? request.PrivilegeIds.ToList()
                 : [1];
 
             // Create role with associated privileges
@@ -45,3 +45,4 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
         }
     }
 }
+

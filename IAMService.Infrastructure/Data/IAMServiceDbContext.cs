@@ -30,6 +30,7 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     /// The privileges.
     /// </value>
     public DbSet<Privilege> Privileges { get; set; } = default!;
+    public DbSet<UserToken> UserTokens { get; set; } = default!;
 
     /// <summary>
     /// Override this method to further configure the model that was discovered by convention from the entity types

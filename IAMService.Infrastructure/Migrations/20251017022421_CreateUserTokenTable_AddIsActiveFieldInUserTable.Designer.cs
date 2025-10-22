@@ -3,6 +3,7 @@ using System;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,14 +12,16 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IAMService.Infrastructure.Migrations
 {
     [DbContext(typeof(IAMServiceDbContext))]
-    partial class IAMServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017022421_CreateUserTokenTable_AddIsActiveFieldInUserTable")]
+    partial class CreateUserTokenTable_AddIsActiveFieldInUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("public")
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -52,9 +55,6 @@ namespace IAMService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("RoleCode")
                         .IsRequired()
                         .HasColumnType("text");
@@ -78,6 +78,9 @@ namespace IAMService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Age")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
 
@@ -100,10 +103,7 @@ namespace IAMService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsPatient")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("NeedsVerification")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PhoneNumber")
@@ -144,8 +144,6 @@ namespace IAMService.Infrastructure.Migrations
 
                     b.HasKey("UserTokenId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("UserTokens", "public");
                 });
 
@@ -175,17 +173,6 @@ namespace IAMService.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("IAMService.Domain.Entities.UserToken", b =>
-                {
-                    b.HasOne("IAMService.Domain.Entities.User", "User")
-                        .WithMany("UserTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PrivilegeRole", b =>
                 {
                     b.HasOne("IAMService.Domain.Entities.Privilege", null)
@@ -204,11 +191,6 @@ namespace IAMService.Infrastructure.Migrations
             modelBuilder.Entity("IAMService.Domain.Entities.Role", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("IAMService.Domain.Entities.User", b =>
-                {
-                    b.Navigation("UserTokens");
                 });
 #pragma warning restore 612, 618
         }

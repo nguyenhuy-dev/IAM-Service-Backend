@@ -22,6 +22,13 @@ public class User
     /// </value>
     public string FullName { get; set; } = default!;
     /// <summary>
+    /// Gets or sets a value indicating whether this instance is active.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is active; otherwise, <c>false</c>.
+    /// </value>
+    public bool IsActive { get; set; }
+    /// <summary>
     /// Gets or sets the phone number.
     /// </summary>
     /// <value>
@@ -43,7 +50,7 @@ public class User
     /// </value>
     public string HashedPassword { get; set; } = default!;
     /// <summary>
-    /// Gets or sets a value indicating whether this <see cref="User"/> is gender.
+    /// Gets or sets a value indicating whether this <see cref="User" /> is gender.
     /// </summary>
     /// <value>
     ///   <c>true</c> if gender; otherwise, <c>false</c>.
@@ -309,4 +316,5 @@ public class User
     }
 
 
+    public ICollection<UserToken> UserTokens { get; set; } = [];
 }
