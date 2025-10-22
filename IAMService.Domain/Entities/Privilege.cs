@@ -18,7 +18,7 @@ public class Privilege
     /// <value>
     /// The name of the privilege.
     /// </value>
-    public string PrivilegeName { get; private set; } = default!;
+    public string PrivilegeName { get; set; } = default!;
     /// <summary>
     /// Gets or sets the roles.
     /// </summary>
@@ -35,6 +35,11 @@ public class Privilege
     /// </summary>
     /// <param name="privilegeName">The privilege name</param>
     /// <exception cref="ArgumentException">Privilege Name cannot be null or empty </exception>
+    
+    public Privilege()
+    {
+        // Parameterless constructor for EF Core
+    }
     public Privilege(string privilegeName)
     {
         if (string.IsNullOrWhiteSpace(privilegeName))

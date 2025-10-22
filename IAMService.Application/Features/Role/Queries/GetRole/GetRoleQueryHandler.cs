@@ -49,17 +49,18 @@ namespace IAMService.Application.Features.Role.Queries.GetRole
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
                 rolesQueryable = rolesQueryable.Where(r =>
-                    r.RoleName.Contains(request.SearchTerm) ||
-                    r.RoleCode.Contains(request.SearchTerm) ||
-                    (r.Description != null && r.Description.Contains(request.SearchTerm)));
+                    r.RoleName.ToLower().Contains(request.SearchTerm.ToLower()) ||
+                    r.RoleCode.ToLower().Contains(request.SearchTerm.ToLower()) ||
+                    (r.Description != null && r.Description.ToLower().Contains(request.SearchTerm.ToLower())));
             }
 
             // 3. Apply simple sorting
-            //Valid options: RoleName, RoleCode.
+            //Valid options: RoleName, RoleCode, RoleId. Defaults to RoleId
             Expression<Func<IAMService.Domain.Entities.Role, object>> keySelector = request.SortBy?.ToLower() switch
             {
                 "rolecode" => role => role.RoleCode,
-                _ => role => role.RoleName,
+                "rolename" => role => role.RoleName,
+                _ => role => role.RoleId,
             };
             //Valid options: asc, desc. Defaults to asc
             if (request.SortOrder?.ToLower() == "desc")

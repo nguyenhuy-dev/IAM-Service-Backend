@@ -4,14 +4,26 @@ using IAMService.Application.Interfaces;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
 
-namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
+namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 {
+    /// <summary>
+    /// Unit test for <see cref="DeleteRoleCommandValidator"/>
+    /// </summary>
     [TestFixture]
     public class DeleteRoleCommandValidatorTests
     {
+        /// <summary>
+        /// The role repository
+        /// </summary>
         private IRoleRepository _roleRepository;
+        /// <summary>
+        /// The validator
+        /// </summary>
         private DeleteRoleCommandValidator _validator;
 
+        /// <summary>
+        /// Setups this instance.
+        /// </summary>
         [SetUp]
         public void Setup()
         {
@@ -19,6 +31,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             _validator = new DeleteRoleCommandValidator(_roleRepository);
         }
 
+        /// <summary>
+        /// Validates the valid role identifier should not have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_ValidRoleId_ShouldNotHaveValidationError()
         {
@@ -43,6 +58,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.Errors.Should().BeEmpty();
         }
 
+        /// <summary>
+        /// Validates the role identifier zero should have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_RoleIdZero_ShouldHaveValidationError()
         {
@@ -59,6 +77,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.Errors.Should().Contain(x => x.PropertyName == "RoleId");
         }
 
+        /// <summary>
+        /// Validates the role identifier negative should have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_RoleIdNegative_ShouldHaveValidationError()
         {
@@ -75,6 +96,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
                 x.ErrorMessage == "RoleId must be greater than zero.");
         }
 
+        /// <summary>
+        /// Validates the role not found should have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_RoleNotFound_ShouldHaveValidationError()
         {
@@ -94,6 +118,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.Errors.Should().Contain(x => x.PropertyName == "RoleId");
         }
 
+        /// <summary>
+        /// Validates the default role should have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_DefaultRole_ShouldHaveValidationError()
         {
@@ -120,6 +147,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.Errors.Should().Contain(x => x.PropertyName == "RoleId");
         }
 
+        /// <summary>
+        /// Validates the read only role should have validation error.
+        /// </summary>
         [Test]
         public async Task Validate_ReadOnlyRole_ShouldHaveValidationError()
         {
@@ -146,6 +176,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.Errors.Should().Contain(x => x.PropertyName == "RoleId");
         }
 
+        /// <summary>
+        /// Validates the cascade mode stops on first error.
+        /// </summary>
         [Test]
         public async Task Validate_CascadeMode_StopsOnFirstError()
         {
@@ -163,6 +196,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             await _roleRepository.DidNotReceive().GetByIdAsync(Arg.Any<int>());
         }
 
+        /// <summary>
+        /// Validates the valid role identifier calls repository once.
+        /// </summary>
         [Test]
         public async Task Validate_ValidRoleId_CallsRepositoryOnce()
         {
@@ -186,6 +222,9 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             await _roleRepository.Received(1).GetByIdAsync(roleId);
         }
 
+        /// <summary>
+        /// Validates the multiple validation errors returns first error only.
+        /// </summary>
         [Test]
         public async Task Validate_MultipleValidationErrors_ReturnsFirstErrorOnly()
         {
@@ -200,9 +239,12 @@ namespace IAMService.Application.Tests.Features.Role.Commands.DeleteRole
             result.IsValid.Should().BeFalse();
             // Should stop at first rule failure (GreaterThan)
             result.Errors.Should().HaveCount(1);
-            result.Errors.First().ErrorMessage.Should().Be("RoleId must be greater than zero.");
+            result.Errors[0].ErrorMessage.Should().Be("RoleId must be greater than zero.");
         }
 
+        /// <summary>
+        /// Validates the with cancellation token passes token to repository.
+        /// </summary>
         [Test]
         public async Task Validate_WithCancellationToken_PassesTokenToRepository()
         {
