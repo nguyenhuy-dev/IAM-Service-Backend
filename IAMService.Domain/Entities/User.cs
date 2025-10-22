@@ -129,6 +129,9 @@ public class User
     /// </summary>
     public DateTimeOffset? LockoutEnd { get; private set; }
     
+    /// <summary>
+    /// Gets or sets the value of the user tokens
+    /// </summary>
     public ICollection<UserToken> UserTokens { get; set; } = [];
     /// <summary>
     /// Gets a value indicating whether the user account is currently locked out.
