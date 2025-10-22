@@ -290,6 +290,7 @@ namespace IAMService.API.Controllers
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
