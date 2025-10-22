@@ -2,9 +2,12 @@
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs.Auth.Login;
 using IAMService.Application.Features.Login.Commands;
+using IAMService.Application.Features.Logout.Commands;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace IAMService.API.Controllers
 {
@@ -57,6 +60,39 @@ namespace IAMService.API.Controllers
                 StatusCode = StatusCodes.Status500InternalServerError,
                 Message = "An internal error occurred: Login command returned an invalid response type."
             });
+        }
+
+        /// <summary>
+        /// Logs out the user by invalidating the refresh token.
+        /// </summary>
+        /// <param name="request">The logout request containing the refresh token.</param>
+        /// <returns>A 204 No Content response on successful logout.</returns>
+        [HttpPost("logout")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Logout()
+        {
+            var accessTokenValue = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var refreshTokenValue = Request.Cookies["refreshToken"];
+            if (!Guid.TryParse(userIdString, out var userIdGuid))
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Invalid user ID found in token claims."
+                });
+            }
+            var command = new LogoutCommand(
+                accessTokenValue: accessTokenValue,
+                refreshTokenValue: refreshTokenValue,
+                userId: userIdGuid
+            );
+            await _sender.Send(command);
+            Response.Cookies.Delete("refreshToken");
+            return NoContent();
         }
     }
 }

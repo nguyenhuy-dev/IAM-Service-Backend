@@ -3,38 +3,80 @@ using IAMService.API.Middleware;
 using IAMService.Application;
 using IAMService.Application.Behaviors;
 using IAMService.Application.Interfaces;
+using IAMService.Application.Interfaces.AccessToken;
 using IAMService.Application.Mappings;
+using IAMService.Application.Services;
 using IAMService.Infrastructure.Repositories;
 using IAMService.Infrastructure.Services;
+using IAMService.Infrastructure.Services.AccessToken;
 using IAMService.Infrastructure.Settings;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
-
+var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
-    
-    var signingKey = builder.Configuration["Jwt:SigningKey"];
+    var signingKey = builder.Configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("Jwt:SigningKey is required.");
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey!)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
 
         
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"]!,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
 
+        
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"]!,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
 
+        
         ValidateLifetime = true,
+        
         ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var accessToken = context.Request.Headers["Authorization"]
+            .FirstOrDefault()?
+            .Replace("Bearer ", string.Empty);
+            var serviceProvider = context.HttpContext.RequestServices;
+
+            var tokenDecoderService = serviceProvider.GetRequiredService<ITokenDecoderService>();
+            var invalidationService = serviceProvider.GetRequiredService<IInvalidationService>();
+
+            string tokenIdentifier = string.Empty;
+            try
+            {
+                tokenIdentifier = tokenDecoderService.GetTokenIdentifier(accessToken);
+            }
+            catch (Exception)
+            {
+                context.Fail("Invalid Token structure: JTI missing or unreadable.");
+            }
+            if (string.IsNullOrEmpty(tokenIdentifier))
+            {
+                context.Fail("JTI claim is missing");
+                return;
+            }
+            bool isRevoked = await invalidationService.IsTokenInvalidatedAsync(tokenIdentifier);
+            if (isRevoked)
+            {
+                context.Fail("The access token has been explicitly revoked (user logged out).");
+                return;
+            }
+        }
     };
 });
 
@@ -54,15 +96,22 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(sp =>
+    sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase()
+);
 builder.Services.AddScoped<IRoleCloneService, RoleCloneService>();
-
 builder.Services.AddScoped<IJwtConfiguration, JwtConfiguration>();
 builder.Services.AddTransient<ITokenGenerator, GenerateTokenService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddTransient<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ITokenHasher, TokenHasher>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>(); 
+builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenService>();
+builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect(redisConnectionString)
+);
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 builder.Services.AddMediatR(cfg =>
 {
@@ -99,6 +148,7 @@ app.MapGet("/", () => Results.Ok("Welcome to IAM Service")).AllowAnonymous();
 app.MapScalarApiReference().AllowAnonymous();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

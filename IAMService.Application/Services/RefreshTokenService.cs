@@ -2,9 +2,9 @@
 using IAMService.Application.DTOs.Auth.Login;
 using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
-// Added using directive for full completeness
+using System.Security.Cryptography; // Added using directive for full completeness
 
-namespace IAMService.Infrastructure.Services
+namespace IAMService.Application.Services
 {
     /// <summary>
     /// Implements the business logic for creating, managing, rotating, and revoking Refresh Tokens.
