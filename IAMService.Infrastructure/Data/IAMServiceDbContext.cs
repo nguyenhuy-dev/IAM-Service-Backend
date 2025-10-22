@@ -1,5 +1,6 @@
 ﻿using IAMService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace IAMService.Infrastructure.Data;
 
@@ -50,9 +51,12 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     /// examples.
     /// </para>
     /// </remarks>
+
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         modelBuilder.HasDefaultSchema("public");
     }
 }
