@@ -35,7 +35,14 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddProblemDetails(); // Optional
 builder.Services.AddValidatorsFromAssembly(typeof(IAssemblyReference).Assembly);
 builder.Services.AddAutoMapper(typeof(MappingProfile));
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:5173") // FE chạy ở đây
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -45,7 +52,7 @@ if (app.Environment.IsDevelopment())
 app.MapScalarApiReference();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
-
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 
 app.MapControllers();
