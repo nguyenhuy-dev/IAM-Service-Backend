@@ -52,7 +52,7 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
         var bearerHeader = Context.Request.Headers["Bearer"];
 
         if (bearerHeader.Count == 0)
-            throw new UnauthorizedAccessException("Missing Bearer header");
+            return Task.FromResult(AuthenticateResult.NoResult());
 
         var tokenValue = bearerHeader[0];
         if (!string.IsNullOrEmpty(tokenValue) && VerifyToken(tokenValue, out ClaimsPrincipal? claimsPrincipal))
