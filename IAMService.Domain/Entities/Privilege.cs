@@ -26,8 +26,6 @@ public class Privilege
     /// The roles.
     /// </value>
 
-    public Privilege() { }
-
     public ICollection<Role> Roles { get; set; } = [];
 
     /// <summary>
