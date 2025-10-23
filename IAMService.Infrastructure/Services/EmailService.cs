@@ -219,5 +219,50 @@ namespace IAMService.Infrastructure.Services
                 throw;
             }
         }
+        public async Task SendPasswordResetEmailAsync(string toEmail, string subject, string callbackUrl, CancellationToken cancellationToken = default)
+        {
+            // Cần phải bọc toàn bộ logic trong một khối try-catch để log lỗi gửi mail
+            try
+            {
+                _logger.LogInformation("Attempting to send password reset email to {Email}", toEmail);
+
+               
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(_settings.FromName, _settings.From));
+                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.Subject = subject;
+
+                
+                var builder = new BodyBuilder();
+                builder.HtmlBody = $@"
+            <html><body style='font-family: Arial, sans-serif; line-height: 1.6;'>
+                <h2>Yêu cầu Đặt lại Mật khẩu (Password Reset Request)</h2>
+                <p>Chào bạn,</p>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản của mình. Vui lòng nhấp vào liên kết dưới đây để tiếp tục:</p>
+                <p style='margin: 15px 0;'><a href='{callbackUrl}' style='color: #0066cc; font-weight: bold; text-decoration: none;'>**ĐẶT LẠI MẬT KHẨU**</a></p>
+                <p>Liên kết này chỉ có hiệu lực trong thời gian ngắn. Nếu bạn không yêu cầu thay đổi mật khẩu, bạn có thể bỏ qua email này.</p>
+                <p style='margin-top: 20px;'>Trân trọng,<br>{_settings.FromName}</p>
+            </body></html>";
+                message.Body = builder.ToMessageBody();
+                using var client = new SmtpClient();
+                await client.ConnectAsync(
+                    _settings.Host,
+                    _settings.Port,
+                    MailKit.Security.SecureSocketOptions.StartTls,
+                    cancellationToken);
+                await client.AuthenticateAsync(
+                    _settings.Username,
+                    _settings.Password,
+                    cancellationToken);
+                await client.SendAsync(message, cancellationToken);
+                await client.DisconnectAsync(true, cancellationToken);
+                _logger.LogInformation("Password reset email sent successfully to {Email}", toEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send password reset email to {Email}", toEmail);
+                throw new InvalidOperationException($"Không thể gửi email khôi phục mật khẩu đến {toEmail}. Lỗi: {ex.Message}", ex);
+            }
+        }
     }
 }

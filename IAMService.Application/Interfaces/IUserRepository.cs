@@ -1,5 +1,4 @@
 ﻿using IAMService.Domain.Entities;
-
 namespace IAMService.Application.Interfaces
 {
     /// <summary>

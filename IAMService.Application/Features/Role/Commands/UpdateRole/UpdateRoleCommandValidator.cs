@@ -60,12 +60,20 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
             if (role == null)
             {
                 context.AddFailure("RoleId", "Role not found.");
+                return;
             }
 
             // Check if it's a default role
             if (role.IsDefault)
             {
                 context.AddFailure("RoleId", "Default roles cannot be updated.");
+                return;
+            }
+            
+            // Check if it's the ReadOnly role
+            if (role.RoleCode == ReadOnlyCode)
+            {
+                context.AddFailure("RoleId", "The ReadOnly role cannot be updated.");
             }
         }
     }

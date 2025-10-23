@@ -17,7 +17,7 @@ namespace IAMService.Infrastructure.Repositories
         /// </summary>
         private readonly IAMServiceDbContext _context;
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRepository"/> class.
+        /// Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
         /// <exception cref="System.ArgumentNullException">context</exception>
@@ -66,6 +66,7 @@ namespace IAMService.Infrastructure.Repositories
             return await _context.Users
                 .Include(u => u.Role)
                     .ThenInclude(r => r.Privileges)
+                .AsNoTracking() // Prevent EF from tracking the entity
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
@@ -84,13 +85,35 @@ namespace IAMService.Infrastructure.Repositories
         /// Updates an existing user with the provided information.
         /// </summary>
         /// <param name="user">The <see cref="T:IAMService.Domain.Entities.User" /> entity containing updated information.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         public async Task UpdateAsync(User user)
         {
-            _context.Users.Update(user);
+            ArgumentNullException.ThrowIfNull(user);
+
+            var trackedUser = await _context.Users.FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+            if (trackedUser != null)
+            {
+                // Update all scalar values (not navigation)
+                _context.Entry(trackedUser).CurrentValues.SetValues(user);
+
+                // Explicitly mark RoleId as modified (EF sometimes misses this)
+                _context.Entry(trackedUser).Property(u => u.RoleId).IsModified = true;
+            }
+            else
+            {
+                // Fallback for detached entity
+                _context.Users.Attach(user);
+                _context.Entry(user).Property(u => u.RoleId).IsModified = true;
+                _context.Entry(user).State = EntityState.Modified;
+            }
+
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>Gets the by role identifier asynchronous.</summary>
+        /// <summary>
+        /// Gets the by role identifier asynchronous.
+        /// </summary>
         /// <param name="roleId">The role identifier.</param>
         /// <returns>
         ///   <br />
@@ -101,7 +124,7 @@ namespace IAMService.Infrastructure.Repositories
                 .Where(u => u.RoleId == roleId)
                 .ToListAsync();
         }
-        
+
         /// <summary>
         /// Marks a collection of user entities for update. This does NOT save to the database.
         /// </summary>
@@ -110,7 +133,7 @@ namespace IAMService.Infrastructure.Repositories
         {
             _context.Users.UpdateRange(users);
         }
-        
+
         /// <summary>
         /// Deletes a user from the database
         /// </summary>
@@ -119,11 +142,13 @@ namespace IAMService.Infrastructure.Repositories
         {
             _context.Users.Remove(user);
         }
-        
+
         /// <summary>
         /// Retrieves all users with their associated roles
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// IQueryable of users for deferred execution
+        /// </returns>
         public IQueryable<User> GetUsersQueryable()
         {
             return _context.Users

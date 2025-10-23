@@ -23,6 +23,38 @@ namespace IAMService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ExpiresAt");
+
+                    b.ToTable("PasswordResetTokens", "public");
+                });
+
             modelBuilder.Entity("IAMService.Domain.Entities.Privilege", b =>
                 {
                     b.Property<int>("PrivilegeId")
@@ -38,6 +70,45 @@ namespace IAMService.Infrastructure.Migrations
                     b.HasKey("PrivilegeId");
 
                     b.ToTable("Privileges", "public");
+                });
+
+            modelBuilder.Entity("IAMService.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReplacedByTokenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReplacedByTokenId")
+                        .IsUnique();
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens", "public");
                 });
 
             modelBuilder.Entity("IAMService.Domain.Entities.Role", b =>
@@ -85,6 +156,9 @@ namespace IAMService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -102,6 +176,9 @@ namespace IAMService.Infrastructure.Migrations
 
                     b.Property<bool>("IsPatient")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("NeedsVerification")
                         .HasColumnType("boolean");
@@ -162,6 +239,35 @@ namespace IAMService.Infrastructure.Migrations
                     b.HasIndex("RolesRoleId");
 
                     b.ToTable("PrivilegeRole", "public");
+                });
+
+            modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.HasOne("IAMService.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("IAMService.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("IAMService.Domain.Entities.RefreshToken", "ReplacedByToken")
+                        .WithOne()
+                        .HasForeignKey("IAMService.Domain.Entities.RefreshToken", "ReplacedByTokenId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAMService.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReplacedByToken");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IAMService.Domain.Entities.User", b =>
