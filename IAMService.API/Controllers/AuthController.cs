@@ -1,8 +1,12 @@
 ﻿using IAMService.API.Common;
 using IAMService.API.Middleware;
+using IAMService.Application.DTOs.Auth.ForgotPassword;
 using IAMService.Application.DTOs.Auth.Login;
+using IAMService.Application.DTOs.Auth.ResetPassword;
+using IAMService.Application.Features.ForgotPassword.Commands;
 using IAMService.Application.Features.Login.Commands;
 using IAMService.Application.Features.Logout.Commands;
+using IAMService.Application.Features.ResetPassword.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
@@ -74,25 +78,117 @@ namespace IAMService.API.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Logout()
         {
-            var accessTokenValue = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            
+            var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+
+            
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                
+                return Unauthorized(new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Message = "Authentication header missing or format is invalid. Use: Authorization: Bearer <token>"
+                });
+            }
+
+            
+            var accessTokenValue = authHeader.Substring("Bearer ".Length).Trim();
+
+            
+            if (string.IsNullOrEmpty(accessTokenValue))
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Access token value is empty."
+                });
+            }
+
+            
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var refreshTokenValue = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshTokenValue))
+            {
+                refreshTokenValue = null;
+            }
             if (!Guid.TryParse(userIdString, out var userIdGuid))
             {
+                
                 return BadRequest(new ErrorResponse
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
                     Message = "Invalid user ID found in token claims."
                 });
             }
+
             var command = new LogoutCommand(
                 accessTokenValue: accessTokenValue,
                 refreshTokenValue: refreshTokenValue,
                 userId: userIdGuid
             );
+
             await _sender.Send(command);
             Response.Cookies.Delete("refreshToken");
             return NoContent();
+        }
+
+
+        /// <summary>
+        /// Initiates the password recovery process by sending a reset link to the user's email.
+        /// Returns success regardless of user existence for security purposes.
+        /// </summary>
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        {
+            var command = new ForgotPasswordCommand { Email = request.Email };
+
+            // Gửi Command
+            await _sender.Send(command);
+
+            return Ok(new
+            {
+                Message = "Nếu email hợp lệ, một liên kết đặt lại mật khẩu đã được gửi."
+            });
+        }
+
+        /// <summary>
+        /// Executes the password reset process using the unique token and new password.
+        /// </summary>
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+        {
+            if (request.NewPassword != request.ConfirmPassword)
+            {
+                return BadRequest(new ErrorResponse
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Mật khẩu mới và mật khẩu xác nhận không khớp."
+                });
+            }
+            var command = new ResetPasswordCommand
+            {
+                UserId = request.UserId,
+                Token = request.Token,
+                NewPassword = request.NewPassword
+            };
+
+            var success = await _sender.Send(command);
+
+            if (success)
+            {
+                return Ok(new { Message = "Mật khẩu của bạn đã được đặt lại thành công." });
+            }
+            return BadRequest(new ErrorResponse
+            {
+                StatusCode = StatusCodes.Status400BadRequest,
+                Message = "Yêu cầu đặt lại mật khẩu không hợp lệ (token lỗi, hết hạn) hoặc tài khoản đang bị khóa."
+            });
         }
     }
 }

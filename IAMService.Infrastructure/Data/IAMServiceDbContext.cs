@@ -17,6 +17,7 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     /// The users.
     /// </value>
     public DbSet<User> Users { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the roles.
     /// </summary>
@@ -24,6 +25,7 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     /// The roles.
     /// </value>
     public DbSet<Role> Roles { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the privileges.
     /// </summary>
@@ -34,9 +36,24 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     public DbSet<UserToken> UserTokens { get; set; } = default!;
 
     /// <summary>
+    /// Gets or sets the refresh tokens used for persistent user sessions.
+    /// </summary>
+    /// <value>
+    /// The collection of <see cref="RefreshToken"/> entities.
+    /// </value>
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
+
+    /// <summary>
+    /// Gets or sets the password reset tokens used for the forgot password feature.
+    /// </summary>
+    /// <value>
+    /// The collection of <see cref="PasswordResetToken"/> entities.
+    /// </value>
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = default!; // Đảm bảo dùng = default! cho tính nhất quán
+
+    /// <summary>
     /// Override this method to further configure the model that was discovered by convention from the entity types
-    /// exposed in <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1" /> properties on your derived context. The resulting model may be cached
-    /// and re-used for subsequent instances of your derived context.
+    /// exposed in <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1" /> properties on your derived context.
     /// </summary>
     /// <param name="modelBuilder">The builder being used to construct the model for this context. Databases (and other extensions) typically
     /// define extension methods on this object that allow you to configure aspects of the model that are specific
@@ -51,12 +68,13 @@ public class IAMServiceDbContext(DbContextOptions<IAMServiceDbContext> options) 
     /// examples.
     /// </para>
     /// </remarks>
-
-    public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        // Automatically applies all IEntityTypeConfiguration classes found in the Infrastructure assembly
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Sets the default database schema (common for PostgreSQL/SQL Server environments)
         modelBuilder.HasDefaultSchema("public");
     }
 }

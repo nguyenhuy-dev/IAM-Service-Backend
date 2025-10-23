@@ -45,13 +45,23 @@ namespace IAMService.Application.Services
         /// <param name="role">The collection of roles for the user.</param>
         /// <returns>A <see cref="TokenResponse"/> containing the access token, refresh token, expiry time, and user details.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the user ID is not found in the repository.</exception>
-        public async Task<TokenResponse> CreateTokensAndSaveChanges(Guid userId, ICollection<string> role)
+        public async Task<TokenResponse> CreateTokensAndSaveChanges(Guid userId,string roleCode)
         {
-            var (accessToken, accessExpiresIn) = _tokenGenerator.GenerateAccessToken(userId, role.ToList());
+            var userEntity = await _userRepository.GetByIdAsync(userId);
+            if (userEntity == null) { throw new KeyNotFoundException($"User with ID {userId} not found."); }
+            var roleEntity = userEntity.Role;
+            if (roleEntity == null)
+            {
+                throw new InvalidOperationException($"Role entity is missing for user ID {userId}. Cannot issue token.");
+            }
+
+            var (accessToken, accessExpiresIn) = _tokenGenerator.GenerateAccessToken(userId, roleCode);
             var refreshTokenString = _tokenGenerator.GenerateRefreshTokenString();
             var refreshLifeTimeDays = _jwtConfiguration.RefreshTokenLifetimeDays;
             var expiresAt = DateTime.UtcNow.AddDays(refreshLifeTimeDays);
             var refreshTokenHash = _tokenHasher.Hash(refreshTokenString);
+
+
             var newEntity = new RefreshToken(
             userId: userId,
             tokenHash: refreshTokenHash,
@@ -60,35 +70,25 @@ namespace IAMService.Application.Services
 
             await _refreshTokenRepository.AddAsync(newEntity);
 
-            var userEntity = await _userRepository.GetByIdAsync(userId);
-            if (userEntity == null) { throw new KeyNotFoundException($"User with ID {userId} not found."); }
-            var roleEntity = userEntity.Role;
-            if (roleEntity == null)
+            var roleDTO = new RoleDto
             {
-                roleEntity = new IAMService.Domain.Entities.Role(
-                roleId: 0,
-                roleName: role.FirstOrDefault() ?? "DefaultUser",
-                roleCode: "DEFAULT",
-                description: "Default System User Role"
-                );
-            }
+                RoleId = roleEntity.RoleId,
+                RoleName = roleEntity.RoleName,
+                RoleCode = roleEntity.RoleCode, // Đã sử dụng RoleCode
+                Description = roleEntity.Description,
+                Privileges = new List<PrivilegeDto>(), // Lưu ý: Cần load Privileges nếu cần
+            };
+
             var userDTO = new UserDto
             {
+                UserId = userEntity.UserId,
                 FullName = userEntity.FullName,
                 PhoneNumber = userEntity.PhoneNumber,
                 Email = userEntity.Email,
                 Gender = userEntity.Gender ? "Male" : "Female",
                 IdentityNumber = userEntity.IdentityNumber,
                 Address = userEntity.Address,
-                Role = new RoleDto
-                {
-                    RoleId = roleEntity.RoleId,
-                    RoleName = roleEntity.RoleName,
-                    RoleCode = roleEntity.RoleCode,
-                    Description = roleEntity.Description,
-                    Privileges = new List<PrivilegeDto>(),
-                },
-                UserId = userEntity.UserId,
+                Role = roleDTO,
                 Age = userEntity.Age,
                 DateOfBirth = userEntity.DateOfBirth,
                 NeedsVerification = userEntity.NeedsVerification,
@@ -116,7 +116,10 @@ namespace IAMService.Application.Services
             {
                 throw new UnauthorizedAccessException("Refresh token invalid or expired. Please re-login!");
             }
-
+            if (!oldTokenEntity.IsActive) // Giả định IsActive check cả RevokedAt và ExpiredAt
+            {
+                throw new UnauthorizedAccessException("Refresh token has expired or is invalid. Please re-login!");
+            }
             // 3. Anti-Reuse Logic (Core security rule)
             if (oldTokenEntity.ReplacedByTokenId.HasValue || oldTokenEntity.RevokedAt.HasValue)
             {
@@ -126,28 +129,60 @@ namespace IAMService.Application.Services
                 throw new UnauthorizedAccessException("Security warning: Token reuse detected. All sessions have been revoked.");
             }
 
-            // 4. Prepare roles and user information (Assuming role is loaded with the user or token)
-            List<string> userRoles = new List<string> { oldTokenEntity.User?.Role?.RoleName ?? "User" };
-
+            var userEntity = oldTokenEntity.User;
+            var roleEntity = oldTokenEntity.User?.Role;
+            if (roleEntity == null || userEntity == null)
+            {
+                throw new InvalidOperationException($"User or Role entity is missing for user ID {oldTokenEntity.UserId}. Cannot rotate token.");
+            }
+            var roleCode = roleEntity.RoleCode;
             // 5. Rotation: Create new token and save (reusing CreateTokensAndSaveChanges logic)
-            var newTokenResponse = await CreateTokensAndSaveChanges(
-                oldTokenEntity.UserId,
-                userRoles
-            );
+            var (accessToken, accessExpiresIn) = _tokenGenerator.GenerateAccessToken(oldTokenEntity.UserId, roleCode);
 
             // 6. Revocation & Linking
-            var newTokenHash = _tokenHasher.Hash(newTokenResponse.RefreshToken);
-            var newTokenEnity = await _refreshTokenRepository.GetByTokenHashAsync(newTokenHash);
+            var newRefreshTokenString = _tokenGenerator.GenerateRefreshTokenString();
+            var refreshLifeTimeDays = _jwtConfiguration.RefreshTokenLifetimeDays;
+            var expiresAt = DateTime.UtcNow.AddDays(refreshLifeTimeDays);
+            var newRefreshTokenHash = _tokenHasher.Hash(newRefreshTokenString);
 
-            if (newTokenEnity != null)
+            var newRefreshTokenEntity = new RefreshToken(
+                userId: oldTokenEntity.UserId,
+                tokenHash: newRefreshTokenHash,
+                expiresAt: expiresAt
+            );
+            await _refreshTokenRepository.AddAsync(newRefreshTokenEntity);
+            var newTokenId = newRefreshTokenEntity.Id;
+            oldTokenEntity.Revoke(newTokenId);
+            await _refreshTokenRepository.UpdateAsync(oldTokenEntity);
+
+            var roleDTO = new RoleDto
             {
-                oldTokenEntity.Revoke(newTokenEnity.Id);
-                await _refreshTokenRepository.UpdateAsync(oldTokenEntity);
-                await _unitOfWork.SaveChangesAsync(CancellationToken.None);
-            }
+                RoleId = roleEntity.RoleId,
+                RoleName = roleEntity.RoleName,
+                RoleCode = roleEntity.RoleCode,
+                Description = roleEntity.Description,
+                Privileges = new List<PrivilegeDto>(),
+            };
 
+            var userDTO = new UserDto
+            {
+                UserId = userEntity.UserId,
+                FullName = userEntity.FullName,
+                PhoneNumber = userEntity.PhoneNumber,
+                Email = userEntity.Email,
+                Gender = userEntity.Gender ? "Male" : "Female",
+                IdentityNumber = userEntity.IdentityNumber,
+                Address = userEntity.Address,
+                Role = roleDTO,
+                Age = userEntity.Age,
+                DateOfBirth = userEntity.DateOfBirth,
+                NeedsVerification = userEntity.NeedsVerification,
+                IsPatient = userEntity.IsPatient,
+                GeneratedPassword = null
+            };
+            await _unitOfWork.SaveChangesAsync(CancellationToken.None);
             // 7. Return the new token pair to the client
-            return newTokenResponse;
+            return new TokenResponse(accessToken, accessExpiresIn, newRefreshTokenString, userDTO);
         }
 
         /// <summary>

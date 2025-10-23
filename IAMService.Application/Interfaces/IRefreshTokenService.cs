@@ -1,4 +1,8 @@
 ﻿using IAMService.Application.DTOs.Auth.Login;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 namespace IAMService.Application.Interfaces
 {
     /// <summary>
@@ -13,7 +17,7 @@ namespace IAMService.Application.Interfaces
         /// <param name="userId">The unique identifier of the user.</param>
         /// <param name="role">The collection of roles assigned to the user, used for claim generation.</param>
         /// <returns>A task that returns a <see cref="TokenResponse"/> containing the new access and refresh tokens.</returns>
-        Task<TokenResponse> CreateTokensAndSaveChanges(Guid userId, ICollection<string> role);
+        Task<TokenResponse> CreateTokensAndSaveChanges(Guid userId, string roleCode);
 
         /// <summary>
         /// Rotates a refresh token by revoking the old token and issuing a new token pair.

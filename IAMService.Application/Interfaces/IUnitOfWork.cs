@@ -1,4 +1,7 @@
-﻿namespace IAMService.Application.Interfaces
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace IAMService.Application.Interfaces
 {
     /// <summary>
     /// Defines the contract for the Unit of Work pattern, coordinating the saving of

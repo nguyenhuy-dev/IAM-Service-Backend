@@ -1,4 +1,10 @@
-﻿namespace IAMService.Application.Interfaces
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IAMService.Application.Interfaces
 {
     /// <summary>
     /// Defines the contract for a service responsible for securely hashing and verifying tokens.

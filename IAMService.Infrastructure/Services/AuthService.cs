@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using IAMService.Application.DTOs.Auth.Login;
 using IAMService.Application.Exceptions;
 using IAMService.Application.Interfaces;
-using IAMService.Domain.Entities; // Assuming User is in Domain.Entities
-using IAMService.Infrastructure.Repositories; // Keep if required for dependency resolution
+using IAMService.Domain.Entities;
 
 namespace IAMService.Infrastructure.Services
 {
@@ -48,7 +43,6 @@ namespace IAMService.Infrastructure.Services
         public async Task<TokenResponse> LoginAsync(string email, string password)
         {
             var user = await _userRepository.GetByEmailAsync(email);
-
             if (user == null)
             {
                 throw new NotFoundException(nameof(User), email);
@@ -56,7 +50,9 @@ namespace IAMService.Infrastructure.Services
             if (user.IsLockedOut && user.LockoutEnd.HasValue && user.LockoutEnd.Value < DateTimeOffset.UtcNow)
             {
                 user.UnlockAccount();
+                throw new NotFoundException("User not found!");
             }
+
             if (user.IsLockedOut)
             {
                 throw new ForbiddenAccessException("User account is locked. Please try again later.");
@@ -93,13 +89,18 @@ namespace IAMService.Infrastructure.Services
             {
                 user.ResetAttempts();
                 await _userRepository.UpdateAsync(user);
-                await _unitOfWork.SaveChangesAsync(CancellationToken.None);
+
             }
-
-            // Assuming the User entity has a navigation property Role, and Role has RoleName
-            List<string> userRoles = new List<string> { user.Role?.RoleName ?? "User" };
-
-            return await _refreshTokenService.CreateTokensAndSaveChanges(user.UserId, userRoles);
+            if (user.Role == null)
+            {
+                throw new InvalidOperationException($"User ID {user.UserId} is missing Role data required for token creation.");
+            }
+            var roleEntity = user.Role;
+            if (roleEntity == null || string.IsNullOrEmpty(roleEntity.RoleCode))
+            {
+                throw new InvalidOperationException($"User ID {user.UserId} does not have a valid RoleCode assigned.");
+            }
+            return await _refreshTokenService.CreateTokensAndSaveChanges(user.UserId, roleEntity.RoleCode);
         }
 
         /// <summary>

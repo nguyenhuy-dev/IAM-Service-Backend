@@ -42,12 +42,12 @@ namespace IAMService.Application.Features.Logout.Commands
             await _invalidationService.InvalidationAccessTokenAsync(req.AccessTokenValue);
 
             // Revoke the long-lived refresh token
-            bool isRovokeRefreshToken = await _refreshTokenService.RevokeTokenByStringAsync(req.RefreshTokenValue);
-
-            // Note: The original code had an empty if block. It's often better practice 
-            // to log the failure here if revocation is critical.
-            if (!isRovokeRefreshToken) { /* Consider logging a warning here if revocation fails */ }
-
+            if (!string.IsNullOrEmpty(req.RefreshTokenValue)) // THÊM LỚP BẢO VỆ NÀY
+            {
+                // Chỉ gọi service nếu giá trị tồn tại
+                bool isRovokeRefreshToken = await _refreshTokenService.RevokeTokenByStringAsync(req.RefreshTokenValue);
+                // ... (xử lý kết quả)
+            }
             return Unit.Value;
         }
     }

@@ -56,7 +56,7 @@ namespace IAMService.Infrastructure.Services
         /// <param name="userId">The ID of the user for the 'sub' (subject) claim.</param>
         /// <param name="roles">A list of user roles to be included in the claims.</param>
         /// <returns>A tuple containing the generated token string and its validity duration in seconds.</returns>
-        public (string Token, int ExpiresInSeconds) GenerateAccessToken(Guid userId, List<string> roles)
+        public (string Token, int ExpiresInSeconds) GenerateAccessToken(Guid userId, string roleCode)
         {
             var claims = new List<Claim> {
                 // 'sub' claim: The principal (user ID) that is the subject of the JWT
@@ -66,9 +66,9 @@ namespace IAMService.Infrastructure.Services
             };
 
             // Add user roles to the claims if provided
-            if (roles != null)
+            if (!string.IsNullOrEmpty(roleCode))
             {
-                claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+                claims.Add(new Claim(ClaimTypes.Role, roleCode));
             }
 
             // Define security key and signing credentials
