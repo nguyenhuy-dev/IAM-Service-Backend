@@ -1,4 +1,4 @@
-﻿namespace IAMService.Application.Interfaces.AccessToken
+namespace IAMService.Application.Interfaces.AccessToken
 {
     /// <summary>
     /// Defines a service for decoding and extracting information from a security token (e.g., a JWT).

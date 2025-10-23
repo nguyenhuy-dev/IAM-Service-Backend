@@ -1,4 +1,4 @@
-﻿namespace IAMService.Application.Interfaces.AccessToken
+namespace IAMService.Application.Interfaces.AccessToken
 {
     /// <summary>
     /// Defines a service responsible for managing the invalidation (revocation) of access tokens.

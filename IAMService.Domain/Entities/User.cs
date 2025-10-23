@@ -128,7 +128,6 @@ public class User
     /// Gets or sets the date and time when the account lockout ends.
     /// </summary>
     public DateTimeOffset? LockoutEnd { get; private set; }
-    
     /// <summary>
     /// Gets or sets the value of the user tokens
     /// </summary>
@@ -342,7 +341,7 @@ public class User
     {
         FailedLoginAttempts++;
     }
-    
+
     /// <summary>
     /// Resets the count of failed login attempts to zero.
     /// </summary>

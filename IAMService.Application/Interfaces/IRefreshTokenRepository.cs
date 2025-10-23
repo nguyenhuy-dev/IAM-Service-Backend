@@ -1,4 +1,8 @@
 ﻿using IAMService.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 namespace IAMService.Application.Interfaces
 {
     /// <summary>

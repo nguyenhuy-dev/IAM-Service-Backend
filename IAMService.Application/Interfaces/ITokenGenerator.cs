@@ -1,4 +1,7 @@
-﻿namespace IAMService.Application.Interfaces
+﻿using System;
+using System.Collections.Generic;
+
+namespace IAMService.Application.Interfaces
 {
     /// <summary>
     /// Defines the contract for services responsible for generating various types of authentication tokens.
@@ -13,7 +16,7 @@
         /// <returns>
         /// A tuple containing the generated **Access Token** string and the token's **Expiration Time in Seconds**.
         /// </returns>
-        (string Token, int ExpiresInSeconds) GenerateAccessToken(Guid userId, List<string> roles);
+        (string Token, int ExpiresInSeconds) GenerateAccessToken(Guid userId, string roleCode);
 
         /// <summary>
         /// Generates a unique, cryptographically secure string to be used as a refresh token.

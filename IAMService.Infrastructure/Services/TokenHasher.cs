@@ -22,6 +22,10 @@ namespace IAMService.Infrastructure.Services
         /// <returns>A Base64-encoded string representing the SHA256 hash of the token.</returns>
         public string Hash(string token)
         {
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new ArgumentNullException(nameof(token), "Token string cannot be null or empty for hashing.");
+            }
             using var sha256 = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(token);
             var hashBytes = sha256.ComputeHash(bytes);
