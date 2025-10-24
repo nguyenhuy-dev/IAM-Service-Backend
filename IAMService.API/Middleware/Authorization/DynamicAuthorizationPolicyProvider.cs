@@ -12,10 +12,13 @@ public class DynamicAuthorizationPolicyProvider : DefaultAuthorizationPolicyProv
     /// The options
     /// </summary>
     private readonly AuthorizationOptions _options;
+
     /// <summary>
     /// The scope factory
     /// </summary>
     private readonly IServiceScopeFactory _scopeFactory;
+
+    private static AuthorizationPolicy DenyAllPolicy => new AuthorizationPolicyBuilder().RequireAssertion(_ => false).Build();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamicAuthorizationPolicyProvider"/> class.

@@ -12,6 +12,7 @@ public interface IAuthorizationCacheService
     /// <param name="policy">The policy.</param>
     /// <param name="timeSpan">The time span.</param>
     void SetPolicy(string policyName, object policy, TimeSpan? timeSpan = null);
+
     /// <summary>
     /// Tries the get policy.
     /// </summary>
