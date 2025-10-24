@@ -1,9 +1,8 @@
 using AutoMapper;
+using IAMService.Application.DTOs;
 using IAMService.Application.Features.Role.Commands.CreateRole;
 using IAMService.Application.Interfaces;
 using NSubstitute;
-using IAMService.Application.DTOs;
-
 namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
 {
     /// <summary>

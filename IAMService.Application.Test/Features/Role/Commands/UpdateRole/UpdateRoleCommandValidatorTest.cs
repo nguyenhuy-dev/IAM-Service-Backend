@@ -2,7 +2,6 @@ using FluentValidation.TestHelper;
 using IAMService.Application.Features.Role.Commands.UpdateRole;
 using IAMService.Application.Interfaces;
 using NSubstitute;
-
 namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
 {
     /// <summary>

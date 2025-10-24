@@ -3,10 +3,8 @@ using FluentValidation;
 using IAMService.Application.Exceptions;
 using IAMService.Application.Features.Role.Commands.DeleteRole;
 using IAMService.Application.Interfaces;
-using IAMService.Domain.Entities;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-
 namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 {
     /// <summary>
@@ -69,9 +67,9 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
                 IsDefault = true
             };
 
-            var user1 = new User { UserId = Guid.NewGuid(), RoleId = roleId };
-            var user2 = new User { UserId = Guid.NewGuid(), RoleId = roleId };
-            var usersToUpdate = new List<User> { user1, user2 };
+            var user1 = new Domain.Entities.User { UserId = Guid.NewGuid(), RoleId = roleId };
+            var user2 = new Domain.Entities.User { UserId = Guid.NewGuid(), RoleId = roleId };
+            var usersToUpdate = new List<Domain.Entities.User> { user1, user2 };
 
             _roleRepository.GetByIdAsync(roleId).Returns(roleToDelete);
             _roleRepository.GetByCodeAsync("READ_ONLY").Returns(readOnlyRole);
@@ -84,7 +82,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
             result.Should().BeTrue();
             user1.RoleId.Should().Be(readOnlyRoleId);
             user2.RoleId.Should().Be(readOnlyRoleId);
-            _userRepository.Received(1).UpdateRange(Arg.Is<IEnumerable<User>>(u => u.Count() == 2));
+            _userRepository.Received(1).UpdateRange(Arg.Is<IEnumerable<Domain.Entities.User>>(u => u.Count() == 2));
             await _roleRepository.Received(1).DeleteAsync(roleToDelete);
             await _unitOfWork.Received(1).SaveChangesAsync(CancellationToken.None);
         }
@@ -182,7 +180,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 
             _roleRepository.GetByIdAsync(roleId).Returns(roleToDelete);
             _roleRepository.GetByCodeAsync("READ_ONLY").ReturnsNull();
-            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<User>());
+            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<Domain.Entities.User>());
 
             // Act
             Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
@@ -219,14 +217,14 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 
             _roleRepository.GetByIdAsync(roleId).Returns(roleToDelete);
             _roleRepository.GetByCodeAsync("READ_ONLY").Returns(readOnlyRole);
-            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<User>());
+            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<Domain.Entities.User>());
 
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
 
             // Assert
             result.Should().BeTrue();
-            _userRepository.Received(1).UpdateRange(Arg.Is<IEnumerable<User>>(u => !u.Any()));
+            _userRepository.Received(1).UpdateRange(Arg.Is<IEnumerable<Domain.Entities.User>>(u => !u.Any()));
             await _roleRepository.Received(1).DeleteAsync(roleToDelete);
             await _unitOfWork.Received(1).SaveChangesAsync(CancellationToken.None);
         }
@@ -259,7 +257,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 
             _roleRepository.GetByIdAsync(roleId).Returns(roleToDelete);
             _roleRepository.GetByCodeAsync("READ_ONLY").Returns(readOnlyRole);
-            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<User>());
+            _userRepository.GetByRoleIdAsync(roleId).Returns(new List<Domain.Entities.User>());
 
             // Act
             await _handler.Handle(command, cancellationToken);
