@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using FluentValidation.TestHelper;
+﻿using FluentValidation.TestHelper;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.UpdateUser;
-using NUnit.Framework;
-
-namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
+namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
 {
     /// <summary>
     /// Unit tests for the UpdateUserCommandValidator class.

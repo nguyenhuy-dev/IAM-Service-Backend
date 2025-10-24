@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using IAMService.Application.Features.User.Commands.CreateUser;
-
-namespace IAMService.Application.Tests.Features.User.Commands.CreateUser
+namespace IAMService.Application.Test.Features.User.Commands.CreateUser
 {
     /// <summary>
     /// Unit tests for the CreateUserCommandValidator class.
