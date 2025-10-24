@@ -3,6 +3,7 @@ using System;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IAMService.Infrastructure.Migrations
 {
     [DbContext(typeof(IAMServiceDbContext))]
-    partial class IAMServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251023164901_CreateJwtTokenTable")]
+    partial class CreateJwtTokenTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,38 +57,6 @@ namespace IAMService.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("JwtTokens", "public");
-                });
-
-            modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("UserId", "ExpiresAt");
-
-                    b.ToTable("PasswordResetTokens", "public");
                 });
 
             modelBuilder.Entity("IAMService.Domain.Entities.Privilege", b =>
@@ -233,6 +204,35 @@ namespace IAMService.Infrastructure.Migrations
                     b.ToTable("Users", "public");
                 });
 
+            modelBuilder.Entity("IAMService.Domain.Entities.UserToken", b =>
+                {
+                    b.Property<Guid>("UserTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpirationAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserTokenId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTokens", "public");
+                });
+
             modelBuilder.Entity("PrivilegeRole", b =>
                 {
                     b.Property<int>("PrivilegesPrivilegeId")
@@ -249,17 +249,6 @@ namespace IAMService.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("IAMService.Domain.Entities.JwtToken", b =>
-                {
-                    b.HasOne("IAMService.Domain.Entities.User", "User")
-                        .WithMany("JwtTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("IAMService.Domain.Entities.User", "User")
                         .WithMany()
@@ -299,6 +288,17 @@ namespace IAMService.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("IAMService.Domain.Entities.UserToken", b =>
+                {
+                    b.HasOne("IAMService.Domain.Entities.User", "User")
+                        .WithMany("UserTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PrivilegeRole", b =>
                 {
                     b.HasOne("IAMService.Domain.Entities.Privilege", null)
@@ -321,7 +321,7 @@ namespace IAMService.Infrastructure.Migrations
 
             modelBuilder.Entity("IAMService.Domain.Entities.User", b =>
                 {
-                    b.Navigation("JwtTokens");
+                    b.Navigation("UserTokens");
                 });
 #pragma warning restore 612, 618
         }

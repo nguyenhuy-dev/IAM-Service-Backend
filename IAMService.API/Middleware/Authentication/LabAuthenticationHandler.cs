@@ -1,10 +1,11 @@
-﻿using IAMService.Application.Interfaces;
+﻿using System.Text.Json;
 
 namespace IAMService.API.Middleware.Authentication;
 
 /// <summary>
 /// Lab authentication handler implementation.
 /// </summary>
+/// <seealso cref="Microsoft.AspNetCore.Authentication.AuthenticationHandler&lt;IAMService.API.Middleware.Authentication.LabAuthenticationSchemeOptions&gt;" />
 /// <seealso cref="Microsoft.AspNetCore.Authentication.AuthenticationHandler&lt;IAMService.API.Middleware.Authentication.LabAuthenticationSchemeOptions&gt;" />
 public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationSchemeOptions>
 {
@@ -18,7 +19,7 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
     private readonly ILogger _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LabAuthenticationHandler"/> class.
+    /// Initializes a new instance of the <see cref="LabAuthenticationHandler" /> class.
     /// </summary>
     /// <param name="authRepository">The authentication repository.</param>
     /// <param name="options">The options.</param>
@@ -36,23 +37,24 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
     /// <returns>
     /// The <see cref="T:Microsoft.AspNetCore.Authentication.AuthenticateResult" />.
     /// </returns>
-    /// <exception cref="System.UnauthorizedAccessException">
-    /// Missing Bearer header
+    /// <exception cref="System.UnauthorizedAccessException">Missing Bearer header
     /// or
-    /// Invalid or expired token
-    /// </exception>
+    /// Invalid or expired token</exception>
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         _logger.LogInformation("Handling authentication...");
 
         var path = Context.Request.Path.Value?.ToLower();
         if (IsPassedPath(path))
+        {
+            _logger.LogInformation("No authentication with passing path.");
             return Task.FromResult(AuthenticateResult.NoResult());
+        }
 
         var bearerHeader = Context.Request.Headers["Bearer"];
 
         if (bearerHeader.Count == 0)
-            throw new UnauthorizedAccessException("Missing Bearer header");
+            return Task.FromResult(AuthenticateResult.Fail("Missing Bearer header"));
 
         var tokenValue = bearerHeader[0];
         if (!string.IsNullOrEmpty(tokenValue) && VerifyToken(tokenValue, out ClaimsPrincipal? claimsPrincipal))
@@ -62,7 +64,7 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
         else
-            throw new UnauthorizedAccessException("Invalid or expired token");
+            return Task.FromResult(AuthenticateResult.Fail("Verify token unsuccessfully."));
     }
 
     /// <summary>
@@ -94,7 +96,7 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
         }
 
         // Check token against database
-        if (!ValidateDb(claimsPrincipal))
+        if (!ValidateDb(tokenValue))
         {
             _logger.LogError("Token not found in database or is revoked.");
             return false;
@@ -106,20 +108,9 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
     /// <summary>
     /// Validates the database.
     /// </summary>
-    /// <param name="claimsPrincipal">The claims principal.</param>
+    /// <param name="tokenValue">The token value.</param>
     /// <returns></returns>
-    private bool ValidateDb(ClaimsPrincipal? claimsPrincipal)
-    {
-        if (claimsPrincipal == null)
-            return false;
-
-        var refreshToken = claimsPrincipal.FindFirst("retoken")?.Value;
-
-        if (string.IsNullOrEmpty(refreshToken))
-            return false;
-
-        return _authRepository.CheckValidToken(refreshToken).Result;
-    }
+    private bool ValidateDb(string tokenValue) => _authRepository.CheckValidToken(tokenValue).Result;
 
     /// <summary>
     /// Validates the specified token value.
@@ -156,5 +147,34 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
 
             return false;
         }
+    }
+
+    /// <summary>
+    /// Override this method to deal with 401 challenge concerns, if an authentication scheme in question
+    /// deals an authentication interaction as part of it's request flow. (like adding a response header, or
+    /// changing the 401 result to 302 of a login page or external sign-in location.)
+    /// </summary>
+    /// <param name="properties"></param>
+    /// <returns>
+    /// A Task.
+    /// </returns>
+    protected override Task HandleChallengeAsync(AuthenticationProperties properties)
+    {
+        if (!Context.Response.HasStarted)
+        {
+            Context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            Context.Response.ContentType = "application/json";
+
+            var result = new ErrorResponse
+            {
+                StatusCode = StatusCodes.Status401Unauthorized,
+                Message = "Unauthorized access"
+            };
+
+            var json = JsonSerializer.Serialize(result);
+            return Context.Response.WriteAsync(json);
+        }
+
+        return Task.CompletedTask;
     }
 }

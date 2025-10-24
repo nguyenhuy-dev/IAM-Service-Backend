@@ -1,5 +1,4 @@
 ﻿using IAMService.Application.DTOs.Auth.Login;
-using System.Threading.Tasks;
 
 namespace IAMService.Application.Interfaces
 {

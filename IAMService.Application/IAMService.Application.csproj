@@ -29,5 +29,4 @@
   <ItemGroup>
     <ProjectReference Include="..\IAMService.Domain\IAMService.Domain.csproj" />
   </ItemGroup>
-
 </Project>

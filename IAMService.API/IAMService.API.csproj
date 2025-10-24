@@ -26,6 +26,7 @@
     </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IAMService.Application.Test\IAMService.Application.Test.csproj" />
     <ProjectReference Include="..\IAMService.Application\IAMService.Application.csproj" />
     <ProjectReference Include="..\IAMService.Domain\IAMService.Domain.csproj" />
     <ProjectReference Include="..\IAMService.Infrastructure\IAMService.Infrastructure.csproj" />
