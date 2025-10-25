@@ -49,7 +49,18 @@ builder.Services.AddScoped<ITokenHasher, TokenHasher>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenService>();
 builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
+var encryptionPassphrase = configuration["ENCRYPTION_PASSPHRASE"] ??
+    Environment.GetEnvironmentVariable("ENCRYPTION_PASSPHRASE");
 
+if (string.IsNullOrEmpty(encryptionPassphrase))
+{
+    throw new InvalidOperationException(
+        "ENCRYPTION_PASSPHRASE must be set in User Secrets (Development) or Environment Variables (Production)");
+}
+
+// Register encryption service as singleton
+builder.Services.AddSingleton<IStringEncryptionService>(sp =>
+    new IAMService.Infrastructure.Services.StringEncryptionService(encryptionPassphrase));
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(IAssemblyReference).Assembly);

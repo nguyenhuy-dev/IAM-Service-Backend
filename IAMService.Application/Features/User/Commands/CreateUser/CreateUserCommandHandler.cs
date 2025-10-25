@@ -36,6 +36,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// The audit log service
         /// </summary>
         private readonly IAuditLogService _auditLogService;
+        private readonly IStringEncryptionService _stringEncryptionService;
         /// <summary>
         /// The mapper
         /// </summary>
@@ -52,6 +53,10 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// <param name="auditLogService">The audit log service.</param>
         /// <param name="mapper">The mapper.</param>
         public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper)
+            : this(userRepository, roleRepository, privilegeRepository, passwordHasher, emailService, auditLogService, mapper, new IAMService.Application.Services.NoOpStringEncryptionService())
+        {
+        }
+        public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper, IStringEncryptionService stringEncryptionService)
         {
             _userRepository = userRepository;
             _roleRepository = roleRepository;
@@ -60,6 +65,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             _emailService = emailService;
             _auditLogService = auditLogService;
             _mapper = mapper;
+            _stringEncryptionService = stringEncryptionService;
         }
 
         /// <summary>
@@ -74,15 +80,19 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
             var failures = new List<ValidationFailure>();
-            // Check if email already exists in the system
-            if (await _userRepository.ExistsByEmailAsync(request.Email))
+            var normalizedEmail = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+            var encryptedEmailForCheck = _stringEncryptionService.EncryptString(normalizedEmail);
+
+            // Check if email already exists in the system (compare encrypted values)
+            if (await _userRepository.ExistsByEmailAsync(encryptedEmailForCheck))
             {
                 failures.Add(new ValidationFailure(
                     nameof(request.Email),
                     $"Email '{request.Email}' is already registered"));
             }
             // Check if identity number already exists in the system
-            if (await _userRepository.ExistsByIdentityNumberAsync(request.IdentityNumber))
+            var encryptedIdentityForCheck = _stringEncryptionService.EncryptString(request.IdentityNumber);
+            if (await _userRepository.ExistsByIdentityNumberAsync(encryptedIdentityForCheck))
             {
                 failures.Add(new ValidationFailure(
                     nameof(request.IdentityNumber),
@@ -136,6 +146,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                 roleId = 8;
             }
             //Create the user entity
+      
             var newUser = new Domain.Entities.User(
                 fullName: request.FullName,
                 phoneNumber: request.PhoneNumber,
@@ -148,15 +159,31 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                 roleId: roleId,
                 isPatient: request.IsPatient
             );
+
+      
+            newUser.FullName = _stringEncryptionService.EncryptString(newUser.FullName);
+            newUser.PhoneNumber = _stringEncryptionService.EncryptString(newUser.PhoneNumber);
+            newUser.Email = _stringEncryptionService.EncryptString(newUser.Email);
+            newUser.IdentityNumber = _stringEncryptionService.EncryptString(newUser.IdentityNumber);
+            newUser.Address = _stringEncryptionService.EncryptString(newUser.Address);
+
+         
+
             //Save user to database
             var createdUser = await _userRepository.CreateAsync(newUser);
             //Send notifications and log audit trail
+            // Decrypt values for outbound operations (emails, audit logs, DTOs)
+            var decryptedEmail = _stringEncryptionService.DecryptString(createdUser.Email);
+            var decryptedFullName = _stringEncryptionService.DecryptString(createdUser.FullName);
+            var decryptedPhone = _stringEncryptionService.DecryptString(createdUser.PhoneNumber);
+            var decryptedIdentity = _stringEncryptionService.DecryptString(createdUser.IdentityNumber);
+            var decryptedAddress = _stringEncryptionService.DecryptString(createdUser.Address);
             if (request.IsPatient)
             {
                 // AC05: Send email notification to patient with generated password
                 await _emailService.SendNewPatientAccountEmailAsync(
-                    createdUser.Email,
-                    createdUser.FullName,
+                    decryptedEmail,
+                    decryptedFullName,
                     generatedPassword!);
 
                 // AC05: Log audit trail for patient account creation
@@ -171,19 +198,25 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             {
                 // Send welcome email to employee (without password)
                 await _emailService.SendNewEmployeeAccountEmailAsync(
-                    createdUser.Email,
-                    createdUser.FullName);
+                    decryptedEmail,
+                    decryptedFullName);
 
                 // Log audit trail for employee account creation
                 await _auditLogService.LogUserCreationAsync(
                     createdUser.UserId,
-                    createdUser.Email,
+                    decryptedEmail,
                     "Employee",
                     "System" // TODO: Replace with actual admin/user who created this account
                     );
             }
 
             //Map entity to DTO and return
+            // Replace encrypted values on the entity before mapping so DTOs contain plaintext
+            createdUser.Email = decryptedEmail;
+            createdUser.FullName = decryptedFullName;
+            createdUser.PhoneNumber = decryptedPhone;
+            createdUser.IdentityNumber = decryptedIdentity;
+            createdUser.Address = decryptedAddress;
             var userDto = _mapper.Map<UserDto>(createdUser);
             // Include generated password in response only for patient accounts
             if (request.IsPatient && generatedPassword != null)

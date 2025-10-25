@@ -25,7 +25,7 @@ namespace IAMService.Infrastructure.Services
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("Password cannot be null or empty", nameof(password));
-            return BCrypt.Net.BCrypt.HashPassword(password, WorkFactor);
+            return BCrypt.Net.BCrypt.EnhancedHashPassword(password, WorkFactor, BCrypt.Net.HashType.SHA512);
         }
         /// <summary>
         /// Verifies if a plain text password matches a hashed password
@@ -47,7 +47,7 @@ namespace IAMService.Infrastructure.Services
 
             if (string.IsNullOrWhiteSpace(providedPassword))
                 throw new ArgumentException("Provided password cannot be null or empty", nameof(providedPassword));
-            return BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
+            return BCrypt.Net.BCrypt.EnhancedVerify(providedPassword, hashedPassword, BCrypt.Net.HashType.SHA512);
         }
         /// <summary>
         /// Generates a random strong password
