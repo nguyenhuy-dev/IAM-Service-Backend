@@ -49,7 +49,7 @@ namespace IAMService.Infrastructure.Repositories
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or empty", nameof(email));
             return await _context.Users
-                .AnyAsync(u => u.Email.ToLower() == email.ToLower());
+                .AnyAsync(u => u.Email == email);
         }
         /// <inheritdoc/>
         public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber)
@@ -78,7 +78,7 @@ namespace IAMService.Infrastructure.Repositories
             return await _context.Users
                 .Include(u => u.Role)
                     .ThenInclude(r => r.Privileges)
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         /// <summary>

@@ -26,6 +26,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         /// The handler
         /// </summary>
         private ViewUserInformationHandler _handler;
+        private readonly IStringEncryptionService _stringEncryptionService;
 
         /// <summary>
         /// Fixtures the setup.
@@ -49,7 +50,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         public void Setup()
         {
             _userRepository = Substitute.For<IUserRepository>();
-            _handler = new ViewUserInformationHandler(_userRepository, _mapper);
+            _handler = new ViewUserInformationHandler(_userRepository, _mapper, _stringEncryptionService);
         }
 
         /// <summary>
