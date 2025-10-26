@@ -9,7 +9,6 @@ using IAMService.Application.Features.User.Queries.GetAllUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Security.Claims;
 
 namespace IAMService.API.Controllers
 {

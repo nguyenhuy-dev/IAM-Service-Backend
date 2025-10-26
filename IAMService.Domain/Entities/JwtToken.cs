@@ -1,31 +1,42 @@
 ﻿namespace IAMService.Domain.Entities;
 
 /// <summary>
-/// User Token entity class.
+/// Jwt Token entity.
 /// </summary>
-public class UserToken
+public class JwtToken
 {
     /// <summary>
-    /// Gets or sets the user token identifier.
+    /// Gets or sets the identifier.
     /// </summary>
     /// <value>
-    /// The user token identifier.
+    /// The identifier.
     /// </value>
-    public Guid UserTokenId { get; set; }
+    public Guid Id { get; set; }
+
     /// <summary>
-    /// Gets or sets the token.
+    /// Gets or sets the access token.
     /// </summary>
     /// <value>
-    /// The token.
+    /// The access token.
     /// </value>
-    public string Token { get; set; } = default!;
+    public string AccessToken { get; set; } = string.Empty;
+
     /// <summary>
-    /// Gets or sets the expiration at.
+    /// Gets or sets the refresh token.
     /// </summary>
     /// <value>
-    /// The expiration at.
+    /// The refresh token.
     /// </value>
-    public DateTime ExpirationAt { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the re token expire at.
+    /// </summary>
+    /// <value>
+    /// The re token expire at.
+    /// </value>
+    public DateTime ReTokenExpireAt { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether this instance is revoked.
     /// </summary>
@@ -33,6 +44,7 @@ public class UserToken
     ///   <c>true</c> if this instance is revoked; otherwise, <c>false</c>.
     /// </value>
     public bool IsRevoked { get; set; }
+
     /// <summary>
     /// Gets or sets the create at.
     /// </summary>
@@ -40,6 +52,7 @@ public class UserToken
     /// The create at.
     /// </value>
     public DateTime CreateAt { get; set; }
+
     /// <summary>
     /// Gets or sets the user identifier.
     /// </summary>
@@ -47,6 +60,7 @@ public class UserToken
     /// The user identifier.
     /// </value>
     public Guid UserId { get; set; }
+
     /// <summary>
     /// Gets or sets the user.
     /// </summary>

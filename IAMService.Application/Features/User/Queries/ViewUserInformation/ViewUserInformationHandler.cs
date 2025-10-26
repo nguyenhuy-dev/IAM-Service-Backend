@@ -9,7 +9,7 @@ namespace IAMService.Application.Features.User.Queries.ViewUserInformation
     /// <summary>
     /// Handler for viewing user information.
     /// </summary>
-    /// <seealso cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Queries.ViewUserInformation.ViewUserInformationQuery, IAMService.Application.DTOs.UserResponseDto&gt;" />
+
     public class ViewUserInformationHandler : IRequestHandler<ViewUserInformationQuery, UserResponseDto>
     {
         /// <summary>
@@ -20,16 +20,24 @@ namespace IAMService.Application.Features.User.Queries.ViewUserInformation
         /// The mapper
         /// </summary>
         private readonly IMapper _mapper;
+        /// <summary>
+        /// The string encryption service
+        /// </summary>
+        private readonly IStringEncryptionService _stringEncryptionService;
+
+
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ViewUserInformationHandler"/> class.
+        /// Initializes a new instance of the <see cref="ViewUserInformationHandler" /> class.
         /// </summary>
         /// <param name="userRepository">The user repository.</param>
         /// <param name="mapper">The mapper.</param>
-        public ViewUserInformationHandler(IUserRepository userRepository, IMapper mapper)
+        /// <param name="stringEncryptionService">The string encryption service.</param>
+        public ViewUserInformationHandler(IUserRepository userRepository, IMapper mapper, IStringEncryptionService stringEncryptionService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _stringEncryptionService = stringEncryptionService;
         }
 
         /// <summary>
@@ -57,6 +65,11 @@ namespace IAMService.Application.Features.User.Queries.ViewUserInformation
             if (!isAdminOrManager && current.UserId != request.TargetUserId)
                 throw new ForbiddenAccessException("You do not have permission to view other users' information.");
 
+            user.FullName = _stringEncryptionService.DecryptString(user.FullName);
+            user.Email = _stringEncryptionService.DecryptString(user.Email);
+            user.PhoneNumber = _stringEncryptionService.DecryptString(user.PhoneNumber);
+            user.IdentityNumber = _stringEncryptionService.DecryptString(user.IdentityNumber);
+            user.Address = _stringEncryptionService.DecryptString(user.Address);
             var result = _mapper.Map<UserResponseDto>(user);
 
             return result;

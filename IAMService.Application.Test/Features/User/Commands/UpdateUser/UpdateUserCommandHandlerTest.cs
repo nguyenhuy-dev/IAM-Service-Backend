@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
-using IAMService.Application.DTOs; // contains UpdateUserRequestDto, UserResponseDto, ...
+using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Interfaces;
+using IAMService.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-
-namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
+namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
 {
     /// <summary>
     /// Unit tests for the UpdateUserCommandHandler class.
@@ -65,7 +65,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             var userId = Guid.NewGuid();
 
             // Use fully-qualified domain entity types to avoid namespace/type conflicts
-            var existingUser = new global::IAMService.Domain.Entities.User
+            var existingUser = new Domain.Entities.User
             {
                 UserId = userId,
                 FullName = "Old Name",
@@ -75,7 +75,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
                 Address = "Old Address",
                 IdentityNumber = "111111111111",
                 DateOfBirth = new DateOnly(1990, 1, 1),
-                Role = new global::IAMService.Domain.Entities.Role
+                Role = new Domain.Entities.Role
                 {
                     RoleId = 1,
                     RoleName = "Employee"
@@ -100,10 +100,10 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             };
 
             _userRepository.GetByIdAsync(userId).Returns(existingUser);
-            _userRepository.UpdateAsync(Arg.Any<global::IAMService.Domain.Entities.User>()).Returns(Task.CompletedTask);
+            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
 
             // After update, repository returns updated user (simulate reload)
-            var reloadedUser = new global::IAMService.Domain.Entities.User
+            var reloadedUser = new Domain.Entities.User
             {
                 UserId = userId,
                 FullName = command.Dto.FullName,
@@ -129,7 +129,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             result.IdentityNumber.Should().Be("222222222222");
             result.DateOfBirth.Should().Be(reloadedUser.DateOfBirth);
 
-            await _userRepository.Received(1).UpdateAsync(Arg.Is<global::IAMService.Domain.Entities.User>(u =>
+            await _userRepository.Received(1).UpdateAsync(Arg.Is<Domain.Entities.User>(u =>
                 u.FullName == "New Name" &&
                 u.Email == "new@example.com" &&
                 u.Address == "New Address"));
@@ -144,17 +144,17 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             // Arrange
             var userId = Guid.NewGuid();
 
-            var oldRole = new global::IAMService.Domain.Entities.Role
+            var oldRole = new Domain.Entities.Role
             {
                 RoleId = 1,
                 RoleName = "Employee",
-                Privileges = new List<global::IAMService.Domain.Entities.Privilege>
+                Privileges = new List<Privilege>
                 {
-                    new global::IAMService.Domain.Entities.Privilege { PrivilegeId = 1 } // don't set PrivilegeName if setter is inaccessible
+                    new Privilege { PrivilegeId = 1 } // don't set PrivilegeName if setter is inaccessible
                 }
             };
 
-            var user = new global::IAMService.Domain.Entities.User
+            var user = new Domain.Entities.User
             {
                 UserId = userId,
                 Role = oldRole,
@@ -174,27 +174,27 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
 
             _userRepository.GetByIdAsync(userId).Returns(user);
 
-            var newRole = new global::IAMService.Domain.Entities.Role
+            var newRole = new Domain.Entities.Role
             {
                 RoleId = 99,
                 RoleName = "Employee (Custom)",
-                Privileges = new List<global::IAMService.Domain.Entities.Privilege>
+                Privileges = new List<Privilege>
                 {
-                    new global::IAMService.Domain.Entities.Privilege { PrivilegeId = 1 },
-                    new global::IAMService.Domain.Entities.Privilege { PrivilegeId = 2 }
+                    new Privilege { PrivilegeId = 1 },
+                    new Privilege { PrivilegeId = 2 }
                 }
             };
 
             _roleCloneService
-                .CloneRoleWithPrivilegesAsync(Arg.Is<global::IAMService.Domain.Entities.User>(u => u.UserId == userId),
+                .CloneRoleWithPrivilegesAsync(Arg.Is<Domain.Entities.User>(u => u.UserId == userId),
                     Arg.Any<List<int>>(),
                     Arg.Any<CancellationToken>())
                 .Returns(newRole);
 
-            _userRepository.UpdateAsync(Arg.Any<global::IAMService.Domain.Entities.User>()).Returns(Task.CompletedTask);
+            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
 
             // After update reload returns role with privileges
-            var reloaded = new global::IAMService.Domain.Entities.User
+            var reloaded = new Domain.Entities.User
             {
                 UserId = userId,
                 FullName = user.FullName,
@@ -212,7 +212,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             result.PrivilegeIds.Should().BeEquivalentTo(new List<int> { 1, 2 });
 
             await _roleCloneService.Received(1)
-                .CloneRoleWithPrivilegesAsync(Arg.Is<global::IAMService.Domain.Entities.User>(u => u.UserId == userId),
+                .CloneRoleWithPrivilegesAsync(Arg.Is<Domain.Entities.User>(u => u.UserId == userId),
                     Arg.Any<List<int>>(),
                     Arg.Any<CancellationToken>());
         }
@@ -225,17 +225,17 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var privileges = new List<global::IAMService.Domain.Entities.Privilege>
+            var privileges = new List<Privilege>
             {
-                new global::IAMService.Domain.Entities.Privilege { PrivilegeId = 1 },
-                new global::IAMService.Domain.Entities.Privilege { PrivilegeId = 2 }
+                new Privilege { PrivilegeId = 1 },
+                new Privilege { PrivilegeId = 2 }
             };
 
-            var user = new global::IAMService.Domain.Entities.User
+            var user = new Domain.Entities.User
             {
                 UserId = userId,
                 FullName = "Same Privileges User",
-                Role = new global::IAMService.Domain.Entities.Role
+                Role = new Domain.Entities.Role
                 {
                     RoleId = 1,
                     RoleName = "Employee",
@@ -255,7 +255,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             };
 
             _userRepository.GetByIdAsync(userId).Returns(user);
-            _userRepository.UpdateAsync(Arg.Any<global::IAMService.Domain.Entities.User>()).Returns(Task.CompletedTask);
+            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
             _userRepository.GetByIdAsync(userId).Returns(user, user); // reload same user
 
             // Act
@@ -282,7 +282,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
                 Dto = new UpdateUserRequestDto { FullName = "Non Existent" }
             };
 
-            _userRepository.GetByIdAsync(command.UserId).Returns((global::IAMService.Domain.Entities.User?)null);
+            _userRepository.GetByIdAsync(command.UserId).Returns((Domain.Entities.User?)null);
 
             // Act
             Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
@@ -300,7 +300,7 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var user = new global::IAMService.Domain.Entities.User { UserId = userId, FullName = "Before Update" };
+            var user = new Domain.Entities.User { UserId = userId, FullName = "Before Update" };
 
             var command = new UpdateUserCommand
             {
@@ -309,8 +309,8 @@ namespace IAMService.Application.Test.Features.Users.Commands.UpdateUser
             };
 
             // first call returns user, second (after update) returns null
-            _userRepository.GetByIdAsync(userId).Returns(user, (global::IAMService.Domain.Entities.User?)null);
-            _userRepository.UpdateAsync(Arg.Any<global::IAMService.Domain.Entities.User>()).Returns(Task.CompletedTask);
+            _userRepository.GetByIdAsync(userId).Returns(user, (Domain.Entities.User?)null);
+            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
 
             Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 

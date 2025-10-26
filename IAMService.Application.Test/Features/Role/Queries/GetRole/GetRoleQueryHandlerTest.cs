@@ -7,7 +7,6 @@ using IAMService.Application.Mappings;
 using IAMService.Domain.Entities;
 using MockQueryable;
 using NSubstitute;
-
 namespace IAMService.Application.Test.Features.Role.Queries.GetRole
 {
     /// <summary>

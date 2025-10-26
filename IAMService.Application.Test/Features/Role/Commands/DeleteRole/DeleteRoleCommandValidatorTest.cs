@@ -3,7 +3,6 @@ using IAMService.Application.Features.Role.Commands.DeleteRole;
 using IAMService.Application.Interfaces;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-
 namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 {
     /// <summary>

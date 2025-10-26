@@ -14,6 +14,7 @@ public class User
     /// The user identifier.
     /// </value>
     public Guid UserId { get; set; }
+
     /// <summary>
     /// Gets or sets the full name.
     /// </summary>
@@ -21,13 +22,15 @@ public class User
     /// The full name.
     /// </value>
     public string FullName { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets a value indicating whether this instance is active.
     /// </summary>
     /// <value>
     ///   <c>true</c> if this instance is active; otherwise, <c>false</c>.
     /// </value>
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
+
     /// <summary>
     /// Gets or sets the phone number.
     /// </summary>
@@ -35,6 +38,7 @@ public class User
     /// The phone number.
     /// </value>
     public string PhoneNumber { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the email.
     /// </summary>
@@ -42,6 +46,7 @@ public class User
     /// The email.
     /// </value>
     public string Email { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the hashed password.
     /// </summary>
@@ -49,6 +54,7 @@ public class User
     /// The hashed password.
     /// </value>
     public string HashedPassword { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets a value indicating whether this <see cref="User" /> is gender.
     /// </summary>
@@ -56,6 +62,7 @@ public class User
     ///   <c>true</c> if gender; otherwise, <c>false</c>.
     /// </value>
     public bool Gender { get; set; }
+
     /// <summary>
     /// Gets or sets the identity number.
     /// </summary>
@@ -63,6 +70,7 @@ public class User
     /// The identity number.
     /// </value>
     public string IdentityNumber { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the age.
     /// </summary>
@@ -74,6 +82,7 @@ public class User
     {
         get => CalculateAge(DateOfBirth);
     }
+
     /// <summary>
     /// Gets or sets the date of birth.
     /// </summary>
@@ -81,6 +90,7 @@ public class User
     /// The date of birth.
     /// </value>
     public DateOnly DateOfBirth { get; set; }
+
     /// <summary>
     /// Gets or sets the address.
     /// </summary>
@@ -88,6 +98,7 @@ public class User
     /// The address.
     /// </value>
     public string Address { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the role identifier.
     /// </summary>
@@ -95,6 +106,7 @@ public class User
     /// The role identifier.
     /// </value>
     public int RoleId { get; set; }
+
     /// <summary>
     /// Gets or sets the role.
     /// </summary>
@@ -102,6 +114,7 @@ public class User
     /// The role.
     /// </value>
     public Role Role { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets whether this user account needs manual verification
     /// True = pending verification, False = verified/active
@@ -110,6 +123,7 @@ public class User
     ///   <c>true</c> if [needs verification]; otherwise, <c>false</c>.
     /// </value>
     public bool NeedsVerification { get; private set; }
+
     /// <summary>
     /// Gets or sets whether this user is a patient
     /// True = patient user, False = employee user
@@ -122,27 +136,43 @@ public class User
     /// <summary>
     /// Gets or sets the number of failed login attempts.
     /// </summary>
+    /// <value>
+    /// The failed login attempts.
+    /// </value>
     public int FailedLoginAttempts { get; private set; } = 0;
 
     /// <summary>
     /// Gets or sets the date and time when the account lockout ends.
     /// </summary>
+    /// <value>
+    /// The lockout end.
+    /// </value>
     public DateTimeOffset? LockoutEnd { get; private set; }
+
     /// <summary>
-    /// Gets or sets the value of the user tokens
+    /// Gets or sets the JWT tokens.
     /// </summary>
-    public ICollection<UserToken> UserTokens { get; set; } = [];
+    /// <value>
+    /// The JWT tokens.
+    /// </value>
+    public ICollection<JwtToken> JwtTokens { get; set; }
+
     /// <summary>
     /// Gets a value indicating whether the user account is currently locked out.
     /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is locked out; otherwise, <c>false</c>.
+    /// </value>
     [NotMapped]
     public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTimeOffset.UtcNow;
+
     /// <summary>
     /// Parameterless constructor required by EF Core
     /// </summary>
     public User() { }
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="User"/> class.
+    /// Initializes a new instance of the <see cref="User" /> class.
     /// </summary>
     /// <param name="fullName">The full name.</param>
     /// <param name="phoneNumber">The phone number.</param>
@@ -180,7 +210,7 @@ public class User
         // All new users need verification by default
         NeedsVerification = true;
     }
-    
+
     /// <summary>
     /// Updates the user's information.
     /// <para>
@@ -230,6 +260,8 @@ public class User
     /// <summary>
     /// Calculate age automatically based on date of birth.
     /// </summary>
+    /// <param name="dob">The dob.</param>
+    /// <returns></returns>
     private static int CalculateAge(DateOnly dob)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -237,18 +269,16 @@ public class User
         if (dob > today.AddYears(-age)) age--;
         return age;
     }
-    
+
     /// <summary>
     /// Validates the full name.
     /// </summary>
     /// <param name="fullName">The full name.</param>
-    /// <exception cref="System.ArgumentException">
-    /// Full name cannot be null or empty - fullName
+    /// <exception cref="System.ArgumentException">Full name cannot be null or empty - fullName
     /// or
     /// Full name must be at least 2 characters - fullName
     /// or
-    /// Full name cannot exceed 100 characters - fullName
-    /// </exception>
+    /// Full name cannot exceed 100 characters - fullName</exception>
     private static void ValidateFullName(string fullName)
     {
         if(string.IsNullOrEmpty(fullName))
@@ -258,15 +288,14 @@ public class User
         if (fullName.Length > 100)
             throw new ArgumentException("Full name cannot exceed 100 characters", nameof(fullName));
     }
+
     /// <summary>
     /// Validates the phone number.
     /// </summary>
     /// <param name="phoneNumber">The phone number.</param>
-    /// <exception cref="System.ArgumentException">
-    /// Phone number cannot be null or empty - phoneNumber
+    /// <exception cref="System.ArgumentException">Phone number cannot be null or empty - phoneNumber
     /// or
-    /// Phone number must contain only digits, start with 0, and be exactly 10 digits long. - phoneNumber
-    /// </exception>
+    /// Phone number must contain only digits, start with 0, and be exactly 10 digits long. - phoneNumber</exception>
     private static void ValidatePhoneNumber(string phoneNumber)
     {
         if(string.IsNullOrEmpty(phoneNumber))
@@ -276,15 +305,14 @@ public class User
         if (!cleaned.All(char.IsDigit) || !cleaned.StartsWith('0') || cleaned.Length != 10)
             throw new ArgumentException("Phone number must contain only digits, start with 0, and be exactly 10 digits long.", nameof(phoneNumber));
     }
+
     /// <summary>
     /// Validates the email.
     /// </summary>
     /// <param name="email">The email.</param>
-    /// <exception cref="System.ArgumentException">
-    /// Email cannot be null or empty - email
+    /// <exception cref="System.ArgumentException">Email cannot be null or empty - email
     /// or
-    /// Email must be in a valid format - email
-    /// </exception>
+    /// Email must be in a valid format - email</exception>
     private static void ValidateEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -295,6 +323,7 @@ public class User
         if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
             throw new ArgumentException("Email must be in a valid format", nameof(email));
     }
+
     /// <summary>
     /// Validates the hashed password.
     /// </summary>
@@ -305,15 +334,14 @@ public class User
         if (string.IsNullOrWhiteSpace(hashedPassword))
             throw new ArgumentException("Hashed password cannot be null or empty", nameof(hashedPassword));
     }
+
     /// <summary>
     /// Validates the identity number.
     /// </summary>
     /// <param name="identityNumber">The identity number.</param>
-    /// <exception cref="System.ArgumentException">
-    /// Identity number cannot be null or empty. - identityNumber
+    /// <exception cref="System.ArgumentException">Identity number cannot be null or empty. - identityNumber
     /// or
-    /// Identity number must contain only digits and be exactly 12 digits long. - identityNumber
-    /// </exception>
+    /// Identity number must contain only digits and be exactly 12 digits long. - identityNumber</exception>
     private static void ValidateIdentityNumber(string identityNumber)
     {
         if (string.IsNullOrWhiteSpace(identityNumber))
@@ -323,6 +351,7 @@ public class User
         if (!identityNumber.All(char.IsDigit) || identityNumber.Length != 12)
             throw new ArgumentException("Identity number must contain only digits and be exactly 12 digits long.", nameof(identityNumber));
     }
+
     /// <summary>
     /// Validates the address.
     /// </summary>

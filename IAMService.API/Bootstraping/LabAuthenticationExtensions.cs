@@ -15,6 +15,9 @@ public static class LabAuthenticationExtensions
     /// <returns></returns>
     public static AuthenticationBuilder AddLabToken(this AuthenticationBuilder builder, Action<LabAuthenticationSchemeOptions> options)
     {
-        return builder.AddScheme<LabAuthenticationSchemeOptions, LabAuthenticationHandler>("Token", options);
+        builder.AddScheme<LabAuthenticationSchemeOptions, LabAuthenticationHandler>("Token", options);
+        builder.Services.AddScoped<IUserTokenGenerator, UserTokenGenerator>();
+
+        return builder;
     }
 }

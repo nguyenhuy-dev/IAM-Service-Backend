@@ -23,6 +23,39 @@ namespace IAMService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("IAMService.Domain.Entities.JwtToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ReTokenExpireAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("JwtTokens", "public");
+                });
+
             modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -174,6 +207,9 @@ namespace IAMService.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsPatient")
                         .HasColumnType("boolean");
 
@@ -197,35 +233,6 @@ namespace IAMService.Infrastructure.Migrations
                     b.ToTable("Users", "public");
                 });
 
-            modelBuilder.Entity("IAMService.Domain.Entities.UserToken", b =>
-                {
-                    b.Property<Guid>("UserTokenId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpirationAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("UserTokenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserTokens", "public");
-                });
-
             modelBuilder.Entity("PrivilegeRole", b =>
                 {
                     b.Property<int>("PrivilegesPrivilegeId")
@@ -239,6 +246,17 @@ namespace IAMService.Infrastructure.Migrations
                     b.HasIndex("RolesRoleId");
 
                     b.ToTable("PrivilegeRole", "public");
+                });
+
+            modelBuilder.Entity("IAMService.Domain.Entities.JwtToken", b =>
+                {
+                    b.HasOne("IAMService.Domain.Entities.User", "User")
+                        .WithMany("JwtTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IAMService.Domain.Entities.PasswordResetToken", b =>
@@ -281,17 +299,6 @@ namespace IAMService.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("IAMService.Domain.Entities.UserToken", b =>
-                {
-                    b.HasOne("IAMService.Domain.Entities.User", "User")
-                        .WithMany("UserTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PrivilegeRole", b =>
                 {
                     b.HasOne("IAMService.Domain.Entities.Privilege", null)
@@ -314,7 +321,7 @@ namespace IAMService.Infrastructure.Migrations
 
             modelBuilder.Entity("IAMService.Domain.Entities.User", b =>
                 {
-                    b.Navigation("UserTokens");
+                    b.Navigation("JwtTokens");
                 });
 #pragma warning restore 612, 618
         }

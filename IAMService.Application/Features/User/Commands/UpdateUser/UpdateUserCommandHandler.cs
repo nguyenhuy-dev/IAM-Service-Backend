@@ -23,6 +23,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         /// The logger
         /// </summary>
         private readonly ILogger<UpdateUserCommandHandler> _logger;
+        private readonly IStringEncryptionService _stringEncryptionService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateUserCommandHandler"/> class.
@@ -33,11 +34,20 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         public UpdateUserCommandHandler(
             IUserRepository userRepository,
             IRoleCloneService roleCloneService,
-            ILogger<UpdateUserCommandHandler> logger)
+            ILogger<UpdateUserCommandHandler> logger) : this(userRepository, roleCloneService, logger, new IAMService.Application.Services.NoOpStringEncryptionService())
+        {
+        }
+
+        public UpdateUserCommandHandler(
+            IUserRepository userRepository,
+            IRoleCloneService roleCloneService,
+            ILogger<UpdateUserCommandHandler> logger,
+            IStringEncryptionService stringEncryptionService)
         {
             _userRepository = userRepository;
             _roleCloneService = roleCloneService;
             _logger = logger;
+            _stringEncryptionService = stringEncryptionService;
         }
 
         /// <summary>
@@ -61,12 +71,26 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             var user = await _userRepository.GetByIdAsync(request.UserId)
                 ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
 
-            // 2️⃣ Update basic info
-            user.FullName = request.Dto.FullName ?? user.FullName;
-            user.PhoneNumber = request.Dto.PhoneNumber ?? user.PhoneNumber;
-            user.Email = request.Dto.Email ?? user.Email;
-            user.IdentityNumber = request.Dto.IdentityNumber ?? user.IdentityNumber;
-            user.Address = request.Dto.Address ?? user.Address;
+            // 2️⃣ Update basic info (encrypt sensitive fields before storing)
+            user.FullName = request.Dto.FullName != null
+                ? _stringEncryptionService.EncryptString(request.Dto.FullName)
+                : user.FullName;
+
+            user.PhoneNumber = request.Dto.PhoneNumber != null
+                ? _stringEncryptionService.EncryptString(request.Dto.PhoneNumber)
+                : user.PhoneNumber;
+
+            user.Email = request.Dto.Email != null
+                ? _stringEncryptionService.EncryptString(request.Dto.Email.Trim().ToLowerInvariant())
+                : user.Email;
+
+            user.IdentityNumber = request.Dto.IdentityNumber != null
+                ? _stringEncryptionService.EncryptString(request.Dto.IdentityNumber)
+                : user.IdentityNumber;
+
+            user.Address = request.Dto.Address != null
+                ? _stringEncryptionService.EncryptString(request.Dto.Address)
+                : user.Address;
 
             if (request.Dto.Gender.HasValue)
                 user.Gender = request.Dto.Gender.Value;
@@ -137,17 +161,24 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             var privilegeIds = updatedUser.Role?.Privileges?.Select(p => p.PrivilegeId).ToList() ?? new List<int>();
             var privilegeNames = updatedUser.Role?.Privileges?.Select(p => p.PrivilegeName).ToList() ?? new List<string>();
 
+            // Decrypt sensitive fields for response
+            var decryptedFullName = _stringEncryptionService.DecryptString(updatedUser.FullName);
+            var decryptedPhone = _stringEncryptionService.DecryptString(updatedUser.PhoneNumber);
+            var decryptedEmail = _stringEncryptionService.DecryptString(updatedUser.Email);
+            var decryptedIdentity = _stringEncryptionService.DecryptString(updatedUser.IdentityNumber);
+            var decryptedAddress = _stringEncryptionService.DecryptString(updatedUser.Address);
+
             return new UserResponseDto
             {
                 UserId = updatedUser.UserId,
-                FullName = updatedUser.FullName,
-                PhoneNumber = updatedUser.PhoneNumber,
-                Email = updatedUser.Email,
+                FullName = decryptedFullName,
+                PhoneNumber = decryptedPhone,
+                Email = decryptedEmail,
                 Gender = updatedUser.Gender,
-                IdentityNumber = updatedUser.IdentityNumber,
+                IdentityNumber = decryptedIdentity,
                 DateOfBirth = updatedUser.DateOfBirth,
                 Age = updatedUser.Age,
-                Address = updatedUser.Address,
+                Address = decryptedAddress,
                 RoleName = updatedUser.Role?.RoleName ?? "(none)",
                 PrivilegeIds = privilegeIds,
                 PrivilegeNames = privilegeNames
