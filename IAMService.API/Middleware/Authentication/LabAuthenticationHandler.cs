@@ -51,12 +51,12 @@ public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationS
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var bearerHeader = Context.Request.Headers["Bearer"];
+        var authorHeader = Context.Request.Headers.Authorization;
 
-        if (bearerHeader.Count == 0)
+        if (authorHeader.Count == 0)
             return Task.FromResult(AuthenticateResult.Fail("Missing Bearer header"));
 
-        var tokenValue = bearerHeader[0];
+        var tokenValue = authorHeader[0]?.Replace("Bearer ", "");
         if (!string.IsNullOrEmpty(tokenValue) && VerifyToken(tokenValue, out ClaimsPrincipal? claimsPrincipal))
         {
             var ticket = new AuthenticationTicket(claimsPrincipal!, Scheme.Name);

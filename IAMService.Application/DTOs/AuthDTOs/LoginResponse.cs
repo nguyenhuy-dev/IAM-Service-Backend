@@ -11,7 +11,7 @@ public class LoginResponse
     /// <value>
     /// The user identifier.
     /// </value>
-    public Guid UserId { get; init; }
+    public Guid UserId { get; set; }
 
     /// <summary>
     /// Gets the full name.
@@ -19,7 +19,7 @@ public class LoginResponse
     /// <value>
     /// The full name.
     /// </value>
-    public string FullName { get; init; } = default!;
+    public string FullName { get; set; } = default!;
 
     /// <summary>
     /// Gets the email.
@@ -27,7 +27,7 @@ public class LoginResponse
     /// <value>
     /// The email.
     /// </value>
-    public string Email { get; init; } = default!;
+    public string Email { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the role code.

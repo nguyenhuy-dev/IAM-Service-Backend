@@ -86,7 +86,7 @@ public class AuthsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
     {
-        var oldAccessToken = HttpContext.Request.Headers["Bearer"].ToString();
+        var oldAccessToken = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
         if (string.IsNullOrEmpty(oldAccessToken))
             throw new UnauthorizedAccessException("Missing Bearer header...");
 
