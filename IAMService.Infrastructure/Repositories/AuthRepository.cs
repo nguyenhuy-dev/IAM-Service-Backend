@@ -12,7 +12,7 @@ namespace IAMService.Infrastructure.Repositories;
 /// </summary>
 /// <seealso cref="IAMService.Application.Interfaces.AuthenticationServices.IAuthRepository" />
 /// <seealso cref="Application.Interfaces.AuthenticationServices.IAuthRepository" />
-public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passwordHasher) : IAuthRepository
+public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passwordHasher, IStringEncryptionService stringEncryptionService) : IAuthRepository
 {
     /// <summary>
     /// The database context
@@ -23,6 +23,8 @@ public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passw
     /// The password hasher
     /// </summary>
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+
+    private readonly IStringEncryptionService _stringEncryptionService = stringEncryptionService;
 
     /// <summary>
     /// Adds the JWT token.
@@ -42,9 +44,8 @@ public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passw
     public Task<bool> CheckValidToken(string tokenValue)
     {
         var isValidToken = _dbContext.JwtTokens
-            .Where(t => t.AccessToken == tokenValue)
-            .OrderByDescending(t => t.CreateAt)
             .Any(t =>
+                t.AccessToken == tokenValue &&
                 !t.IsRevoked &&
                 t.ReTokenExpireAt > DateTime.UtcNow
             );
@@ -79,14 +80,20 @@ public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passw
     /// </exception>
     public async Task<User> Login(string email, string password, CancellationToken cancellationToken)
     {
+        var encryptedEmail = _stringEncryptionService.EncryptString(email);
         var user = await _dbContext.Users
+            .AsNoTracking()
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Email == email && u.IsActive, cancellationToken) 
+            .FirstOrDefaultAsync(u => u.Email == encryptedEmail && u.IsActive, cancellationToken)
             ?? throw new UnauthorizedAccessException("Account non-available.");
 
         var hashedPassword = user.HashedPassword;
         if (!_passwordHasher.VerifyPassword(hashedPassword, password))
             throw new UnauthorizedAccessException("Password incorrect.");
+
+        // Decrypt infor
+        user.Email = email;
+        user.FullName = _stringEncryptionService.DecryptString(user.FullName);
 
         return user;
     }

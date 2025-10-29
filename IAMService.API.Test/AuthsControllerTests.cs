@@ -113,7 +113,7 @@ namespace IAMService.API.Test
         {
             // Arrange
             var context = new DefaultHttpContext();
-            context.Request.Headers["Bearer"] = "old-token";
+            context.Request.Headers.Authorization = "Bearer old-token";
             _controller.ControllerContext = new ControllerContext { HttpContext = context };
 
             var expectedResponse = new RefreshTokenResponse { AccessToken = "new-token" };
