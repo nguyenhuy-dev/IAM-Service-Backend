@@ -6,30 +6,37 @@ using IAMService.Application.Features.User.Queries.ViewUserInformation;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Mappings;
 using NSubstitute;
+
 namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
 {
     /// <summary>
-    /// Unit tests for <see cref="ViewUserInformationHandler"/>
+    /// Unit tests for <see cref="ViewUserInformationHandler"/>.
     /// </summary>
     [TestFixture]
     public class ViewUserInformationHandlerTests
     {
         /// <summary>
-        /// The user repository
+        /// The user repository mock.
         /// </summary>
         private IUserRepository _userRepository;
-        /// <summary>
-        /// The mapper
-        /// </summary>
-        private IMapper _mapper;
-        /// <summary>
-        /// The handler
-        /// </summary>
-        private ViewUserInformationHandler _handler;
-        private readonly IStringEncryptionService _stringEncryptionService;
 
         /// <summary>
-        /// Fixtures the setup.
+        /// The AutoMapper instance.
+        /// </summary>
+        private IMapper _mapper;
+
+        /// <summary>
+        /// The handler under test.
+        /// </summary>
+        private ViewUserInformationHandler _handler;
+
+        /// <summary>
+        /// The encryption service mock.
+        /// </summary>
+        private IStringEncryptionService _stringEncryptionService;
+
+        /// <summary>
+        /// Initializes AutoMapper configuration once for all tests.
         /// </summary>
         [OneTimeSetUp]
         public void FixtureSetup()
@@ -44,17 +51,27 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Setups this instance.
+        /// Sets up mocks and handler before each test.
         /// </summary>
         [SetUp]
         public void Setup()
         {
+            // Mock user repository
             _userRepository = Substitute.For<IUserRepository>();
+
+            // Mock encryption service
+            _stringEncryptionService = Substitute.For<IStringEncryptionService>();
+
+            // Return input string as-is for DecryptString to avoid transformation
+            _stringEncryptionService.DecryptString(Arg.Any<string>())
+                .Returns(callInfo => callInfo.Arg<string>());
+
+            // Initialize handler with mocked dependencies
             _handler = new ViewUserInformationHandler(_userRepository, _mapper, _stringEncryptionService);
         }
 
         /// <summary>
-        /// Handles the user exists admin can view other user returns user response dto.
+        /// Test case: When user exists and current user is an Admin, handler should return user details.
         /// </summary>
         [Test]
         public async Task Handle_UserExists_AdminCanViewOtherUser_ReturnsUserResponseDto()
@@ -98,7 +115,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Handles the user exists current user is self returns user response dto.
+        /// Test case: When user views their own information, handler should return user details successfully.
         /// </summary>
         [Test]
         public async Task Handle_UserExists_CurrentUserIsSelf_ReturnsUserResponseDto()
@@ -143,7 +160,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Handles the user does not exist throws not found exception.
+        /// Test case: When user does not exist, handler should throw NotFoundException.
         /// </summary>
         [Test]
         public void Handle_UserDoesNotExist_ThrowsNotFoundException()
@@ -174,7 +191,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Handles the non admin tries to view other user throws forbidden access exception.
+        /// Test case: When non-admin tries to view another user, handler should throw ForbiddenAccessException.
         /// </summary>
         [Test]
         public void Handle_NonAdminTriesToViewOtherUser_ThrowsForbiddenAccessException()
@@ -212,7 +229,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Handles the manager can view other user returns user response dto.
+        /// Test case: When current user is Manager and views another user, handler should return user details.
         /// </summary>
         [Test]
         public async Task Handle_ManagerCanViewOtherUser_ReturnsUserResponseDto()

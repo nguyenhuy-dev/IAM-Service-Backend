@@ -83,6 +83,7 @@ builder.Services.AddLabAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
+builder.Services.AddCorsLab("AllowExternal", ["http://localhost:5173"]);
 
 builder.Services.AddCors(options =>
 {
@@ -98,6 +99,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("AllowExternal");
 
 app.MapScalarApiReference().AllowAnonymous();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

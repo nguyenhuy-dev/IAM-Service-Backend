@@ -11,7 +11,7 @@ namespace IAMService.Application.Features.Auth.Commands.Login;
 /// </summary>
 /// <seealso cref="IAMService.Application.Interfaces.Messaging.ICommandHandler&lt;IAMService.Application.Features.Auth.Commands.Login.LoginCommand, IAMService.Application.DTOs.AuthDTOs.LoginResponse&gt;" />
 public class LoginCommandHandler(IAuthRepository authRepository, IUserTokenGenerator userTokenGenerator, 
-    IUnitOfWork unitOfWork) : ICommandHandler<LoginCommand, LoginResponse>
+    IUnitOfWork unitOfWork, IStringEncryptionService stringEncryptionService) : ICommandHandler<LoginCommand, LoginResponse>
 {
     /// <summary>
     /// The authentication repository
@@ -27,6 +27,8 @@ public class LoginCommandHandler(IAuthRepository authRepository, IUserTokenGener
     /// The unit of work
     /// </summary>
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+    private readonly IStringEncryptionService _stringEncryptionService = stringEncryptionService;
 
     /// <summary>
     /// Handles the specified request.
