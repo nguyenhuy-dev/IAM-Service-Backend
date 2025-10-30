@@ -16,14 +16,16 @@ namespace IAMService.Infrastructure.Repositories
         /// The context
         /// </summary>
         private readonly IAMServiceDbContext _context;
+        private readonly IStringEncryptionService _stringEncryptionService;
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
         /// <exception cref="System.ArgumentNullException">context</exception>
-        public UserRepository(IAMServiceDbContext context)
+        public UserRepository(IAMServiceDbContext context, IStringEncryptionService stringEncryptionService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _stringEncryptionService = stringEncryptionService ?? throw new ArgumentNullException(nameof(stringEncryptionService));
         }
 
         /// <inheritdoc/>
@@ -48,8 +50,9 @@ namespace IAMService.Infrastructure.Repositories
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            var encryptedEmail = _stringEncryptionService.EncryptString(email);
             return await _context.Users
-                .AnyAsync(u => u.Email == email);
+                .AnyAsync(u => u.Email == encryptedEmail);
         }
         /// <inheritdoc/>
         public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber)
@@ -61,25 +64,47 @@ namespace IAMService.Infrastructure.Repositories
         }
 
         /// <inheritdoc/>
-        public async Task<User?> GetByIdAsync(Guid userId)
+        public async Task<User?> GetByIdAsync(Guid userId, bool tracking = false)
         {
-            return await _context.Users
+            IQueryable<User> query = _context.Users
                 .Include(u => u.Role)
-                    .ThenInclude(r => r.Privileges)
-                .AsNoTracking() // Prevent EF from tracking the entity
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+                .ThenInclude(r => r.Privileges);
+
+            if (!tracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return await query.FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
         /// <inheritdoc/>
-        public async Task<User?> GetByEmailAsync(string email)
+public async Task<User?> GetByEmailAsync(string email)
+{
+    if (string.IsNullOrWhiteSpace(email))
+        throw new ArgumentException("Email cannot be null or empty", nameof(email));
+    
+    var encryptedEmail = _stringEncryptionService.EncryptString(email);
+    
+    var user = await _context.Users
+        .FirstOrDefaultAsync(u => u.Email == encryptedEmail);
+    
+    if (user != null)
+    {
+        await _context.Entry(user)
+            .Reference(u => u.Role)
+            .LoadAsync();
+        
+        if (user.Role != null)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email cannot be null or empty", nameof(email));
-            return await _context.Users
-                .Include(u => u.Role)
-                    .ThenInclude(r => r.Privileges)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            await _context.Entry(user.Role)
+                .Collection(r => r.Privileges)
+                .LoadAsync();
         }
+    }
+    
+    return user;
+}
 
         /// <summary>
         /// Updates an existing user with the provided information.
@@ -94,10 +119,7 @@ namespace IAMService.Infrastructure.Repositories
 
             if (trackedUser != null)
             {
-                // Update all scalar values (not navigation)
                 _context.Entry(trackedUser).CurrentValues.SetValues(user);
-
-                // Explicitly mark RoleId as modified (EF sometimes misses this)
                 _context.Entry(trackedUser).Property(u => u.RoleId).IsModified = true;
             }
             else
@@ -107,8 +129,6 @@ namespace IAMService.Infrastructure.Repositories
                 _context.Entry(user).Property(u => u.RoleId).IsModified = true;
                 _context.Entry(user).State = EntityState.Modified;
             }
-
-            await _context.SaveChangesAsync();
         }
 
         /// <summary>
