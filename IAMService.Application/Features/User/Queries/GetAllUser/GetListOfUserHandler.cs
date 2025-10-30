@@ -29,13 +29,15 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
                 string term = request.SearchTerm.ToLower();
+
                 usersQueryable = usersQueryable.Where(u =>
-                    u.FullName.ToLower().Contains(term) ||
-                    u.Email.ToLower().Contains(term) ||
-                    u.PhoneNumber.Contains(term) ||
-                    u.IdentityNumber.Contains(term) ||
-                    u.Address.ToLower().Contains(term) ||
-                    u.Role.RoleName.ToLower().Contains(term));
+                    (u.FullName ?? "").ToLower().Contains(term) ||
+                    (u.Email ?? "").ToLower().Contains(term) ||
+                    (u.PhoneNumber ?? "").ToLower().Contains(term) ||
+                    (u.IdentityNumber ?? "").ToLower().Contains(term) ||
+                    (u.Address ?? "").ToLower().Contains(term) ||
+                    ((u.Role != null ? u.Role.RoleName : "") ?? "").ToLower().Contains(term)
+                );
             }
 
             Expression<Func<IAMService.Domain.Entities.User, object>> keySelector = request.SortBy?.ToLower() switch
