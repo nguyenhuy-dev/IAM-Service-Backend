@@ -29,7 +29,7 @@ namespace IAMService.Application.Features.ResetPassword.Commands
             {
                 return false;
             }
-            var user = await _userRepository.GetByIdAsync(request.UserId);
+            var user = await _userRepository.GetByIdAsync(request.UserId, tracking: true);
             if (user == null || user.IsLockedOut)
             {
                 return false;

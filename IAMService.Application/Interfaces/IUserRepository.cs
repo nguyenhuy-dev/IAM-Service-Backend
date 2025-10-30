@@ -28,15 +28,16 @@ namespace IAMService.Application.Interfaces
         /// <returns>True if identity number exists, false otherwise</returns>
         Task<bool> ExistsByIdentityNumberAsync(string identityNumber);
 
-        /// Gets a user by their ID
-        /// <summary>
-        /// Gets a user by their unique identifier.
-        /// </summary>
-        /// <param name="userId">The user identifier (GUID).</param>
-        /// <returns>
-        /// The <see cref="User"/> entity if found; otherwise, <c>null</c>.
-        /// </returns>
-        Task<User?> GetByIdAsync(Guid userId);
+    /// Gets a user by their ID
+    /// <summary>
+    /// Gets a user by their unique identifier.
+    /// </summary>
+    /// <param name="userId">The user identifier (GUID).</param>
+    /// <param name="tracking">Whether to track the entity in the context (default: false).</param>
+    /// <returns>
+    /// The <see cref="User"/> entity if found; otherwise, <c>null</c>.
+    /// </returns>
+    Task<User?> GetByIdAsync(Guid userId, bool tracking = false);
 
         /// <summary>
         /// Gets a user by their email address
