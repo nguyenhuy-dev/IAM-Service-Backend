@@ -173,6 +173,7 @@ public async Task<User?> GetByEmailAsync(string email)
         {
             return _context.Users
                 .Include(u => u.Role)
+                .ThenInclude(r => r.Privileges)
                 .AsQueryable();
         }
         

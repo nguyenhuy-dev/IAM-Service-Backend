@@ -3,6 +3,7 @@ using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
 using MediatR;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 namespace IAMService.Application.Features.User.Queries.GetAllUser
 {
     /// <summary>
@@ -12,18 +13,18 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IStringEncryptionService _stringEncryptionService;
 
-        public GetUsersQueryHandler(IUserRepository userRepository, IMapper mapper)
+        public GetUsersQueryHandler(IUserRepository userRepository, IMapper mapper, IStringEncryptionService stringEncryptionService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _stringEncryptionService = stringEncryptionService;
         }
 
         public async Task<PaginatedList<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
         {
-
             var usersQueryable = _userRepository.GetUsersQueryable();
-
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
@@ -51,10 +52,33 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
                 ? usersQueryable.OrderByDescending(keySelector)
                 : usersQueryable.OrderBy(keySelector);
 
-            
-            var dtoQueryable = _mapper.ProjectTo<UserDto>(usersQueryable);
 
-            return await PaginatedList<UserDto>.CreateAsync(dtoQueryable, request.PageNumber, request.PageSize);
+            var totalCount = await usersQueryable.CountAsync(cancellationToken);
+            var users = await usersQueryable
+                .AsNoTracking()
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync(cancellationToken);
+
+
+            foreach (var user in users)
+            {
+                user.FullName = _stringEncryptionService.DecryptString(user.FullName);
+                user.Email = _stringEncryptionService.DecryptString(user.Email);
+                user.PhoneNumber = _stringEncryptionService.DecryptString(user.PhoneNumber);
+                user.IdentityNumber = _stringEncryptionService.DecryptString(user.IdentityNumber);
+                user.Address = _stringEncryptionService.DecryptString(user.Address);
+            }
+
+
+            var userDtos = _mapper.Map<List<UserDto>>(users);
+
+            return new PaginatedList<UserDto>(
+                userDtos,
+                totalCount,
+                request.PageNumber,
+                request.PageSize
+            );
         }
     }
 }

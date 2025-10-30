@@ -83,6 +83,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddCorsLab("AllowExternal", ["http://localhost:5173"]);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        policy.WithOrigins("http://localhost:5173") // FE chạy ở đây
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -95,8 +103,7 @@ app.UseCors("AllowExternal");
 app.MapScalarApiReference().AllowAnonymous();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
-
-app.UseAuthentication();
+app.UseCors("AllowFrontend");
 app.UseAuthorization();
 
 app.MapControllers();
