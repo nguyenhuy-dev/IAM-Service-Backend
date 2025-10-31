@@ -96,19 +96,50 @@ pipeline {
             steps {
                 script {
                     echo "Running tests for specific test projects..."
-                    echo "Coverage will be collected ONLY for: Application and API projects"
+                    echo "Coverage will be collected ONLY for: ${env.COVERAGE_INCLUDE}"
                     
-                    // Split the TEST_PROJECTS string and run tests for each project
+                    // 1. Define and write the .runsettings file
+                    def runSettingsContent = """
+                        <?xml version="1.0" encoding="utf-8"?>
+                        <RunSettings>
+                          <DataCollectionRunSettings>
+                            <DataCollectors>
+                              <DataCollector friendlyName="XPlat code coverage">
+                                <Configuration>
+                                  <DisableParallelProcessing>true</DisableParallelProcessing>
+                                  <Include>${env.COVERAGE_INCLUDE}</Include>
+                                  <Exclude>${env.COVERAGE_EXCLUDE}</Exclude>
+                                </Configuration>
+                              </DataCollector>
+                            </DataCollectors>
+                          </DataCollectionRunSettings>
+                        </RunSettings>
+                    """.stripIndent().trim()
+                    
+                    writeFile file: 'coverlet.runsettings', text: runSettingsContent
+                    echo "Generated coverlet.runsettings file."
+
+                    // 2. Split and loop through test projects
                     def testProjects = env.TEST_PROJECTS.split(' ')
                     
                     testProjects.each { testProjectPath ->
                         def projectName = testProjectPath.tokenize('/')[0]
+                        
+                        // THIS IS THE FIX: Create a unique temp dir for each project
+                        def isolatedTempDir = "$WORKSPACE/coverlet-tmp/${projectName}"
+
                         echo "=========================================="
                         echo "Running tests for: ${testProjectPath}"
-                        echo "Coverage filter: ${COVERAGE_INCLUDE}"
+                        echo "Using settings: coverlet.runsettings"
+                        echo "Using isolated temp dir: ${isolatedTempDir}"
                         echo "=========================================="
                         
                         sh """
+                            # 3. Create the isolated dir and set TMPDIR
+                            mkdir -p "${isolatedTempDir}"
+                            export TMPDIR="${isolatedTempDir}"
+                            
+                            # 4. Run the test command
                             dotnet test "${testProjectPath}" \
                                 --configuration ${BUILD_CONFIGURATION} \
                                 --no-build \
@@ -117,8 +148,7 @@ pipeline {
                                 --logger "console;verbosity=detailed" \
                                 --collect:"XPlat Code Coverage" \
                                 --results-directory ./TestResults/${projectName} \
-                                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="${COVERAGE_INCLUDE}" \
-                                   DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="${COVERAGE_EXCLUDE}"
+                                --settings "coverlet.runsettings"
                         """
                     }
                 }
@@ -126,24 +156,17 @@ pipeline {
             post {
                 always {
                     script {
-                        // Publish test results using JUnit format (MSTest plugin converts TRX to JUnit)
+                        // Publish test results
                         if (fileExists('TestResults')) {
-                            junit testResults: '**/TestResults/**/*.trx', 
-                                  allowEmptyResults: true,
-                                  keepLongStdio: true
+                            echo "Publishing test reports..."
+                            // FIX: Using a recursive glob pattern to find all .trx files
+                            junit testResults: 'TestResults/**/*.trx', 
+                                    allowEmptyResults: true, 
+                                    keepLongStdio: true
+                        } else {
+                            echo "Warning: 'TestResults' directory not found. Skipping test report publishing."
                         }
                     }
-                }
-            }
-        }
-        
-        stage('Code Analysis') {
-            steps {
-                script {
-                    echo "Running code analysis..."
-                    sh """
-                            dotnet format ${SOLUTION_FILE_PATH} --verify-no-changes --verbosity diagnostic || true
-                        """
                 }
             }
         }
@@ -161,8 +184,9 @@ pipeline {
                         find ./TestResults -name "coverage.cobertura.xml" -type f
                         
                         # Generate HTML and Cobertura reports
+                        # FIX: Using a recursive glob (**) to find the files in their nested folders
                         ./tools/reportgenerator \
-                            "-reports:**/TestResults/**/coverage.cobertura.xml" \
+                            "-reports:TestResults/**/coverage.cobertura.xml" \
                             "-targetdir:./CoverageReport" \
                             "-reporttypes:Html;Cobertura;Badges;TextSummary" \
                             "-verbosity:Info" || true
