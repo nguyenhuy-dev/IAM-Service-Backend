@@ -59,7 +59,7 @@ namespace IAMService.API.Controllers
             );
             return StatusCode(StatusCodes.Status201Created, response);
         }
-        
+
         /// <summary>
         /// Updates the user information.
         /// Only the owner, Admin, or Manager can update user information.
@@ -68,6 +68,7 @@ namespace IAMService.API.Controllers
         /// <param name="dto">The dto.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
+        [Authorize]
         [HttpPut("{userId:guid}")]
         [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -76,21 +77,21 @@ namespace IAMService.API.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateUser(
-            Guid userId,
-            [FromBody][BindingBehavior(BindingBehavior.Optional)] UpdateUserRequestDto dto,
-            CancellationToken cancellationToken)
+    Guid userId,
+    [FromBody][BindingBehavior(BindingBehavior.Optional)] UpdateUserRequestDto dto,
+    CancellationToken cancellationToken)
         {
-            //  Validate body
+            //  1. Validate the request body
             if (dto == null)
             {
                 return BadRequest(new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status400BadRequest,
+                    StatusCode = 400,
                     Message = "Request body cannot be empty."
                 });
             }
 
-            // Ensure that at least one field is provided for updating
+            //  2. Ensure at least one field is provided for update
             if (dto.FullName == null &&
                 dto.PhoneNumber == null &&
                 dto.Email == null &&
@@ -102,57 +103,58 @@ namespace IAMService.API.Controllers
             {
                 return BadRequest(new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status400BadRequest,
+                    StatusCode = 400,
                     Message = "No fields were provided for update."
                 });
             }
 
-            // If no authentication context is found, create mock claims for testing
+            //  3. Verify authentication (JWT must be valid)
             if (User?.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                var fakeClaims = new List<Claim>
-                {
-                    new Claim("sub", "a9b86d50-0b26-4526-99cc-07fdb3b78f98"), // UserId fake
-                    new Claim("role", "Admin"), // Test privilege
-                    new Claim("email", "testadmin@example.com"),
-                    new Claim("fullName", "Mock Admin")
-                };
-
-                // Assign the fake identity to the current user context
-                var fakeIdentity = new ClaimsIdentity(fakeClaims, "FakeJWT");
-                HttpContext.User = new ClaimsPrincipal(fakeIdentity);
-            }
-
-            // Extract the current user's ID and role from claims
-            var currentUserIdClaim = User.FindFirst("sub")?.Value;
-            var currentRole = User.FindFirst("role")?.Value ?? "User";
-
-            if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
                 return Unauthorized(new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status401Unauthorized,
+                    StatusCode = 401,
+                    Message = "User is not authenticated or missing a valid token."
+                });
+            }
+
+            // 4️⃣ Extract user claims from the JWT
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+            var currentRole =
+                User.FindFirst(ClaimTypes.Role)?.Value
+                ?? User.FindFirst("role")?.Value
+                ?? User.FindFirst("roles")?.Value
+                ?? "User";
+
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return Unauthorized(new ErrorResponse
+                {
+                    StatusCode = 401,
                     Message = "Invalid or missing user ID in token."
                 });
             }
 
-            // Determine if the user has admin or manager privileges
-            bool isAdminOrManager = currentRole.Equals("Admin", StringComparison.OrdinalIgnoreCase)
-                || currentRole.Equals("Manager", StringComparison.OrdinalIgnoreCase);
+            // 5️⃣ Determine user permissions
+            bool isAdminOrManager =
+                currentRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                currentRole.Equals("Manager", StringComparison.OrdinalIgnoreCase);
 
-            // Determine if the current user is updating their own account
             bool isOwner = currentUserId == userId;
 
             if (!isOwner && !isAdminOrManager)
             {
-                return StatusCode(StatusCodes.Status403Forbidden, new ErrorResponse
+                return StatusCode(403, new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status403Forbidden,
+                    StatusCode = 403,
                     Message = "You do not have permission to update another user's information."
                 });
             }
 
-            // Create the update command and pass the necessary data
+
+            //  6. Send the command to the application layer via MediatR
             var command = new UpdateUserCommand
             {
                 UserId = userId,
@@ -160,13 +162,13 @@ namespace IAMService.API.Controllers
                 IsAdmin = isAdminOrManager
             };
 
-            // Send the command to the application layer using MediatR
             var result = await _sender.Send(command, cancellationToken);
 
+            //  7. Return success response
             var response = ApiResponse<UserResponseDto>.Success(
                 result,
                 "User updated successfully.",
-                StatusCodes.Status200OK
+                200
             );
 
             return Ok(response);
@@ -178,78 +180,74 @@ namespace IAMService.API.Controllers
         /// <param name="userId">The ID of the user to view.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns></returns>
+        [Authorize]
         [HttpGet("{userId:guid}")]
         [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetUserById(
-            Guid userId,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> GetUserById(Guid userId, CancellationToken cancellationToken)
         {
+            // 🔹 Kiểm tra xác thực
             if (User?.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                var fakeClaims = new List<Claim>
-        {
-            new Claim("sub", "a9b86d50-0b26-4526-99cc-07fdb3b78f98"),
-            new Claim("role", "Admin"),
-            new Claim("email", "mockuser@example.com"),
-            new Claim("fullName", "Mock Admin User")
-        };
-
-                var fakeIdentity = new ClaimsIdentity(fakeClaims, "FakeJWT");
-                HttpContext.User = new ClaimsPrincipal(fakeIdentity);
-            }
-
-            // Extract user ID and role from claims
-            var currentUserIdClaim = User.FindFirst("sub")?.Value;
-            var currentRole = User.FindFirst("role")?.Value ?? "User";
-
-            // Validate user ID from token
-            if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
                 return Unauthorized(new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status401Unauthorized,
+                    StatusCode = 401,
+                    Message = "Unauthorized: missing or invalid JWT."
+                });
+            }
+
+            // 🔹 Lấy thông tin từ JWT thật
+            var currentUserIdClaim =
+    User.FindFirst("sub")?.Value ??
+    User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ??
+    Request.Headers["X-User-Id"].FirstOrDefault();
+
+            var currentRole = User.FindFirst("role")?.Value ?? "User";
+
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                return Unauthorized(new ErrorResponse
+                {
+                    StatusCode = 401,
                     Message = "Invalid or missing user ID in token."
                 });
             }
 
-            // Create a DTO representing the current authenticated user
             var currentUser = new CurrentUserDto
             {
                 UserId = currentUserId,
                 RoleName = currentRole
             };
 
-            // Create the query to retrieve the target user’s information
+            // 🔹 Tạo query và gửi qua MediatR
             var query = new ViewUserInformationQuery
             {
                 TargetUserId = userId,
                 CurrentUser = currentUser
             };
 
-            // Send the query to the application layer via MediatR
             var result = await _sender.Send(query, cancellationToken);
 
             if (result == null)
             {
                 return NotFound(new ErrorResponse
                 {
-                    StatusCode = StatusCodes.Status404NotFound,
+                    StatusCode = 404,
                     Message = "User not found or has been deleted."
                 });
             }
 
-            // Return the retrieved user information in a standard API response
             var response = ApiResponse<UserResponseDto>.Success(
                 result,
                 "User information retrieved successfully.",
-                StatusCodes.Status200OK
+                200
             );
 
             return Ok(response);
         }
+
         /// <summary>
         /// 
         /// </summary>
