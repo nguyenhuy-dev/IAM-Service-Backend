@@ -24,6 +24,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         /// </summary>
         private readonly ILogger<UpdateUserCommandHandler> _logger;
         private readonly IStringEncryptionService _stringEncryptionService;
+        private readonly IUnitOfWork? _unitOfWork;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateUserCommandHandler"/> class.
@@ -34,20 +35,30 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         public UpdateUserCommandHandler(
             IUserRepository userRepository,
             IRoleCloneService roleCloneService,
-            ILogger<UpdateUserCommandHandler> logger) : this(userRepository, roleCloneService, logger, new IAMService.Application.Services.NoOpStringEncryptionService())
+            ILogger<UpdateUserCommandHandler> logger)
+            : this(
+                userRepository,
+                roleCloneService,
+                logger,
+                new IAMService.Application.Services.NoOpStringEncryptionService(),
+                null 
+            )
         {
         }
+
 
         public UpdateUserCommandHandler(
             IUserRepository userRepository,
             IRoleCloneService roleCloneService,
             ILogger<UpdateUserCommandHandler> logger,
-            IStringEncryptionService stringEncryptionService)
+            IStringEncryptionService stringEncryptionService,
+            IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _roleCloneService = roleCloneService;
             _logger = logger;
             _stringEncryptionService = stringEncryptionService;
+            _unitOfWork = unitOfWork;
         }
 
         /// <summary>
@@ -151,7 +162,13 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
 
             // 6️⃣ Persist user (RoleId and basic info)
             await _userRepository.UpdateAsync(user);
-            _logger.LogInformation("💾 User {UserId} successfully updated.", user.UserId);
+
+            if (_unitOfWork != null)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            _logger.LogInformation("💾 User {UserId} successfully updated and saved.", user.UserId);
 
             // 7️⃣ Reload updated user
             var updatedUser = await _userRepository.GetByIdAsync(user.UserId)
