@@ -18,7 +18,6 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var redisConnectionString = configuration.GetConnectionString("RedisConnection");
-
 builder.Services.AddDbContext<IAMServiceDbContext>(options =>
     options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
@@ -46,7 +45,6 @@ builder.Services.AddScoped<IJwtConfiguration, JwtConfiguration>();
 builder.Services.AddTransient<ITokenGenerator, GenerateTokenService>();
 builder.Services.AddTransient<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ITokenHasher, TokenHasher>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenService>();
 builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
 var encryptionPassphrase = configuration["ENCRYPTION_PASSPHRASE"] ??

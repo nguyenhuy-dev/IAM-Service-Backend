@@ -1,4 +1,4 @@
-﻿using IAMService.Application.DTOs.Auth.Login;
+﻿using IAMService.Application.DTOs.AuthDTOs;
 
 namespace IAMService.Application.Interfaces
 {

@@ -100,18 +100,26 @@ namespace IAMService.Infrastructure.Services
                 return base64CipherText;
             }
 
-            var key = DeriveKeyFromPassword(_passphrase);
-            using var aes = Aes.Create();
-            aes.Key = key;
-            aes.IV = IV;
+            // ✅ ADD TRY-CATCH FOR DECRYPT OPERATION
+            try
+            {
+                var key = DeriveKeyFromPassword(_passphrase);
+                using var aes = Aes.Create();
+                aes.Key = key;
+                aes.IV = IV;
 
-            using var input = new MemoryStream(encryptedBytes);
-            using var cryptoStream = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
-            using var output = new MemoryStream();
-            cryptoStream.CopyTo(output);
+                using var input = new MemoryStream(encryptedBytes);
+                using var cryptoStream = new CryptoStream(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+                using var output = new MemoryStream();
+                cryptoStream.CopyTo(output);
 
-            var plain = output.ToArray();
-            return Encoding.Unicode.GetString(plain);
+                var plain = output.ToArray();
+                return Encoding.Unicode.GetString(plain);
+            }
+            catch (CryptographicException)
+            {
+                return base64CipherText;
+            }
         }
     }
 }

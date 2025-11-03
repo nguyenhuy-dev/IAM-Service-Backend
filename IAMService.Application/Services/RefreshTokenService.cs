@@ -1,5 +1,5 @@
 ﻿using IAMService.Application.DTOs;
-using IAMService.Application.DTOs.Auth.Login;
+using IAMService.Application.DTOs.AuthDTOs;
 using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
 using System.Security.Cryptography; // Added using directive for full completeness
