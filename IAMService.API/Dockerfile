@@ -13,6 +13,10 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["IAMService.API/IAMService.API.csproj", "IAMService.API/"]
+COPY ["IAMService.Application.Test/IAMService.Application.Test.csproj", "IAMService.Application.Test/"]
+COPY ["IAMService.Application/IAMService.Application.csproj", "IAMService.Application/"]
+COPY ["IAMService.Domain/IAMService.Domain.csproj", "IAMService.Domain/"]
+COPY ["IAMService.Infrastructure/IAMService.Infrastructure.csproj", "IAMService.Infrastructure/"]
 RUN dotnet restore "./IAMService.API/IAMService.API.csproj"
 COPY . .
 WORKDIR "/src/IAMService.API"

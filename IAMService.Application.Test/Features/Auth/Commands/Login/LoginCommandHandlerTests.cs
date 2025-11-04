@@ -14,7 +14,6 @@ namespace IAMService.Application.Test.Features.Auth.Commands.Login
         private Mock<IAuthRepository> _authRepositoryMock;
         private Mock<IUserTokenGenerator> _userTokenGeneratorMock;
         private Mock<IUnitOfWork> _unitOfWorkMock;
-        private Mock<IStringEncryptionService> _stringEncryptionServiceMock;
         private LoginCommandHandler _handler;
 
         [SetUp]
@@ -23,13 +22,11 @@ namespace IAMService.Application.Test.Features.Auth.Commands.Login
             _authRepositoryMock = new Mock<IAuthRepository>();
             _userTokenGeneratorMock = new Mock<IUserTokenGenerator>();
             _unitOfWorkMock = new Mock<IUnitOfWork>();
-            _stringEncryptionServiceMock = new Mock<IStringEncryptionService>();
 
             _handler = new LoginCommandHandler(
                 _authRepositoryMock.Object,
                 _userTokenGeneratorMock.Object,
-                _unitOfWorkMock.Object,
-                _stringEncryptionServiceMock.Object
+                _unitOfWorkMock.Object
             );
         }
 

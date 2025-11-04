@@ -180,8 +180,8 @@ namespace IAMService.API.Controllers
         /// <param name="userId">The ID of the user to view.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns></returns>
-        [Authorize]
         [HttpGet("{userId:guid}")]
+        [Authorize]
         [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
@@ -200,9 +200,9 @@ namespace IAMService.API.Controllers
 
             // 🔹 Lấy thông tin từ JWT thật
             var currentUserIdClaim =
-    User.FindFirst("sub")?.Value ??
-    User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ??
-    Request.Headers["X-User-Id"].FirstOrDefault();
+                User.FindFirst("sub")?.Value ??
+                User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ??
+                Request.Headers["X-User-Id"].FirstOrDefault();
 
             var currentRole = User.FindFirst("role")?.Value ?? "User";
 
@@ -287,8 +287,8 @@ namespace IAMService.API.Controllers
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        [AllowAnonymous]
         [HttpGet]
+        [Authorize(Policy = "view_user")]
         [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

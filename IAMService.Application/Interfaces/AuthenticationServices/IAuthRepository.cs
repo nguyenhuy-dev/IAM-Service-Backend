@@ -20,7 +20,7 @@ public interface IAuthRepository
     /// <param name="jwtToken">The JWT token.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task AddJwtToken(JwtToken jwtToken, CancellationToken cancellationToken = default);
+    Task AddJwtToken(JwtToken jwtToken, CancellationToken cancellationToken);
 
     /// <summary>
     /// Logins the specified email.
@@ -29,7 +29,7 @@ public interface IAuthRepository
     /// <param name="password">The password.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task<User> Login(string email, string password, CancellationToken cancellationToken = default);
+    Task<User> Login(string email, string password, CancellationToken cancellationToken);
 
     /// <summary>
     /// Deletes all JWT tokens.
@@ -37,7 +37,7 @@ public interface IAuthRepository
     /// <param name="userId">The user identifier.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task<int> DeleteAllJwtTokens(Guid userId, CancellationToken cancellationToken = default);
+    Task<int> DeleteAllJwtTokens(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets the user with old access token.
@@ -45,5 +45,5 @@ public interface IAuthRepository
     /// <param name="oldAccessToken">The old access token.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task<User> GetUserWithOldAccessToken(string oldAccessToken, CancellationToken cancellationToken = default);
+    Task<User> GetUserWithOldAccessToken(string oldAccessToken, CancellationToken cancellationToken);
 }
