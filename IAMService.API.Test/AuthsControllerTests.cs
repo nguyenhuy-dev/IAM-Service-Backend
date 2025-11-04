@@ -1,6 +1,7 @@
 ﻿using IAMService.API.Common;
 using IAMService.API.Controllers;
 using IAMService.Application.DTOs.AuthDTOs;
+using IAMService.Application.Exceptions;
 using IAMService.Application.Features.Auth.Commands.Login;
 using IAMService.Application.Features.Auth.Commands.Logout;
 using IAMService.Application.Features.Auth.Commands.RefreshToken;
@@ -64,8 +65,8 @@ namespace IAMService.API.Test
             _controller.ControllerContext = new ControllerContext { HttpContext = context };
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<ArgumentNullException>(() => _controller.Logout(_token));
-            Assert.That(ex!.Message, Does.Contain("Logout failed! User id invalid."));
+            var ex = Assert.ThrowsAsync<NotFoundException>(() => _controller.Logout(_token));
+            Assert.That(ex!.Message, Does.Contain("The 'userId' is not existed. Logout failed!"));
         }
 
         [Test]

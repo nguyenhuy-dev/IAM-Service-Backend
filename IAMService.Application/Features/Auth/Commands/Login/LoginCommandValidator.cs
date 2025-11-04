@@ -30,7 +30,7 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     /// <returns>
     ///   <c>true</c> if [is valid password] [the specified password]; otherwise, <c>false</c>.
     /// </returns>
-    private bool IsValidPassword(string password)
+    private static bool IsValidPassword(string password)
     {
         bool hasUpper = password.Any(char.IsUpper);
         bool hasLower = password.Any(char.IsLower);

@@ -1,6 +1,7 @@
 ﻿using IAMService.API.Common;
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs.AuthDTOs;
+using IAMService.Application.Exceptions;
 using IAMService.Application.Features.Auth.Commands.Login;
 using IAMService.Application.Features.Auth.Commands.Logout;
 using IAMService.Application.Features.Auth.Commands.RefreshToken;
@@ -66,7 +67,7 @@ public class AuthsController(ISender sender) : ControllerBase
         var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isUserIdGuid = Guid.TryParse(userId, out Guid userIdGuid);
         if (!isUserIdGuid)
-            throw new ArgumentNullException(nameof(userId), "Logout failed! User id invalid.");
+            throw new NotFoundException($"The '{nameof(userId)}' is not existed. Logout failed!");
 
         var command = new LogoutCommand(userIdGuid);
         var isLogout = await _sender.Send(command, cancellationToken);

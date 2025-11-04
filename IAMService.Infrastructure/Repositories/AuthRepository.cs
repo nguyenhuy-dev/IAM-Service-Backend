@@ -3,6 +3,7 @@ using IAMService.Application.Interfaces.AuthenticationServices;
 using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 
 namespace IAMService.Infrastructure.Repositories;
@@ -12,7 +13,8 @@ namespace IAMService.Infrastructure.Repositories;
 /// </summary>
 /// <seealso cref="IAMService.Application.Interfaces.AuthenticationServices.IAuthRepository" />
 /// <seealso cref="Application.Interfaces.AuthenticationServices.IAuthRepository" />
-public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passwordHasher, IStringEncryptionService stringEncryptionService) : IAuthRepository
+public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passwordHasher, 
+    IStringEncryptionService stringEncryptionService, IConfiguration configuration) : IAuthRepository
 {
     /// <summary>
     /// The database context
@@ -24,7 +26,15 @@ public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passw
     /// </summary>
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
 
+    /// <summary>
+    /// The string encryption service
+    /// </summary>
     private readonly IStringEncryptionService _stringEncryptionService = stringEncryptionService;
+
+    /// <summary>
+    /// The configuration
+    /// </summary>
+    private readonly IConfiguration _configuration = configuration;
 
     /// <summary>
     /// Adds the JWT token.
@@ -73,29 +83,92 @@ public class AuthRepository(IAMServiceDbContext dbContext, IPasswordHasher passw
     /// <param name="password">The password.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    /// <exception cref="System.UnauthorizedAccessException">
-    /// Account non-available.
+    /// <exception cref="System.UnauthorizedAccessException">Account non-available.
     /// or
-    /// Password incorrect.
-    /// </exception>
+    /// Password incorrect.</exception>
     public async Task<User> Login(string email, string password, CancellationToken cancellationToken)
     {
         var encryptedEmail = _stringEncryptionService.EncryptString(email);
         var user = await _dbContext.Users
             .AsNoTracking()
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Email == encryptedEmail && u.IsActive, cancellationToken)
+            .FirstOrDefaultAsync(u => u.Email == encryptedEmail && 
+                                        u.IsActive &&
+                                        (!u.LockoutEnd.HasValue || u.LockoutEnd < DateTimeOffset.UtcNow), cancellationToken)
             ?? throw new UnauthorizedAccessException("Account non-available.");
 
         var hashedPassword = user.HashedPassword;
         if (!_passwordHasher.VerifyPassword(hashedPassword, password))
+        {
+            await LockoutAccount(user, cancellationToken);
             throw new UnauthorizedAccessException("Password incorrect.");
+        } 
+        
+        if (user.FailedLoginAttempts != 0 || user.LockoutEnd is not null)
+            await ResetAttemptsOrLockoutEnd(user, cancellationToken);
 
         // Decrypt infor
         user.Email = email;
         user.FullName = _stringEncryptionService.DecryptString(user.FullName);
 
         return user;
+    }
+
+    /// <summary>
+    /// Resets the attempts or lockout end.
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    private async Task ResetAttemptsOrLockoutEnd(User user, CancellationToken cancellationToken)
+    {
+        if (user.FailedLoginAttempts != 0)
+        {
+            user.ResetAttempts();
+            await _dbContext.Users
+                .Where(u => u.UserId == user.UserId)
+                .ExecuteUpdateAsync(s => s.SetProperty(u => u.FailedLoginAttempts, user.FailedLoginAttempts), cancellationToken);
+        }
+        
+        if (user.LockoutEnd is not null) 
+        {
+            user.UnlockAccount();
+            await _dbContext.Users
+                .Where(u => u.UserId == user.UserId)
+                .ExecuteUpdateAsync(s => s.SetProperty(u => u.LockoutEnd, user.LockoutEnd), cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Lockouts the account.
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <exception cref="System.InvalidOperationException">Can't read environment variables '{nameof(maxFailedLoginAttempts)}' or '{nameof(lockoutEndDays)}'.</exception>
+    /// <exception cref="System.UnauthorizedAccessException">Account is locked out.</exception>
+    private async Task LockoutAccount(User user, CancellationToken cancellationToken)
+    {
+        var sectionLockoutPolicy = _configuration.GetSection("LockoutPolicy");
+        if (!int.TryParse(sectionLockoutPolicy["MaxFailedLoginAttempts"], out int maxFailedLoginAttempts) ||
+            !double.TryParse(sectionLockoutPolicy["LockoutEndDays"], out double lockoutEndDays))
+            throw new InvalidOperationException($"Can't read environment variables '{nameof(maxFailedLoginAttempts)}' or '{nameof(lockoutEndDays)}'.");
+
+        if (user.FailedLoginAttempts == maxFailedLoginAttempts)
+        {
+            user.LockAccount(DateTimeOffset.UtcNow.AddDays(lockoutEndDays));
+            user.ResetAttempts();
+            await _dbContext.Users
+                .Where(u => u.UserId == user.UserId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.LockoutEnd, user.LockoutEnd)
+                    .SetProperty(u => u.FailedLoginAttempts, user.FailedLoginAttempts), cancellationToken
+                );
+            throw new UnauthorizedAccessException("Account is locked out.");
+        }
+
+        user.IncrementFailedAttempts();
+        await _dbContext.Users
+            .Where(u => u.UserId == user.UserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.FailedLoginAttempts, user.FailedLoginAttempts), cancellationToken);
     }
 
     /// <summary>
