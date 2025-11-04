@@ -1,7 +1,6 @@
 pipeline {
     // 1. Agent Configuration
     // Run on any available agent.
-    // This agent MUST have Docker installed and available on the PATH.
     agent any
     
     // 2. Tool Configuration
@@ -33,8 +32,6 @@ pipeline {
         COVERAGE_INCLUDE = '[IAMService.Application]*,[IAMService.API]*'
         COVERAGE_EXCLUDE = '[*.Test]*,[*]*.Program,[*]*.Startup'
         
-        // The full name for your Docker image (e.g., dockerhub-username/repo-name)
-        DOCKER_IMAGE_NAME     = 'iamservice'
         
         // --- BUILD CONFIGURATION ---
         BUILD_CONFIGURATION   = 'Release'
@@ -43,6 +40,7 @@ pipeline {
         DOTNET_CLI_HOME       = '/tmp/dotnet'
         DOTNET_SKIP_FIRST_TIME_EXPERIENCE = 'true'
         DOTNET_NOLOGO         = 'true'
+        
     }
     
     stages {
@@ -63,8 +61,6 @@ pipeline {
                             echo "Verifying .NET SDK installation..."
                             dotnet --version
                             dotnet --list-sdks
-                            echo "Verifying Docker installation..."
-                            docker --version
                         '''
                 }
             }
@@ -244,26 +240,6 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "Building Docker image..."
-                    def imageTag = "${BUILD_NUMBER}"
-                    
-                    sh """
-                            docker build -t ${DOCKER_IMAGE_NAME}:${imageTag} -f ${API_PROJECT_PATH}/Dockerfile .
-                            docker tag ${DOCKER_IMAGE_NAME}:${imageTag} ${DOCKER_IMAGE_NAME}:latest
-                            echo "Docker image built successfully: ${DOCKER_IMAGE_NAME}:${imageTag}"
-                            docker images | grep ${DOCKER_IMAGE_NAME}
-                        """
-                    
-                    // Store image info for potential deployment
-                    env.DOCKER_IMAGE_TAG = imageTag
-                    echo "Docker Image: ${DOCKER_IMAGE_NAME}:${imageTag}"
-                }
-            }
-        }
-        
         stage('Security Scan') {
             steps {
                 script {
@@ -293,15 +269,10 @@ pipeline {
     
     post {
         always {
-            script {
-                echo "Cleaning up Docker resources..."
-                sh 'docker system prune -f || true'
-            }
             cleanWs()
         }
         success {
             echo "✅ Pipeline completed successfully!"
-            echo "Docker Image: ${DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
         }
         failure {
             echo "❌ Pipeline failed. Check the logs for details."
