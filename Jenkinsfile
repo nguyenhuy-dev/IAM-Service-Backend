@@ -47,11 +47,72 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    echo "Checking out code from repository..."
-                    checkout scm
+                    echo "=== Checkout Information ==="
+                    echo "CHANGE_ID: ${env.CHANGE_ID ?: 'N/A'}"
+                    echo "CHANGE_TARGET: ${env.CHANGE_TARGET ?: 'N/A'}"
+                    echo "CHANGE_BRANCH: ${env.CHANGE_BRANCH ?: 'N/A'}"
+                    echo "BRANCH_NAME: ${env.BRANCH_NAME ?: 'N/A'}"
+                    echo "GIT_BRANCH: ${env.GIT_BRANCH ?: 'N/A'}"
+                    
+                    // GitLab webhook specific (fallback)
+                    echo "gitlabSourceBranch: ${env.gitlabSourceBranch ?: 'N/A'}"
+                    echo "gitlabTargetBranch: ${env.gitlabTargetBranch ?: 'N/A'}"
+                    echo "=============================="
+                    
+                    // GitLab Integration uses CHANGE_ID for merge requests
+                    // CHANGE_BRANCH contains the source branch name
+                    // CHANGE_TARGET contains the target branch (dev)
+                    
+                    if (env.CHANGE_ID) {
+                        // This is a Merge Request (GitLab Integration)
+                        echo "🔀 This is a Merge Request build (GitLab Integration)"
+                        echo "📥 MR #${env.CHANGE_ID}: ${env.CHANGE_BRANCH} → ${env.CHANGE_TARGET}"
+                        echo "✅ checkout scm will automatically use the source branch"
+                        
+                        // With GitLab Integration, 'checkout scm' automatically 
+                        // checks out the correct source branch for merge requests
+                        checkout scm
+                        
+                    } else if (env.gitlabSourceBranch) {
+                        // Fallback for GitLab webhook trigger
+                        echo "🔀 This is a Merge Request build (GitLab Webhook)"
+                        echo "📥 Checking out source branch: ${env.gitlabSourceBranch}"
+                        
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "origin/${env.gitlabSourceBranch}"]],
+                            extensions: [
+                                [$class: 'CleanBeforeCheckout'],
+                                [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]
+                            ],
+                            userRemoteConfigs: [[
+                                url: env.gitlabSourceRepoHttpUrl ?: env.GIT_URL,
+                                credentialsId: 'your-gitlab-credentials-id'
+                            ]]
+                        ])
+                        
+                    } else {
+                        // Regular branch build (not a merge request)
+                        echo "🌿 This is a regular branch build"
+                        checkout scm
+                    }
+                    
+                    // Display current branch/commit info
+                    sh '''
+                        echo "=== Current Git Information ==="
+                        echo "Current branch:"
+                        git branch | grep \\* | cut -d ' ' -f2
+                        echo "---"
+                        echo "Current commit:"
+                        git log -1 --oneline
+                        echo "---"
+                        echo "Files in workspace:"
+                        ls -la
+                        echo "=============================="
+                    '''
                 }
             }
-        }
+		}	
         
         stage('Setup Environment') {
             steps {
