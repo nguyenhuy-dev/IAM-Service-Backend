@@ -17,6 +17,8 @@ pipeline {
         // --- PLEASE CONFIGURE THESE VALUES ---
         // The path to your solution file (at repo root)
         SOLUTION_FILE_PATH    = 'IAM-Service-Backend.sln'
+		// --- GITLAB CREDENTIAL ID ---
+		GITLAB_CREDENTIAL_ID = '5b91663a-07b4-4fc3-b3b2-102d4303fcb1'
         
         // The path to the folder containing your API's Dockerfile (at repo root)
         API_PROJECT_PATH      = 'IAMService.API' 
@@ -87,7 +89,7 @@ pipeline {
                             ],
                             userRemoteConfigs: [[
                                 url: env.gitlabSourceRepoHttpUrl ?: env.GIT_URL,
-                                credentialsId: 'your-gitlab-credentials-id'
+                                credentialsId: env.GITLAB_CREDENTIAL_ID
                             ]]
                         ])
                         
