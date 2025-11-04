@@ -17,7 +17,7 @@ pipeline {
         // --- PLEASE CONFIGURE THESE VALUES ---
         // The path to your solution file (at repo root)
         SOLUTION_FILE_PATH    = 'IAM-Service-Backend.sln'
-		// --- GITLAB CREDENTIAL ID ---
+		// The credentialsId for jenkins. Change this if you want to use another account
 		GITLAB_CREDENTIAL_ID = '5b91663a-07b4-4fc3-b3b2-102d4303fcb1'
         
         // The path to the folder containing your API's Dockerfile (at repo root)
@@ -32,7 +32,8 @@ pipeline {
         // --- CODE COVERAGE FILTER ---
         // Only collect coverage for these projects (exclude test projects and other assemblies)
         COVERAGE_INCLUDE = '[IAMService.Application]*,[IAMService.API]*'
-        COVERAGE_EXCLUDE = '[*.Test]*,[*]*.Program,[*]*.Startup'
+        // Example: Exclude only from specific project
+		COVERAGE_EXCLUDE = '[*.Test]*,[*]*.Program,[*]*Program*,[*]*.Startup,[*]*ErrorDetail,[*]*ErrorResponse,[*]*ValidationBehavior*'
         
         
         // --- BUILD CONFIGURATION ---
@@ -50,10 +51,6 @@ pipeline {
             steps {
                 script {
                     echo "=== Checkout Information ==="
-                    echo "CHANGE_ID: ${env.CHANGE_ID ?: 'N/A'}"
-                    echo "CHANGE_TARGET: ${env.CHANGE_TARGET ?: 'N/A'}"
-                    echo "CHANGE_BRANCH: ${env.CHANGE_BRANCH ?: 'N/A'}"
-                    echo "BRANCH_NAME: ${env.BRANCH_NAME ?: 'N/A'}"
                     echo "GIT_BRANCH: ${env.GIT_BRANCH ?: 'N/A'}"
                     
                     // GitLab webhook specific (fallback)
@@ -61,21 +58,7 @@ pipeline {
                     echo "gitlabTargetBranch: ${env.gitlabTargetBranch ?: 'N/A'}"
                     echo "=============================="
                     
-                    // GitLab Integration uses CHANGE_ID for merge requests
-                    // CHANGE_BRANCH contains the source branch name
-                    // CHANGE_TARGET contains the target branch (dev)
-                    
-                    if (env.CHANGE_ID) {
-                        // This is a Merge Request (GitLab Integration)
-                        echo "🔀 This is a Merge Request build (GitLab Integration)"
-                        echo "📥 MR #${env.CHANGE_ID}: ${env.CHANGE_BRANCH} → ${env.CHANGE_TARGET}"
-                        echo "✅ checkout scm will automatically use the source branch"
-                        
-                        // With GitLab Integration, 'checkout scm' automatically 
-                        // checks out the correct source branch for merge requests
-                        checkout scm
-                        
-                    } else if (env.gitlabSourceBranch) {
+                    if (env.gitlabSourceBranch) {
                         // Fallback for GitLab webhook trigger
                         echo "🔀 This is a Merge Request build (GitLab Webhook)"
                         echo "📥 Checking out source branch: ${env.gitlabSourceBranch}"
@@ -101,9 +84,6 @@ pipeline {
                     
                     // Display current branch/commit info
                     sh '''
-                        echo "=== Current Git Information ==="
-                        echo "Current branch:"
-                        git branch | grep \\* | cut -d ' ' -f2
                         echo "---"
                         echo "Current commit:"
                         git log -1 --oneline
