@@ -26,43 +26,13 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
         {
             var usersQueryable = _userRepository.GetUsersQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-            {
-                string term = request.SearchTerm.ToLower();
-
-                usersQueryable = usersQueryable.Where(u =>
-                    (u.FullName ?? "").ToLower().Contains(term) ||
-                    (u.Email ?? "").ToLower().Contains(term) ||
-                    (u.PhoneNumber ?? "").ToLower().Contains(term) ||
-                    (u.IdentityNumber ?? "").ToLower().Contains(term) ||
-                    (u.Address ?? "").ToLower().Contains(term) ||
-                    ((u.Role != null ? u.Role.RoleName : "") ?? "").ToLower().Contains(term)
-                );
-            }
-
-            Expression<Func<IAMService.Domain.Entities.User, object>> keySelector = request.SortBy?.ToLower() switch
-            {
-                "email" => u => u.Email,
-                "fullname" => u => u.FullName,
-                "phonenumber" => u => u.PhoneNumber,
-                "identitynumber" => u => u.IdentityNumber,
-                "rolename" => u => u.Role.RoleName,
-                _ => u => u.FullName,
-            };
-
-            usersQueryable = request.SortOrder?.ToLower() == "desc"
-                ? usersQueryable.OrderByDescending(keySelector)
-                : usersQueryable.OrderBy(keySelector);
-
-
-            var totalCount = await usersQueryable.CountAsync(cancellationToken);
+            // Lấy tất cả user trước (vì dữ liệu trong DB là mã hóa)
             var users = await usersQueryable
+                .Include(u => u.Role)
                 .AsNoTracking()
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
                 .ToListAsync(cancellationToken);
 
-
+            // Decrypt toàn bộ
             foreach (var user in users)
             {
                 user.FullName = _stringEncryptionService.DecryptString(user.FullName);
@@ -72,8 +42,45 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
                 user.Address = _stringEncryptionService.DecryptString(user.Address);
             }
 
+            // Search sau khi decrypt
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                string term = request.SearchTerm.ToLower();
 
-            var userDtos = _mapper.Map<List<UserDto>>(users);
+                users = users.Where(u =>
+                    (u.FullName ?? "").ToLower().Contains(term) ||
+                    (u.Email ?? "").ToLower().Contains(term) ||
+                    (u.PhoneNumber ?? "").ToLower().Contains(term) ||
+                    (u.IdentityNumber ?? "").ToLower().Contains(term) ||
+                    (u.Address ?? "").ToLower().Contains(term) ||
+                    ((u.Role != null ? u.Role.RoleName : "") ?? "").ToLower().Contains(term)
+                ).ToList();
+            }
+
+            // Sort
+            Func<IAMService.Domain.Entities.User, object> keySelector = request.SortBy?.ToLower() switch
+            {
+                "email" => u => u.Email,
+                "fullname" => u => u.FullName,
+                "phonenumber" => u => u.PhoneNumber,
+                "identitynumber" => u => u.IdentityNumber,
+                "rolename" => u => u.Role?.RoleName ?? "",
+                _ => u => u.FullName,
+            };
+
+            users = request.SortOrder?.ToLower() == "desc"
+                ? users.OrderByDescending(keySelector).ToList()
+                : users.OrderBy(keySelector).ToList();
+
+            // Pagination
+            var totalCount = users.Count;
+            var paginatedUsers = users
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToList();
+
+            // Mapping sang DTO
+            var userDtos = _mapper.Map<List<UserDto>>(paginatedUsers);
 
             return new PaginatedList<UserDto>(
                 userDtos,

@@ -1,7 +1,6 @@
 pipeline {
     // 1. Agent Configuration
     // Run on any available agent.
-    // This agent MUST have Docker installed and available on the PATH.
     agent any
     
     // 2. Tool Configuration
@@ -18,6 +17,8 @@ pipeline {
         // --- PLEASE CONFIGURE THESE VALUES ---
         // The path to your solution file (at repo root)
         SOLUTION_FILE_PATH    = 'IAM-Service-Backend.sln'
+		// The credentialsId for jenkins. Change this if you want to use another account
+		GITLAB_CREDENTIAL_ID = '5b91663a-07b4-4fc3-b3b2-102d4303fcb1'
         
         // The path to the folder containing your API's Dockerfile (at repo root)
         API_PROJECT_PATH      = 'IAMService.API' 
@@ -31,10 +32,9 @@ pipeline {
         // --- CODE COVERAGE FILTER ---
         // Only collect coverage for these projects (exclude test projects and other assemblies)
         COVERAGE_INCLUDE = '[IAMService.Application]*,[IAMService.API]*'
-        COVERAGE_EXCLUDE = '[*.Test]*,[*]*.Program,[*]*.Startup'
+        // Example: Exclude only from specific project
+		COVERAGE_EXCLUDE = '[*.Test]*,[*]*.Program,[*]*Program*,[*]*.Startup,[*]*ErrorDetail,[*]*ErrorResponse,[*]*ValidationBehavior*,[*.Application]*.DTOs.*,[*.Application.DTOs]*'
         
-        // The full name for your Docker image (e.g., dockerhub-username/repo-name)
-        DOCKER_IMAGE_NAME     = 'iamservice'
         
         // --- BUILD CONFIGURATION ---
         BUILD_CONFIGURATION   = 'Release'
@@ -43,17 +43,58 @@ pipeline {
         DOTNET_CLI_HOME       = '/tmp/dotnet'
         DOTNET_SKIP_FIRST_TIME_EXPERIENCE = 'true'
         DOTNET_NOLOGO         = 'true'
+        
     }
     
     stages {
         stage('Checkout') {
             steps {
                 script {
-                    echo "Checking out code from repository..."
-                    checkout scm
+                    echo "=== Checkout Information ==="
+                    echo "GIT_BRANCH: ${env.GIT_BRANCH ?: 'N/A'}"
+                    
+                    // GitLab webhook specific (fallback)
+                    echo "gitlabSourceBranch: ${env.gitlabSourceBranch ?: 'N/A'}"
+                    echo "gitlabTargetBranch: ${env.gitlabTargetBranch ?: 'N/A'}"
+                    echo "=============================="
+                    
+                    if (env.gitlabSourceBranch) {
+                        // Fallback for GitLab webhook trigger
+                        echo "🔀 This is a Merge Request build (GitLab Webhook)"
+                        echo "📥 Checking out source branch: ${env.gitlabSourceBranch}"
+                        
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "origin/${env.gitlabSourceBranch}"]],
+                            extensions: [
+                                [$class: 'CleanBeforeCheckout'],
+                                [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]
+                            ],
+                            userRemoteConfigs: [[
+                                url: env.gitlabSourceRepoHttpUrl ?: env.GIT_URL,
+                                credentialsId: env.GITLAB_CREDENTIAL_ID
+                            ]]
+                        ])
+                        
+                    } else {
+                        // Regular branch build (not a merge request)
+                        echo "🌿 This is a regular branch build"
+                        checkout scm
+                    }
+                    
+                    // Display current branch/commit info
+                    sh '''
+                        echo "---"
+                        echo "Current commit:"
+                        git log -1 --oneline
+                        echo "---"
+                        echo "Files in workspace:"
+                        ls -la
+                        echo "=============================="
+                    '''
                 }
             }
-        }
+		}	
         
         stage('Setup Environment') {
             steps {
@@ -63,8 +104,6 @@ pipeline {
                             echo "Verifying .NET SDK installation..."
                             dotnet --version
                             dotnet --list-sdks
-                            echo "Verifying Docker installation..."
-                            docker --version
                         '''
                 }
             }
@@ -244,26 +283,6 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "Building Docker image..."
-                    def imageTag = "${BUILD_NUMBER}"
-                    
-                    sh """
-                            docker build -t ${DOCKER_IMAGE_NAME}:${imageTag} -f ${API_PROJECT_PATH}/Dockerfile .
-                            docker tag ${DOCKER_IMAGE_NAME}:${imageTag} ${DOCKER_IMAGE_NAME}:latest
-                            echo "Docker image built successfully: ${DOCKER_IMAGE_NAME}:${imageTag}"
-                            docker images | grep ${DOCKER_IMAGE_NAME}
-                        """
-                    
-                    // Store image info for potential deployment
-                    env.DOCKER_IMAGE_TAG = imageTag
-                    echo "Docker Image: ${DOCKER_IMAGE_NAME}:${imageTag}"
-                }
-            }
-        }
-        
         stage('Security Scan') {
             steps {
                 script {
@@ -293,15 +312,10 @@ pipeline {
     
     post {
         always {
-            script {
-                echo "Cleaning up Docker resources..."
-                sh 'docker system prune -f || true'
-            }
             cleanWs()
         }
         success {
             echo "✅ Pipeline completed successfully!"
-            echo "Docker Image: ${DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}"
         }
         failure {
             echo "❌ Pipeline failed. Check the logs for details."

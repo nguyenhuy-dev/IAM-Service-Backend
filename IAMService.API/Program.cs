@@ -6,7 +6,6 @@ using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.AccessToken;
 using IAMService.Application.Interfaces.ForgetPassword;
 using IAMService.Application.Mappings;
-using IAMService.Application.Services;
 using IAMService.Infrastructure.Repositories;
 using IAMService.Infrastructure.Repositories.ForgetPassword;
 using IAMService.Infrastructure.Services;
@@ -16,6 +15,9 @@ using MediatR;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("/run/secrets/secrets_file", optional: true);
+
 var configuration = builder.Configuration;
 var redisConnectionString = configuration.GetConnectionString("RedisConnection");
 builder.Services.AddDbContext<IAMServiceDbContext>(options =>
@@ -43,7 +45,6 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IRoleCloneService, RoleCloneService>();
 builder.Services.AddScoped<IJwtConfiguration, JwtConfiguration>();
 builder.Services.AddTransient<ITokenGenerator, GenerateTokenService>();
-builder.Services.AddTransient<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ITokenHasher, TokenHasher>();
 builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenService>();
 builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
@@ -71,9 +72,10 @@ builder.Logging.AddFilter("Microsoft.AspNetCore.Authorization", LogLevel.Debug);
 builder.Services.AddAuthentication("Token")
     .AddLabToken(configureOptions =>
         {
-            configureOptions.IssuerSigningKey = configuration.GetSection("Jwt")["SigningKey"] ?? "";
-            configureOptions.ValidIssuer = configuration.GetSection("Jwt")["Issuer"] ?? "";
-            configureOptions.ValidAudience = configuration.GetSection("Jwt")["Audience"] ?? "";
+            var sectionJwt = configuration.GetSection("Jwt");
+            configureOptions.IssuerSigningKey = sectionJwt["SigningKey"] ?? "";
+            configureOptions.ValidIssuer = sectionJwt["Issuer"] ?? "";
+            configureOptions.ValidAudience = sectionJwt["Audience"] ?? "";
         }
     );
 builder.Services.AddLabAuthorization();
@@ -82,7 +84,6 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddCorsLab("AllowExternal", ["http://localhost:5173"]);
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -91,6 +92,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials());
 });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
