@@ -7,29 +7,22 @@ using IAMService.Application.Features.Role.Commands.UpdateRole;
 using IAMService.Application.Features.Role.Queries.GetRole;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-
 namespace IAMService.API.Controllers
 {
     /// <summary>
-    /// The roles controller class
+    ///     The roles controller class
     /// </summary>
-    /// <seealso cref="ControllerBase"/>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Produces("application/json")]
+    /// <seealso cref="ControllerBase" />
+    [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class RolesController(ISender sender) : ControllerBase
     {
         /// <summary>
-        /// Creates the role using the specified command
+        ///     Creates the role using the specified command
         /// </summary>
         /// <param name="command">The command</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>A task containing the action result</returns>
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [HttpPost, ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status201Created), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreateRole(
             [FromBody] CreateRoleCommand command,
             CancellationToken cancellationToken)
@@ -37,26 +30,21 @@ namespace IAMService.API.Controllers
             var roleDto = await sender.Send(command, cancellationToken);
             // Wrap the result in the standard success response object
             var response = ApiResponse<RoleDto>.Success(
-                roleDto, 
-                "Role created successfully.", 
+                roleDto,
+                "Role created successfully.",
                 StatusCodes.Status201Created
             );
             return StatusCode(StatusCodes.Status201Created, response);
         }
 
         /// <summary>
-        /// Updates the role using the specified role id
+        ///     Updates the role using the specified role id
         /// </summary>
         /// <param name="roleId">The role id</param>
         /// <param name="request">The request</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>A task containing the action result</returns>
-        [HttpPut("{roleId}")]
-        [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [HttpPut("{roleId}"), ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateRole(
             [FromRoute] int roleId,
             [FromBody] UpdateRoleRequest request,
@@ -69,29 +57,25 @@ namespace IAMService.API.Controllers
                 request.Description,
                 request.PrivilegeIds
             );
-            
+
             var roleDto = await sender.Send(command, cancellationToken);
-            
+
             var response = ApiResponse<RoleDto>.Success(
-                roleDto, 
-                "Role updated successfully.", 
-                StatusCodes.Status200OK
+                roleDto,
+                "Role updated successfully."
             );
-            
+
             return Ok(response);
         }
 
         /// <summary>
-        /// Gets the roles.
+        ///     Gets the roles.
         /// </summary>
         /// <param name="query">The query.</param>
         /// <returns></returns>
-        /// PaginatedList<GetRoleRequest>
-        [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse),StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        /// PaginatedList
+        /// <GetRoleRequest>
+        [HttpGet, ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetRoles([FromQuery] GetRoleQuery query)
         {
             var result = await sender.Send(query);
@@ -103,10 +87,9 @@ namespace IAMService.API.Controllers
             }
             var response = ApiResponse<PaginatedList<GetRoleRequest>>.Success(
                 result,
-                message,
-                StatusCodes.Status200OK
+                message
             );
-            
+
             return Ok(response);
 
         }
@@ -114,24 +97,18 @@ namespace IAMService.API.Controllers
         /// <param name="roleId">The role identifier.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
-        ///   <br />
+        ///     <br />
         /// </returns>
-        [HttpDelete("{roleId}")]
-        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [HttpDelete("{roleId}"), ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteRole(
             [FromRoute] int roleId,
             CancellationToken cancellationToken)
         {
             var command = new DeleteRoleCommand(roleId);
             await sender.Send(command);
-            var response = ApiResponse<bool>.Success (
+            var response = ApiResponse<bool>.Success(
                 true,
-                "Role deleted successfully.",
-                StatusCodes.Status200OK
+                "Role deleted successfully."
             );
             return Ok(response);
         }

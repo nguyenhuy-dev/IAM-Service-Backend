@@ -2,9 +2,9 @@
 using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
 namespace IAMService.Infrastructure.Repositories.ForgetPassword
-{   public class PasswordResetTokenRepositoy : IPasswordResetTokenRepository
+{
+    public class PasswordResetTokenRepositoy : IPasswordResetTokenRepository
     {
         private readonly IAMServiceDbContext _dbContext;
         public PasswordResetTokenRepositoy(IAMServiceDbContext dbContext)
@@ -20,8 +20,8 @@ namespace IAMService.Infrastructure.Repositories.ForgetPassword
         public async Task DeleteExistingTokensByUserIdAsync(Guid userId)
         {
             var tokenToDelete = await _dbContext.PasswordResetTokens
-                                        .Where(x => x.UserId == userId)
-                                        .ToListAsync();
+                .Where(x => x.UserId == userId)
+                .ToListAsync();
             _dbContext.PasswordResetTokens.RemoveRange(tokenToDelete);
         }
 

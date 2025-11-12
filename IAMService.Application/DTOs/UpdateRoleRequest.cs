@@ -1,7 +1,7 @@
 namespace IAMService.Application.DTOs
 {
     /// <summary>
-    /// The update role request
+    ///     The update role request
     /// </summary>
     public record UpdateRoleRequest(
         string RoleName,

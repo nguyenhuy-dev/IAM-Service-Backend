@@ -3,21 +3,21 @@ using MediatR;
 namespace IAMService.Application.Behaviors
 {
     /// <summary>
-    /// The validation behavior class
+    ///     The validation behavior class
     /// </summary>
-    /// <seealso cref="IPipelineBehavior{TRequest, TResponse}"/>
+    /// <seealso cref="IPipelineBehavior{TRequest,TResponse}" />
     public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
 
         /// <summary>
-        /// Handles the request
+        ///     Handles the request
         /// </summary>
         /// <param name="request">The request</param>
         /// <param name="next">The next</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>
-        /// A task containing the response
+        ///     A task containing the response
         /// </returns>
         /// <exception cref="FluentValidation.ValidationException"></exception>
         /// <exception cref="ValidationException"></exception>

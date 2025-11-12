@@ -1,33 +1,35 @@
 ﻿using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
+using IAMService.Application.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
-
+using System.Globalization;
 namespace IAMService.Application.Features.User.Commands.UpdateUser
 {
     /// <summary>
-    /// Handles updating user information (basic info + privileges if admin).
+    ///     Handles updating user information (basic info + privileges if admin).
     /// </summary>
-    /// <seealso cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
+    /// <seealso
+    ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserResponseDto>
     {
         /// <summary>
-        /// The user repository
-        /// </summary>
-        private readonly IUserRepository _userRepository;
-        /// <summary>
-        /// The role clone service
-        /// </summary>
-        private readonly IRoleCloneService _roleCloneService;
-        /// <summary>
-        /// The logger
+        ///     The logger
         /// </summary>
         private readonly ILogger<UpdateUserCommandHandler> _logger;
+        /// <summary>
+        ///     The role clone service
+        /// </summary>
+        private readonly IRoleCloneService _roleCloneService;
         private readonly IStringEncryptionService _stringEncryptionService;
         private readonly IUnitOfWork? _unitOfWork;
+        /// <summary>
+        ///     The user repository
+        /// </summary>
+        private readonly IUserRepository _userRepository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UpdateUserCommandHandler"/> class.
+        ///     Initializes a new instance of the <see cref="UpdateUserCommandHandler" /> class.
         /// </summary>
         /// <param name="userRepository">The user repository.</param>
         /// <param name="roleCloneService">The role clone service.</param>
@@ -40,8 +42,8 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 userRepository,
                 roleCloneService,
                 logger,
-                new IAMService.Application.Services.NoOpStringEncryptionService(),
-                null 
+                new NoOpStringEncryptionService(),
+                null
             )
         {
         }
@@ -62,17 +64,17 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Handles a request
+        ///     Handles a request
         /// </summary>
         /// <param name="request">The request</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>
-        /// Response from the request
+        ///     Response from the request
         /// </returns>
         /// <exception cref="System.Collections.Generic.KeyNotFoundException">
-        /// User with ID {request.UserId} not found.
-        /// or
-        /// User with ID {user.UserId} not found after update.
+        ///     User with ID {request.UserId} not found.
+        ///     or
+        ///     User with ID {user.UserId} not found after update.
         /// </exception>
         public async Task<UserResponseDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
@@ -80,7 +82,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
 
             // 1️⃣ Retrieve user
             var user = await _userRepository.GetByIdAsync(request.UserId)
-                ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
+                    ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
 
             // 2️⃣ Update basic info (encrypt sensitive fields before storing)
             user.FullName = request.Dto.FullName != null
@@ -109,7 +111,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             // 3️⃣ Handle Date of Birth (convert "MM/dd/yyyy")
             if (!string.IsNullOrWhiteSpace(request.Dto.DateOfBirth) &&
                 DateTime.TryParseExact(request.Dto.DateOfBirth, "MM/dd/yyyy", null,
-                    System.Globalization.DateTimeStyles.None, out var dob))
+                    DateTimeStyles.None, out var dob))
             {
                 user.DateOfBirth = DateOnly.FromDateTime(dob);
             }
@@ -127,7 +129,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                     .OrderBy(x => x)
                     .ToList();
 
-                bool privilegesChanged = !currentPrivileges.SequenceEqual(newPrivileges);
+                var privilegesChanged = !currentPrivileges.SequenceEqual(newPrivileges);
 
                 if (privilegesChanged)
                 {
@@ -172,7 +174,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
 
             // 7️⃣ Reload updated user
             var updatedUser = await _userRepository.GetByIdAsync(user.UserId)
-                ?? throw new KeyNotFoundException($"User with ID {user.UserId} not found after update.");
+                           ?? throw new KeyNotFoundException($"User with ID {user.UserId} not found after update.");
 
             // 8️⃣ Map privileges
             var privilegeIds = updatedUser.Role?.Privileges?.Select(p => p.PrivilegeId).ToList() ?? new List<int>();

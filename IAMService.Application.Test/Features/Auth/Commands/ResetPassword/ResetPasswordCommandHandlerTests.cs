@@ -4,19 +4,13 @@ using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.ForgetPassword;
 using IAMService.Domain.Entities;
 using Moq;
-using UserEntity = IAMService.Domain.Entities.User;
+using UserEntity=IAMService.Domain.Entities.User;
 
 namespace IAMService.Application.Test.Features.Auth.Commands.ResetPassword
 {
     [TestFixture]
     public class ResetPasswordCommandHandlerTests
     {
-        private Mock<IUserRepository> _userRepositoryMock;
-        private Mock<ITokenHasher> _tokenHasherMock;
-        private Mock<IPasswordHasher> _passwordHasherMock;
-        private Mock<IPasswordResetTokenRepository> _tokenRepositoryMock;
-        private Mock<IUnitOfWork> _unitOfWorkMock;
-        private ResetPasswordCommandHandler _handler;
 
         [SetUp]
         public void SetUp()
@@ -35,6 +29,12 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ResetPassword
                 _unitOfWorkMock.Object
             );
         }
+        private Mock<IUserRepository> _userRepositoryMock;
+        private Mock<ITokenHasher> _tokenHasherMock;
+        private Mock<IPasswordHasher> _passwordHasherMock;
+        private Mock<IPasswordResetTokenRepository> _tokenRepositoryMock;
+        private Mock<IUnitOfWork> _unitOfWorkMock;
+        private ResetPasswordCommandHandler _handler;
 
         [Test]
         public async Task Handle_ValidRequest_ShouldResetPasswordAndReturnTrue()

@@ -1,17 +1,16 @@
 ﻿using FluentValidation;
 using System.Globalization;
 using System.Text.RegularExpressions;
-
 namespace IAMService.Application.Features.User.Commands.CreateUser
 {
     /// <summary>
-    /// Validator for CreateUserCommand
-    /// Validates all input fields according to business rules
+    ///     Validator for CreateUserCommand
+    ///     Validates all input fields according to business rules
     /// </summary>
     public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     {
         /// <summary>
-        /// Initializes validation rules for CreateUserCommand
+        ///     Initializes validation rules for CreateUserCommand
         /// </summary>
         public CreateUserCommandValidator()
         {
@@ -73,7 +72,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
 
 
         /// <summary>
-        /// Validates phone number format
+        ///     Validates phone number format
         /// </summary>
         /// <param name="phoneNumber">The phone number.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -81,14 +80,14 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 return false;
-            string cleaned = phoneNumber.Replace(" ", "")
-                                .Replace("-", "")
-                                .Replace("(", "")
-                                .Replace(")", "");
+            var cleaned = phoneNumber.Replace(" ", "")
+                .Replace("-", "")
+                .Replace("(", "")
+                .Replace(")", "");
             return Regex.IsMatch(cleaned, @"^0\d{9}$");
         }
         /// <summary>
-        /// Validates identity number format
+        ///     Validates identity number format
         /// </summary>
         /// <param name="identityNumber">Identity number.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -100,7 +99,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             return Regex.IsMatch(identityNumber, @"^\d{12}$");
         }
         /// <summary>
-        /// Validates gender value
+        ///     Validates gender value
         /// </summary>
         /// <param name="gender">The gender.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -114,7 +113,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             return normalizedGender == "male" || normalizedGender == "female";
         }
         /// <summary>
-        /// Validates that the date of birth is a valid date and not in the future
+        ///     Validates that the date of birth is a valid date and not in the future
         /// </summary>
         /// <param name="dateOfBirth">The date of birth.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -128,7 +127,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                 "MM/dd/yyyy",
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.None,
-                out DateTime parsedDate))
+                out var parsedDate))
             {
                 return false;
             }
@@ -145,7 +144,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates date of birth format (MM/DD/YYYY)
+        ///     Validates date of birth format (MM/DD/YYYY)
         /// </summary>
         /// <param name="dateOfBirth">The date of birth.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -156,13 +155,13 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             return Regex.IsMatch(dateOfBirth, @"^\d{2}/\d{2}/\d{4}$");
         }
         /// <summary>
-        ///  Validates password strength
-        /// Must contain:
-        /// - At least 8 characters
-        /// - At least one uppercase letter
-        /// - At least one lowercase letter
-        /// - At least one digit
-        /// - At least one special character
+        ///     Validates password strength
+        ///     Must contain:
+        ///     - At least 8 characters
+        ///     - At least one uppercase letter
+        ///     - At least one lowercase letter
+        ///     - At least one digit
+        ///     - At least one special character
         /// </summary>
         /// <param name="password">The password.</param>
         /// <returns>True if valid, false otherwise</returns>
@@ -192,6 +191,5 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
 
             return true;
         }
-
     }
 }

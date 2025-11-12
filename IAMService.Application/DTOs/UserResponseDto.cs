@@ -1,92 +1,92 @@
 ﻿namespace IAMService.Application.DTOs
 {
     /// <summary>
-    /// The update user response class
+    ///     The update user response class
     /// </summary>
     public class UserResponseDto
     {
         /// <summary>
-        /// Gets or sets the user identifier.
+        ///     Gets or sets the user identifier.
         /// </summary>
         /// <value>
-        /// The user identifier.
+        ///     The user identifier.
         /// </value>
         public Guid UserId { get; set; }
         /// <summary>
-        /// Gets or sets the full name.
+        ///     Gets or sets the full name.
         /// </summary>
         /// <value>
-        /// The full name.
+        ///     The full name.
         /// </value>
         public string? FullName { get; set; }
         /// <summary>
-        /// Gets or sets the phone number.
+        ///     Gets or sets the phone number.
         /// </summary>
         /// <value>
-        /// The phone number.
+        ///     The phone number.
         /// </value>
         public string? PhoneNumber { get; set; }
         /// <summary>
-        /// Gets or sets the email.
+        ///     Gets or sets the email.
         /// </summary>
         /// <value>
-        /// The email.
+        ///     The email.
         /// </value>
         public string? Email { get; set; }
         /// <summary>
-        /// Gets or sets the gender.
+        ///     Gets or sets the gender.
         /// </summary>
         /// <value>
-        /// The gender.
+        ///     The gender.
         /// </value>
         public bool? Gender { get; set; }
         /// <summary>
-        /// Gets or sets the identity number.
+        ///     Gets or sets the identity number.
         /// </summary>
         /// <value>
-        /// The identity number.
+        ///     The identity number.
         /// </value>
         public string? IdentityNumber { get; set; }
         /// <summary>
-        /// Gets or sets the date of birth.
+        ///     Gets or sets the date of birth.
         /// </summary>
         /// <value>
-        /// The date of birth.
+        ///     The date of birth.
         /// </value>
         public DateOnly? DateOfBirth { get; set; }
         /// <summary>
-        /// Gets or sets the age.
+        ///     Gets or sets the age.
         /// </summary>
         /// <value>
-        /// The age.
+        ///     The age.
         /// </value>
         public int? Age { get; set; }
         /// <summary>
-        /// Gets or sets the address.
+        ///     Gets or sets the address.
         /// </summary>
         /// <value>
-        /// The address.
+        ///     The address.
         /// </value>
         public string? Address { get; set; }
         /// <summary>
-        /// Gets or sets the name of the role.
+        ///     Gets or sets the name of the role.
         /// </summary>
         /// <value>
-        /// The name of the role.
+        ///     The name of the role.
         /// </value>
         public string? RoleName { get; set; }
         /// <summary>
-        /// Gets or sets the privilege ids.
+        ///     Gets or sets the privilege ids.
         /// </summary>
         /// <value>
-        /// The privilege ids.
+        ///     The privilege ids.
         /// </value>
         public List<int>? PrivilegeIds { get; set; }
         /// <summary>
-        /// Gets or sets the privilege names.
+        ///     Gets or sets the privilege names.
         /// </summary>
         /// <value>
-        /// The privilege names.
+        ///     The privilege names.
         /// </value>
         public List<string>? PrivilegeNames { get; set; }
     }

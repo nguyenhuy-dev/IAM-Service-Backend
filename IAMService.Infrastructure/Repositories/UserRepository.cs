@@ -2,23 +2,22 @@
 using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
 namespace IAMService.Infrastructure.Repositories
 {
     /// <summary>
-    /// Repository implementation for User entity
-    /// Handles all database operations related to users
+    ///     Repository implementation for User entity
+    ///     Handles all database operations related to users
     /// </summary>
     /// <seealso cref="IAMService.Application.Interfaces.IUserRepository" />
     public class UserRepository : IUserRepository
     {
         /// <summary>
-        /// The context
+        ///     The context
         /// </summary>
         private readonly IAMServiceDbContext _context;
         private readonly IStringEncryptionService _stringEncryptionService;
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRepository" /> class.
+        ///     Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
         /// <exception cref="System.ArgumentNullException">context</exception>
@@ -28,7 +27,7 @@ namespace IAMService.Infrastructure.Repositories
             _stringEncryptionService = stringEncryptionService ?? throw new ArgumentNullException(nameof(stringEncryptionService));
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<User> CreateAsync(User user)
         {
             ArgumentNullException.ThrowIfNull(user);
@@ -36,7 +35,7 @@ namespace IAMService.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             var createdUser = await _context.Users
                 .Include(u => u.Role)
-                    .ThenInclude(r => r.Privileges)
+                .ThenInclude(r => r.Privileges)
                 .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
             if (createdUser == null)
@@ -45,7 +44,7 @@ namespace IAMService.Infrastructure.Repositories
             }
             return user;
         }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> ExistsByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -54,7 +53,7 @@ namespace IAMService.Infrastructure.Repositories
             return await _context.Users
                 .AnyAsync(u => u.Email == encryptedEmail);
         }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber)
         {
             if (string.IsNullOrWhiteSpace(identityNumber))
@@ -63,7 +62,7 @@ namespace IAMService.Infrastructure.Repositories
                 .AnyAsync(u => u.IdentityNumber == identityNumber);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<User?> GetByIdAsync(Guid userId, bool tracking = false)
         {
             IQueryable<User> query = _context.Users
@@ -78,36 +77,36 @@ namespace IAMService.Infrastructure.Repositories
             return await query.FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
-        /// <inheritdoc/>
-public async Task<User?> GetByEmailAsync(string email)
-{
-    if (string.IsNullOrWhiteSpace(email))
-        throw new ArgumentException("Email cannot be null or empty", nameof(email));
-    
-    var encryptedEmail = _stringEncryptionService.EncryptString(email);
-    
-    var user = await _context.Users
-        .FirstOrDefaultAsync(u => u.Email == encryptedEmail);
-    
-    if (user != null)
-    {
-        await _context.Entry(user)
-            .Reference(u => u.Role)
-            .LoadAsync();
-        
-        if (user.Role != null)
+        /// <inheritdoc />
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            await _context.Entry(user.Role)
-                .Collection(r => r.Privileges)
-                .LoadAsync();
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+
+            var encryptedEmail = _stringEncryptionService.EncryptString(email);
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == encryptedEmail);
+
+            if (user != null)
+            {
+                await _context.Entry(user)
+                    .Reference(u => u.Role)
+                    .LoadAsync();
+
+                if (user.Role != null)
+                {
+                    await _context.Entry(user.Role)
+                        .Collection(r => r.Privileges)
+                        .LoadAsync();
+                }
+            }
+
+            return user;
         }
-    }
-    
-    return user;
-}
 
         /// <summary>
-        /// Updates an existing user with the provided information.
+        ///     Updates an existing user with the provided information.
         /// </summary>
         /// <param name="user">The <see cref="T:IAMService.Domain.Entities.User" /> entity containing updated information.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
@@ -132,11 +131,11 @@ public async Task<User?> GetByEmailAsync(string email)
         }
 
         /// <summary>
-        /// Gets the by role identifier asynchronous.
+        ///     Gets the by role identifier asynchronous.
         /// </summary>
         /// <param name="roleId">The role identifier.</param>
         /// <returns>
-        ///   <br />
+        ///     <br />
         /// </returns>
         public async Task<List<User>> GetByRoleIdAsync(int roleId)
         {
@@ -146,7 +145,7 @@ public async Task<User?> GetByEmailAsync(string email)
         }
 
         /// <summary>
-        /// Marks a collection of user entities for update. This does NOT save to the database.
+        ///     Marks a collection of user entities for update. This does NOT save to the database.
         /// </summary>
         /// <param name="users">The collection of users to update.</param>
         public void UpdateRange(IEnumerable<User> users)
@@ -155,7 +154,7 @@ public async Task<User?> GetByEmailAsync(string email)
         }
 
         /// <summary>
-        /// Deletes a user from the database
+        ///     Deletes a user from the database
         /// </summary>
         /// <param name="user">The user entity to delete</param>
         public void Delete(User user)
@@ -164,10 +163,10 @@ public async Task<User?> GetByEmailAsync(string email)
         }
 
         /// <summary>
-        /// Retrieves all users with their associated roles
+        ///     Retrieves all users with their associated roles
         /// </summary>
         /// <returns>
-        /// IQueryable of users for deferred execution
+        ///     IQueryable of users for deferred execution
         /// </returns>
         public IQueryable<User> GetUsersQueryable()
         {
@@ -176,6 +175,5 @@ public async Task<User?> GetByEmailAsync(string email)
                 .ThenInclude(r => r.Privileges)
                 .AsQueryable();
         }
-        
     }
 }

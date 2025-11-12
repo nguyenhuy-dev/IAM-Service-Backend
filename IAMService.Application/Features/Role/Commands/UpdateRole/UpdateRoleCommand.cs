@@ -3,7 +3,7 @@ using MediatR;
 namespace IAMService.Application.Features.Role.Commands.UpdateRole
 {
     /// <summary>
-    /// The update role command
+    ///     The update role command
     /// </summary>
     public record UpdateRoleCommand(
         int RoleId,

@@ -5,38 +5,19 @@ using IAMService.Application.Exceptions;
 using IAMService.Application.Features.User.Queries.ViewUserInformation;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Mappings;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-
 namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
 {
     /// <summary>
-    /// Unit tests for <see cref="ViewUserInformationHandler"/>.
+    ///     Unit tests for <see cref="ViewUserInformationHandler" />.
     /// </summary>
     [TestFixture]
     public class ViewUserInformationHandlerTests
     {
-        /// <summary>
-        /// The user repository mock.
-        /// </summary>
-        private IUserRepository _userRepository;
 
         /// <summary>
-        /// The AutoMapper instance.
-        /// </summary>
-        private IMapper _mapper;
-
-        /// <summary>
-        /// The handler under test.
-        /// </summary>
-        private ViewUserInformationHandler _handler;
-
-        /// <summary>
-        /// The encryption service mock.
-        /// </summary>
-        private IStringEncryptionService _stringEncryptionService;
-
-        /// <summary>
-        /// Initializes AutoMapper configuration once for all tests.
+        ///     Initializes AutoMapper configuration once for all tests.
         /// </summary>
         [OneTimeSetUp]
         public void FixtureSetup()
@@ -44,14 +25,14 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<MappingProfile>();
-            });
+            }, new NullLoggerFactory());
 
             config.AssertConfigurationIsValid();
             _mapper = config.CreateMapper();
         }
 
         /// <summary>
-        /// Sets up mocks and handler before each test.
+        ///     Sets up mocks and handler before each test.
         /// </summary>
         [SetUp]
         public void Setup()
@@ -69,9 +50,28 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
             // Initialize handler with mocked dependencies
             _handler = new ViewUserInformationHandler(_userRepository, _mapper, _stringEncryptionService);
         }
+        /// <summary>
+        ///     The user repository mock.
+        /// </summary>
+        private IUserRepository _userRepository;
 
         /// <summary>
-        /// Test case: When user exists and current user is an Admin, handler should return user details.
+        ///     The AutoMapper instance.
+        /// </summary>
+        private IMapper _mapper;
+
+        /// <summary>
+        ///     The handler under test.
+        /// </summary>
+        private ViewUserInformationHandler _handler;
+
+        /// <summary>
+        ///     The encryption service mock.
+        /// </summary>
+        private IStringEncryptionService _stringEncryptionService;
+
+        /// <summary>
+        ///     Test case: When user exists and current user is an Admin, handler should return user details.
         /// </summary>
         [Test]
         public async Task Handle_UserExists_AdminCanViewOtherUser_ReturnsUserResponseDto()
@@ -115,7 +115,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Test case: When user views their own information, handler should return user details successfully.
+        ///     Test case: When user views their own information, handler should return user details successfully.
         /// </summary>
         [Test]
         public async Task Handle_UserExists_CurrentUserIsSelf_ReturnsUserResponseDto()
@@ -160,7 +160,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Test case: When user does not exist, handler should throw NotFoundException.
+        ///     Test case: When user does not exist, handler should throw NotFoundException.
         /// </summary>
         [Test]
         public void Handle_UserDoesNotExist_ThrowsNotFoundException()
@@ -191,7 +191,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Test case: When non-admin tries to view another user, handler should throw ForbiddenAccessException.
+        ///     Test case: When non-admin tries to view another user, handler should throw ForbiddenAccessException.
         /// </summary>
         [Test]
         public void Handle_NonAdminTriesToViewOtherUser_ThrowsForbiddenAccessException()
@@ -229,7 +229,7 @@ namespace IAMService.Application.Test.Features.User.Queries.ViewUserInformation
         }
 
         /// <summary>
-        /// Test case: When current user is Manager and views another user, handler should return user details.
+        ///     Test case: When current user is Manager and views another user, handler should return user details.
         /// </summary>
         [Test]
         public async Task Handle_ManagerCanViewOtherUser_ReturnsUserResponseDto()

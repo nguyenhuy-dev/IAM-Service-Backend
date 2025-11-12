@@ -2,18 +2,17 @@ using AutoMapper;
 using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
 using MediatR;
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 namespace IAMService.Application.Features.User.Queries.GetAllUser
 {
     /// <summary>
-    /// Handles fetching and filtering users with pagination and sorting.
+    ///     Handles fetching and filtering users with pagination and sorting.
     /// </summary>
     public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginatedList<UserDto>>
     {
-        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly IStringEncryptionService _stringEncryptionService;
+        private readonly IUserRepository _userRepository;
 
         public GetUsersQueryHandler(IUserRepository userRepository, IMapper mapper, IStringEncryptionService stringEncryptionService)
         {
@@ -45,7 +44,7 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
             // Search sau khi decrypt
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
-                string term = request.SearchTerm.ToLower();
+                var term = request.SearchTerm.ToLower();
 
                 users = users.Where(u =>
                     (u.FullName ?? "").ToLower().Contains(term) ||
@@ -58,14 +57,14 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
             }
 
             // Sort
-            Func<IAMService.Domain.Entities.User, object> keySelector = request.SortBy?.ToLower() switch
+            Func<Domain.Entities.User, object> keySelector = request.SortBy?.ToLower() switch
             {
                 "email" => u => u.Email,
                 "fullname" => u => u.FullName,
                 "phonenumber" => u => u.PhoneNumber,
                 "identitynumber" => u => u.IdentityNumber,
                 "rolename" => u => u.Role?.RoleName ?? "",
-                _ => u => u.FullName,
+                _ => u => u.FullName
             };
 
             users = request.SortOrder?.ToLower() == "desc"

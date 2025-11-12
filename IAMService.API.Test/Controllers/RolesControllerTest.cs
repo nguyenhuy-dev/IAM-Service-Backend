@@ -1,6 +1,5 @@
 ﻿using IAMService.API.Common;
 using IAMService.API.Controllers;
-using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.Role.Commands.CreateRole;
 using IAMService.Application.Features.Role.Commands.DeleteRole;
@@ -10,15 +9,11 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class RolesControllerTests
     {
-        private ISender _sender;
-        private RolesController _controller;
-        private CancellationToken _token;
 
         [SetUp]
         public void SetUp()
@@ -32,8 +27,9 @@ namespace IAMService.API.Test
                 HttpContext = new DefaultHttpContext()
             };
         }
-
-        #region CreateRole Tests
+        private ISender _sender;
+        private RolesController _controller;
+        private CancellationToken _token;
 
         [Test]
         public async Task CreateRole_ShouldReturn201Created_WhenRoleIsCreatedSuccessfully()
@@ -82,11 +78,11 @@ namespace IAMService.API.Test
         {
             // Arrange
             var command = new CreateRoleCommand(
-                 "Basic Role",
-                 "BASIC",
-                 null,
-                 null
-             );
+                "Basic Role",
+                "BASIC",
+                null,
+                null
+            );
 
             var expectedRoleDto = new RoleDto
             {
@@ -113,10 +109,6 @@ namespace IAMService.API.Test
             await _sender.Received(1).Send(command, _token);
         }
 
-        #endregion
-
-        #region UpdateRole Tests
-
         [Test]
         public async Task UpdateRole_ShouldReturn200Ok_WhenRoleIsUpdatedSuccessfully()
         {
@@ -139,11 +131,11 @@ namespace IAMService.API.Test
             };
 
             _sender.Send(Arg.Is<UpdateRoleCommand>(c =>
-                c.RoleId == roleId &&
-                c.RoleName == request.RoleName &&
-                c.RoleCode == request.RoleCode &&
-                c.Description == request.Description &&
-                c.PrivilegeIds == request.PrivilegeIds), _token)
+                    c.RoleId == roleId &&
+                    c.RoleName == request.RoleName &&
+                    c.RoleCode == request.RoleCode &&
+                    c.Description == request.Description &&
+                    c.PrivilegeIds == request.PrivilegeIds), _token)
                 .Returns(expectedDto);
 
             // Act
@@ -202,7 +194,7 @@ namespace IAMService.API.Test
         {
             // Arrange
             var roleId = 1;
-            
+
             var request = new UpdateRoleRequest("Role Without Privileges", "NO_PRIV", "Role with no privileges", new int[] { });
 
             var expectedDto = new RoleDto
@@ -227,15 +219,11 @@ namespace IAMService.API.Test
             Assert.That(apiResponse!.Data.Privileges, Is.Empty);
         }
 
-        #endregion
-
-        #region GetRoles Tests
-
         [Test]
         public async Task GetRoles_ShouldReturn200Ok_WithRoles_WhenRolesExist()
         {
             // Arrange
-            var query = new GetRoleQuery(null, null, null, 1, 10);
+            var query = new GetRoleQuery(null, null, null);
 
             var roles = new List<GetRoleRequest>
             {
@@ -261,7 +249,7 @@ namespace IAMService.API.Test
                 query.PageNumber,
                 query.PageSize);
 
-            _sender.Send(query, default).Returns(paginatedResult);
+            _sender.Send(query).Returns(paginatedResult);
 
             // Act
             var result = await _controller.GetRoles(query);
@@ -277,14 +265,14 @@ namespace IAMService.API.Test
             Assert.That(apiResponse.Data.Items, Has.Count.EqualTo(2));
             Assert.That(apiResponse.Data.TotalCount, Is.EqualTo(2));
 
-            await _sender.Received(1).Send(query, default);
+            await _sender.Received(1).Send(query);
         }
 
         [Test]
         public async Task GetRoles_ShouldReturn200Ok_WithEmptyList_WhenNoRolesExist()
         {
             // Arrange
-            var query = new GetRoleQuery(null, null, null, 1, 10);
+            var query = new GetRoleQuery(null, null, null);
 
             var emptyList = new List<GetRoleRequest>();
             var paginatedResult = new PaginatedList<GetRoleRequest>(
@@ -293,7 +281,7 @@ namespace IAMService.API.Test
                 query.PageNumber,
                 query.PageSize);
 
-            _sender.Send(query, default).Returns(paginatedResult);
+            _sender.Send(query).Returns(paginatedResult);
 
             // Act
             var result = await _controller.GetRoles(query);
@@ -314,7 +302,7 @@ namespace IAMService.API.Test
         public async Task GetRoles_WithSearchTerm_ShouldReturn200Ok_WithFilteredResults()
         {
             // Arrange
-            var query = new GetRoleQuery("Admin", null, null, 1, 10);
+            var query = new GetRoleQuery("Admin", null, null);
 
             var roles = new List<GetRoleRequest>
             {
@@ -333,7 +321,7 @@ namespace IAMService.API.Test
                 query.PageNumber,
                 query.PageSize);
 
-            _sender.Send(query, default).Returns(paginatedResult);
+            _sender.Send(query).Returns(paginatedResult);
 
             // Act
             var result = await _controller.GetRoles(query);
@@ -365,7 +353,7 @@ namespace IAMService.API.Test
                 query.PageNumber,
                 query.PageSize);
 
-            _sender.Send(query, default).Returns(paginatedResult);
+            _sender.Send(query).Returns(paginatedResult);
 
             // Act
             var result = await _controller.GetRoles(query);
@@ -378,10 +366,6 @@ namespace IAMService.API.Test
             Assert.That(apiResponse!.Data.PageNumber, Is.EqualTo(2));
             Assert.That(apiResponse.Data.TotalCount, Is.EqualTo(12));
         }
-
-        #endregion
-
-        #region DeleteRole Tests
 
         [Test]
         public async Task DeleteRole_ShouldReturn200Ok_WhenDeletionIsSuccessful()
@@ -406,49 +390,6 @@ namespace IAMService.API.Test
 
             await _sender.Received(1).Send(Arg.Is<DeleteRoleCommand>(c => c.RoleId == roleId), _token);
         }
-
-        //[Test]
-        //public async Task DeleteRole_WithDifferentRoleId_ShouldCallMediatorWithCorrectId()
-        //{
-        //    // Arrange
-        //    var roleId = 99;
-
-        //    _sender.Send(Arg.Is<DeleteRoleCommand>(c => c.RoleId == roleId), _token)
-        //        .Returns(Task.CompletedTask);
-
-        //    // Act
-        //    var result = await _controller.DeleteRole(roleId, _token);
-
-        //    // Assert
-        //    var okResult = result as OkObjectResult;
-        //    Assert.That(okResult, Is.Not.Null);
-
-        //    await _sender.Received(1).Send(
-        //        Arg.Is<DeleteRoleCommand>(c => c.RoleId == 99),
-        //        _token);
-        //}
-
-        //[Test]
-        //public async Task DeleteRole_ShouldReturnTrue_InResponseData()
-        //{
-        //    // Arrange
-        //    var roleId = 5;
-
-        //    _sender.Send(Arg.Any<DeleteRoleCommand>(), _token)
-        //        .Returns(Task.CompletedTask);
-
-        //    // Act
-        //    var result = await _controller.DeleteRole(roleId, _token);
-
-        //    // Assert
-        //    var okResult = result as OkObjectResult;
-        //    var apiResponse = okResult!.Value as ApiResponse<bool>;
-        //    Assert.That(apiResponse!.Data, Is.True);
-        //}
-
-        #endregion
-
-        #region Edge Cases and Cancellation Token Tests
 
         [Test]
         public async Task CreateRole_ShouldPassCancellationToken_ToMediator()
@@ -509,6 +450,45 @@ namespace IAMService.API.Test
         }
 
         //[Test]
+        //public async Task DeleteRole_WithDifferentRoleId_ShouldCallMediatorWithCorrectId()
+        //{
+        //    // Arrange
+        //    var roleId = 99;
+
+        //    _sender.Send(Arg.Is<DeleteRoleCommand>(c => c.RoleId == roleId), _token)
+        //        .Returns(Task.CompletedTask);
+
+        //    // Act
+        //    var result = await _controller.DeleteRole(roleId, _token);
+
+        //    // Assert
+        //    var okResult = result as OkObjectResult;
+        //    Assert.That(okResult, Is.Not.Null);
+
+        //    await _sender.Received(1).Send(
+        //        Arg.Is<DeleteRoleCommand>(c => c.RoleId == 99),
+        //        _token);
+        //}
+
+        //[Test]
+        //public async Task DeleteRole_ShouldReturnTrue_InResponseData()
+        //{
+        //    // Arrange
+        //    var roleId = 5;
+
+        //    _sender.Send(Arg.Any<DeleteRoleCommand>(), _token)
+        //        .Returns(Task.CompletedTask);
+
+        //    // Act
+        //    var result = await _controller.DeleteRole(roleId, _token);
+
+        //    // Assert
+        //    var okResult = result as OkObjectResult;
+        //    var apiResponse = okResult!.Value as ApiResponse<bool>;
+        //    Assert.That(apiResponse!.Data, Is.True);
+        //}
+
+        //[Test]
         //public async Task DeleteRole_ShouldPassCancellationToken_ToMediator()
         //{
         //    // Arrange
@@ -525,7 +505,5 @@ namespace IAMService.API.Test
         //    // Assert
         //    await _sender.Received(1).Send(Arg.Any<DeleteRoleCommand>(), token);
         //}
-
-        #endregion
     }
 }

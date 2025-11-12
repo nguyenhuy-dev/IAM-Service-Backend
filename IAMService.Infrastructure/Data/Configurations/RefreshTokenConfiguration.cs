@@ -1,16 +1,15 @@
 ﻿using IAMService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace IAMService.Infrastructure.Data.Configurations
 {
     /// <summary>
-    /// Configures the Entity Framework Core mapping for the <see cref="RefreshToken"/> domain entity.
+    ///     Configures the Entity Framework Core mapping for the <see cref="RefreshToken" /> domain entity.
     /// </summary>
     public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
         /// <summary>
-        /// Configures the properties and relationships of the <see cref="RefreshToken"/> entity.
+        ///     Configures the properties and relationships of the <see cref="RefreshToken" /> entity.
         /// </summary>
         /// <param name="builder">The builder used to configure the entity type.</param>
         public void Configure(EntityTypeBuilder<RefreshToken> builder)
@@ -21,21 +20,21 @@ namespace IAMService.Infrastructure.Data.Configurations
 
             // Relationship to User (Many-to-One)
             builder.HasOne(rt => rt.User)
-                    .WithMany() // Assuming the User entity does not have a navigation collection back to RefreshToken
-                    .HasForeignKey(rt => rt.UserId)
-                    .IsRequired();
+                .WithMany() // Assuming the User entity does not have a navigation collection back to RefreshToken
+                .HasForeignKey(rt => rt.UserId)
+                .IsRequired();
 
             // Self-Referencing Relationship for Token Rotation (One-to-One, Optional)
             builder.HasOne(rt => rt.ReplacedByToken)
-                    .WithOne() // A token is only replaced by one new token (or none)
-                    .HasForeignKey<RefreshToken>(rt => rt.ReplacedByTokenId)
-                    .IsRequired(false) // Allows the foreign key to be null
-                    .OnDelete(DeleteBehavior.Restrict); // Prevents cascading delete
+                .WithOne() // A token is only replaced by one new token (or none)
+                .HasForeignKey<RefreshToken>(rt => rt.ReplacedByTokenId)
+                .IsRequired(false) // Allows the foreign key to be null
+                .OnDelete(DeleteBehavior.Restrict); // Prevents cascading delete
 
             // Property Configurations
             builder.Property(rt => rt.TokenHash)
-                   .IsRequired()
-                   .HasMaxLength(256);
+                .IsRequired()
+                .HasMaxLength(256);
 
             // Ensures token hashes are unique, providing a quick lookup mechanism
             builder.HasIndex(rt => rt.TokenHash).IsUnique();

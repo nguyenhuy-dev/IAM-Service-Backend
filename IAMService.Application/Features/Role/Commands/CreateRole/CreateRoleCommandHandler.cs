@@ -5,9 +5,9 @@ using MediatR;
 namespace IAMService.Application.Features.Role.Commands.CreateRole
 {
     /// <summary>
-    /// The create role command handler class
+    ///     The create role command handler class
     /// </summary>
-    /// <seealso cref="RoleDto"/>
+    /// <seealso cref="RoleDto" />
     public class CreateRoleCommandHandler(
         IRoleRepository roleRepository,
         IMapper mapper)
@@ -15,12 +15,15 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
     {
 
         /// <summary>
-        /// Handles the create role command.
+        ///     Handles the create role command.
         /// </summary>
         /// <param name="request">The create role command.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The newly created role.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when role code or name already exists, or when privilege IDs are invalid.</exception>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown when role code or name already exists, or when privilege IDs are
+        ///     invalid.
+        /// </exception>
         public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
         {
             // Create the role entity
@@ -45,4 +48,3 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
         }
     }
 }
-

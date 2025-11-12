@@ -1,12 +1,9 @@
 using FluentValidation;
 using IAMService.Application.Interfaces;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace IAMService.Application.Features.User.Commands.DeleteUser
 {
     /// <summary>
-    /// Validator for DeleteUserCommand.
+    ///     Validator for DeleteUserCommand.
     /// </summary>
     public class DeleteUserCommandValidator : AbstractValidator<DeleteUserCommand>
     {

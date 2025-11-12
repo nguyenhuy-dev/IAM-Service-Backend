@@ -8,30 +8,14 @@ using NSubstitute.ReturnsExtensions;
 namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
 {
     /// <summary>
-    /// Unit Test for <see cref="DeleteRoleCommandHandler"/>
+    ///     Unit Test for <see cref="DeleteRoleCommandHandler" />
     /// </summary>
     [TestFixture]
     public class DeleteRoleCommandHandlerTests
     {
-        /// <summary>
-        /// The role repository
-        /// </summary>
-        private IRoleRepository _roleRepository;
-        /// <summary>
-        /// The user repository
-        /// </summary>
-        private IUserRepository _userRepository;
-        /// <summary>
-        /// The unit of work
-        /// </summary>
-        private IUnitOfWork _unitOfWork;
-        /// <summary>
-        /// The handler
-        /// </summary>
-        private DeleteRoleCommandHandler _handler;
 
         /// <summary>
-        /// Setups this instance.
+        ///     Setups this instance.
         /// </summary>
         [SetUp]
         public void Setup()
@@ -41,9 +25,25 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
             _unitOfWork = Substitute.For<IUnitOfWork>();
             _handler = new DeleteRoleCommandHandler(_roleRepository, _userRepository, _unitOfWork);
         }
+        /// <summary>
+        ///     The role repository
+        /// </summary>
+        private IRoleRepository _roleRepository;
+        /// <summary>
+        ///     The user repository
+        /// </summary>
+        private IUserRepository _userRepository;
+        /// <summary>
+        ///     The unit of work
+        /// </summary>
+        private IUnitOfWork _unitOfWork;
+        /// <summary>
+        ///     The handler
+        /// </summary>
+        private DeleteRoleCommandHandler _handler;
 
         /// <summary>
-        /// Handles the valid role deletes role and reassigns users.
+        ///     Handles the valid role deletes role and reassigns users.
         /// </summary>
         [Test]
         public async Task Handle_ValidRole_DeletesRoleAndReassignsUsers()
@@ -88,7 +88,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the role not found throws not found exception.
+        ///     Handles the role not found throws not found exception.
         /// </summary>
         [Test]
         public async Task Handle_RoleNotFound_ThrowsNotFoundException()
@@ -108,7 +108,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the default role throws validation exception.
+        ///     Handles the default role throws validation exception.
         /// </summary>
         [Test]
         public async Task Handle_DefaultRole_ThrowsValidationException()
@@ -135,7 +135,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the read only role throws validation exception.
+        ///     Handles the read only role throws validation exception.
         /// </summary>
         [Test]
         public async Task Handle_ReadOnlyRole_ThrowsValidationException()
@@ -162,7 +162,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the read only role not found throws invalid operation exception.
+        ///     Handles the read only role not found throws invalid operation exception.
         /// </summary>
         [Test]
         public async Task Handle_ReadOnlyRoleNotFound_ThrowsInvalidOperationException()
@@ -191,7 +191,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the no users with role deletes role successfully.
+        ///     Handles the no users with role deletes role successfully.
         /// </summary>
         [Test]
         public async Task Handle_NoUsersWithRole_DeletesRoleSuccessfully()
@@ -230,7 +230,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.DeleteRole
         }
 
         /// <summary>
-        /// Handles the cancellation requested passes cancellation token.
+        ///     Handles the cancellation requested passes cancellation token.
         /// </summary>
         [Test]
         public async Task Handle_CancellationRequested_PassesCancellationToken()

@@ -8,26 +8,14 @@ using NSubstitute;
 namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
 {
     /// <summary>
-    /// The update role command handler test class
+    ///     The update role command handler test class
     /// </summary>
     [TestFixture]
     public class UpdateRoleCommandHandlerTest
     {
-        /// <summary>
-        /// The role repository
-        /// </summary>
-        private IRoleRepository _roleRepository;
-        /// <summary>
-        /// The mapper
-        /// </summary>
-        private IMapper _mapper;
-        /// <summary>
-        /// The handler
-        /// </summary>
-        private UpdateRoleCommandHandler _handler;
 
         /// <summary>
-        /// Setup this instance
+        ///     Setup this instance
         /// </summary>
         [SetUp]
         public void Setup()
@@ -36,9 +24,21 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
             _mapper = Substitute.For<IMapper>();
             _handler = new UpdateRoleCommandHandler(_roleRepository, _mapper);
         }
+        /// <summary>
+        ///     The role repository
+        /// </summary>
+        private IRoleRepository _roleRepository;
+        /// <summary>
+        ///     The mapper
+        /// </summary>
+        private IMapper _mapper;
+        /// <summary>
+        ///     The handler
+        /// </summary>
+        private UpdateRoleCommandHandler _handler;
 
         /// <summary>
-        /// Tests that handle should update role when command is valid
+        ///     Tests that handle should update role when command is valid
         /// </summary>
         [Test]
         public async Task Handle_Should_UpdateRole_WhenCommandIsValid()
@@ -46,7 +46,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
             // ## Arrange ##
             var command = new UpdateRoleCommand(1, "New Name", "NEW_CODE", "New Desc", new List<int> { 10 });
             var existingRole = new Domain.Entities.Role(1, "Old Name", "OLD_CODE", "Old Desc"); // IsDefault is false by default
-            var expectedDto = new RoleDto { RoleId = 1, RoleName = "New Name", Privileges = [], RoleCode = "NEW_CODE", Description = "New Desc"};
+            var expectedDto = new RoleDto { RoleId = 1, RoleName = "New Name", Privileges = [], RoleCode = "NEW_CODE", Description = "New Desc" };
 
             _roleRepository.GetByIdAsync(command.RoleId).Returns(existingRole);
             _roleRepository.UpdateAsync(Arg.Any<Domain.Entities.Role>(), Arg.Any<List<int>>()).Returns(existingRole);
@@ -64,7 +64,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
         }
 
         /// <summary>
-        /// Tests that handle should throw not found exception when role does not exist
+        ///     Tests that handle should throw not found exception when role does not exist
         /// </summary>
         [Test]
         public void Handle_Should_ThrowNotFoundException_WhenRoleDoesNotExist()
@@ -78,7 +78,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
         }
 
         /// <summary>
-        /// Tests that handle should throw validation exception when role is default
+        ///     Tests that handle should throw validation exception when role is default
         /// </summary>
         [Test]
         public void Handle_Should_ThrowValidationException_WhenRoleIsDefault()

@@ -5,20 +5,14 @@ using IAMService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-using NUnit.Framework;
-
 namespace IAMService.Application.Test.Features.User.Commands.DeleteUser
 {
     /// <summary>
-    /// Unit tests for <see cref="DeleteUserCommandHandler"/>
+    ///     Unit tests for <see cref="DeleteUserCommandHandler" />
     /// </summary>
     [TestFixture]
     public class DeleteUserCommandHandlerTests
     {
-        private IUserRepository _userRepository;
-        private IUnitOfWork _unitOfWork;
-        private ILogger<DeleteUserCommandHandler> _logger;
-        private DeleteUserCommandHandler _handler;
 
         [SetUp]
         public void Setup()
@@ -29,6 +23,10 @@ namespace IAMService.Application.Test.Features.User.Commands.DeleteUser
 
             _handler = new DeleteUserCommandHandler(_userRepository, _unitOfWork, _logger);
         }
+        private IUserRepository _userRepository;
+        private IUnitOfWork _unitOfWork;
+        private ILogger<DeleteUserCommandHandler> _logger;
+        private DeleteUserCommandHandler _handler;
 
         [Test]
         public async Task Handle_ValidUser_DeletesUserSuccessfully()

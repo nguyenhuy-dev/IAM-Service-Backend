@@ -4,17 +4,16 @@ using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
 namespace IAMService.Infrastructure.Repositories
 {
     /// <summary>
-    /// Repository implementation for Role entity operations.
+    ///     Repository implementation for Role entity operations.
     /// </summary>
     public class RoleRepository(IAMServiceDbContext context) : IRoleRepository
     {
         private readonly IAMServiceDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<Role> CreateAsync(Role role, IEnumerable<int> privilegeIds)
         {
             ArgumentNullException.ThrowIfNull(role);
@@ -73,20 +72,20 @@ namespace IAMService.Infrastructure.Repositories
 
             // Clear privilege list
             existingRole.Privileges.Clear();
-            
+
             // Add new privilege
             foreach (var privilege in privileges)
             {
                 existingRole.Privileges.Add(privilege);
             }
-            
+
             _context.Roles.Update(existingRole);
             await _context.SaveChangesAsync();
-            
+
             return existingRole;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> ExistsByCodeAsync(string roleCode)
         {
             if (string.IsNullOrWhiteSpace(roleCode))
@@ -96,7 +95,7 @@ namespace IAMService.Infrastructure.Repositories
                 .AnyAsync(r => r.RoleCode == roleCode);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> ExistsByNameAsync(string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -109,7 +108,7 @@ namespace IAMService.Infrastructure.Repositories
         }
 
         /// <summary>
-        /// Gets the role asynchronous.
+        ///     Gets the role asynchronous.
         /// </summary>
         /// <returns></returns>
         public IQueryable<Role> GetRoleWithPrivileges()
@@ -118,7 +117,7 @@ namespace IAMService.Infrastructure.Repositories
                 .Include(r => r.Privileges);
         }
         /// <summary>
-        /// Deletes the specified role.
+        ///     Deletes the specified role.
         /// </summary>
         public Task DeleteAsync(Role role)
         {

@@ -8,30 +8,14 @@ using NSubstitute;
 namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
 {
     /// <summary>
-    /// Unit tests for the UpdateUserCommandHandler class.
+    ///     Unit tests for the UpdateUserCommandHandler class.
     /// </summary>
     [TestFixture]
     public class UpdateUserCommandHandlerTests
     {
-        /// <summary>
-        /// The role clone service
-        /// </summary>
-        private IRoleCloneService _roleCloneService;
-        /// <summary>
-        /// The user repository
-        /// </summary>
-        private IUserRepository _userRepository;
-        /// <summary>
-        /// The logger
-        /// </summary>
-        private ILogger<UpdateUserCommandHandler> _logger;
-        /// <summary>
-        /// The handler
-        /// </summary>
-        private UpdateUserCommandHandler _handler;
 
         /// <summary>
-        /// Setups this instance.
+        ///     Setups this instance.
         /// </summary>
         [SetUp]
         public void Setup()
@@ -48,15 +32,34 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
                 _logger
             );
         }
+        /// <summary>
+        ///     The role clone service
+        /// </summary>
+        private IRoleCloneService _roleCloneService;
+        /// <summary>
+        ///     The user repository
+        /// </summary>
+        private IUserRepository _userRepository;
+        /// <summary>
+        ///     The logger
+        /// </summary>
+        private ILogger<UpdateUserCommandHandler> _logger;
+        /// <summary>
+        ///     The handler
+        /// </summary>
+        private UpdateUserCommandHandler _handler;
 
         // helper (no-op) in case your editor flagged the previous symbol name
         /// <summary>
-        /// Roles the clone service fix.
+        ///     Roles the clone service fix.
         /// </summary>
-        private void _roleClone_service_fix() { /* no-op */ }
+        private void _roleClone_service_fix()
+        {
+            /* no-op */
+        }
 
         /// <summary>
-        /// Handles the valid user updates basic information successfully.
+        ///     Handles the valid user updates basic information successfully.
         /// </summary>
         [Test]
         public async Task Handle_ValidUser_UpdatesBasicInfoSuccessfully()
@@ -136,7 +139,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Handles the admin updates privileges clones role.
+        ///     Handles the admin updates privileges clones role.
         /// </summary>
         [Test]
         public async Task Handle_AdminUpdatesPrivileges_ClonesRole()
@@ -218,7 +221,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Handles the admin privileges unchanged no clone happens.
+        ///     Handles the admin privileges unchanged no clone happens.
         /// </summary>
         [Test]
         public async Task Handle_AdminPrivilegesUnchanged_NoCloneHappens()
@@ -270,7 +273,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Handles the user not found throws key not found exception.
+        ///     Handles the user not found throws key not found exception.
         /// </summary>
         [Test]
         public async Task Handle_UserNotFound_ThrowsKeyNotFoundException()
@@ -293,7 +296,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Handles the user missing after update throws key not found exception.
+        ///     Handles the user missing after update throws key not found exception.
         /// </summary>
         [Test]
         public async Task Handle_UserMissingAfterUpdate_ThrowsKeyNotFoundException()

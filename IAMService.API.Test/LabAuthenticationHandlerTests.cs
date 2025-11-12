@@ -10,20 +10,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class LabAuthenticationHandlerTests
     {
-        private Mock<IAuthRepository> _authRepositoryMock = null!;
-        private Mock<ILoggerFactory> _loggerFactoryMock = null!;
-        private DefaultHttpContext _httpContext = null!;
-        private LabAuthenticationHandler _handler = null!;
-        private IOptionsMonitor<LabAuthenticationSchemeOptions> _options = null!;
-        private UrlEncoder _encoder = null!;
-
-        private const string SecretKey = "ThisIsASecretKey1234567890123456"; // 32 bytes
 
         [SetUp]
         public void Setup()
@@ -49,6 +40,14 @@ namespace IAMService.API.Test
             _handler = new LabAuthenticationHandler(_authRepositoryMock.Object, _options, _loggerFactoryMock.Object, _encoder);
             _handler.InitializeAsync(new AuthenticationScheme("TestScheme", null, typeof(LabAuthenticationHandler)), _httpContext);
         }
+        private Mock<IAuthRepository> _authRepositoryMock = null!;
+        private Mock<ILoggerFactory> _loggerFactoryMock = null!;
+        private DefaultHttpContext _httpContext = null!;
+        private LabAuthenticationHandler _handler = null!;
+        private IOptionsMonitor<LabAuthenticationSchemeOptions> _options = null!;
+        private UrlEncoder _encoder = null!;
+
+        private const string SecretKey = "ThisIsASecretKey1234567890123456"; // 32 bytes
 
         private string GenerateValidJwtToken()
         {
@@ -98,7 +97,7 @@ namespace IAMService.API.Test
             _httpContext.Request.Headers.Authorization = $"Bearer {validToken}";
 
             _authRepositoryMock.Setup(x => x.CheckValidToken(It.IsAny<string>()))
-                               .ReturnsAsync(true);
+                .ReturnsAsync(true);
 
             var result = await _handler.AuthenticateAsync();
 
@@ -116,7 +115,7 @@ namespace IAMService.API.Test
             _httpContext.Request.Headers.Authorization = $"Bearer {validToken}";
 
             _authRepositoryMock.Setup(x => x.CheckValidToken(It.IsAny<string>()))
-                               .ReturnsAsync(false);
+                .ReturnsAsync(false);
 
             var result = await _handler.AuthenticateAsync();
 
@@ -131,7 +130,7 @@ namespace IAMService.API.Test
             _httpContext.Request.Headers.Authorization = "Bearer invalid.token.value";
 
             _authRepositoryMock.Setup(x => x.CheckValidToken(It.IsAny<string>()))
-                               .ReturnsAsync(true);
+                .ReturnsAsync(true);
 
             var result = await _handler.AuthenticateAsync();
 

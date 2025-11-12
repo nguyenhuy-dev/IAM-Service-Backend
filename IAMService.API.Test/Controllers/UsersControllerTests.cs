@@ -6,21 +6,18 @@ using IAMService.Application.Features.User.Commands.CreateUser;
 using IAMService.Application.Features.User.Commands.DeleteUser;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Features.User.Queries.ViewUserInformation;
+using IAMService.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using NSubstitute;
 using System.Security.Claims;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class UsersControllerTests
     {
-        private ISender _sender;
-        private UsersController _controller;
-        private CancellationToken _token;
 
         [SetUp]
         public void SetUp()
@@ -37,6 +34,9 @@ namespace IAMService.API.Test
                 HttpContext = new DefaultHttpContext()
             };
         }
+        private ISender _sender;
+        private UsersController _controller;
+        private CancellationToken _token;
 
         private void SetupControllerContext(Guid userId, string role)
         {
@@ -56,8 +56,6 @@ namespace IAMService.API.Test
             };
         }
 
-        #region CreateUser Tests
-
         [Test]
         public async Task CreateUser_IsPatient_ShouldReturn201Created_WithPatientMessage()
         {
@@ -75,7 +73,7 @@ namespace IAMService.API.Test
                 IsPatient = true,
                 PrivilegeIds = null
             };
-            var createdUser = new Domain.Entities.User
+            var createdUser = new User
             {
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
@@ -140,7 +138,7 @@ namespace IAMService.API.Test
                 IsPatient = false,
                 PrivilegeIds = new[] { 1 }
             };
-            var createdUser = new Domain.Entities.User
+            var createdUser = new User
             {
                 UserId = Guid.NewGuid(),
                 Email = command.Email,
@@ -184,12 +182,6 @@ namespace IAMService.API.Test
             Assert.That(apiResponse!.Data, Is.EqualTo(expectedDto));
             Assert.That(apiResponse.Message, Does.Contain("Employee account created successfully."));
         }
-
-        #endregion
-
-
-
-        #region UpdateUser Tests
 
         [Test]
         public async Task UpdateUser_ShouldReturn400BadRequest_WhenDtoIsNull()
@@ -424,12 +416,6 @@ namespace IAMService.API.Test
             Assert.That(okResult, Is.Not.Null);
         }
 
-        #endregion
-
-
-
-        #region GetUserById Tests
-
         [Test]
         public async Task GetUserById_ShouldReturn401Unauthorized_WhenUserIsNotAuthenticated()
         {
@@ -495,11 +481,6 @@ namespace IAMService.API.Test
             Assert.That(errorResponse!.Message, Is.EqualTo("User not found or has been deleted."));
         }
 
-        #endregion
-
-
-        #region DeleteUser Tests
-
         [Test]
         public async Task DeleteUser_ShouldReturn200Ok_WhenDeletionIsSuccessful()
         {
@@ -550,9 +531,6 @@ namespace IAMService.API.Test
             Assert.That(apiResponse.Message, Is.EqualTo("User deleted successfully.")); // Message might be misleading, but matches controller logic
             Assert.That(apiResponse.Data, Is.False);
         }
-
-        #endregion
-        #region Edge Cases and Additional Coverage
 
         [Test]
         public async Task UpdateUser_ShouldReturn401_WhenUserIdClaimIsMissing()
@@ -607,7 +585,6 @@ namespace IAMService.API.Test
             var unauthorizedResult = result as UnauthorizedObjectResult;
             Assert.That(unauthorizedResult, Is.Not.Null);
         }
-        #endregion
 
         //#region GetUsers (GetAllUser) Tests
 

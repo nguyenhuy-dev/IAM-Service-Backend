@@ -4,27 +4,27 @@ using IAMService.Application.Features.User.Commands.UpdateUser;
 namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
 {
     /// <summary>
-    /// Unit tests for the UpdateUserCommandValidator class.
+    ///     Unit tests for the UpdateUserCommandValidator class.
     /// </summary>
     [TestFixture]
     public class UpdateUserCommandValidatorTest
     {
-        /// <summary>
-        /// The validator
-        /// </summary>
-        private UpdateUserCommandValidator _validator;
 
         /// <summary>
-        /// Setups this instance.
+        ///     Setups this instance.
         /// </summary>
         [SetUp]
         public void Setup()
         {
             _validator = new UpdateUserCommandValidator();
         }
+        /// <summary>
+        ///     The validator
+        /// </summary>
+        private UpdateUserCommandValidator _validator;
 
         /// <summary>
-        /// Shoulds the have error when user identifier is empty.
+        ///     Shoulds the have error when user identifier is empty.
         /// </summary>
         [Test]
         public void Should_HaveError_When_UserId_IsEmpty()
@@ -41,7 +41,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when email format is invalid.
+        ///     Shoulds the have error when email format is invalid.
         /// </summary>
         [Test]
         public void Should_HaveError_When_EmailFormatIsInvalid()
@@ -58,7 +58,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when phone number is invalid.
+        ///     Shoulds the have error when phone number is invalid.
         /// </summary>
         [Test]
         public void Should_HaveError_When_PhoneNumberIsInvalid()
@@ -75,7 +75,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when identity number is invalid.
+        ///     Shoulds the have error when identity number is invalid.
         /// </summary>
         [Test]
         public void Should_HaveError_When_IdentityNumberIsInvalid()
@@ -92,7 +92,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when date of birth format invalid.
+        ///     Shoulds the have error when date of birth format invalid.
         /// </summary>
         [Test]
         public void Should_HaveError_When_DateOfBirthFormatInvalid()
@@ -109,7 +109,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when no field provided.
+        ///     Shoulds the have error when no field provided.
         /// </summary>
         [Test]
         public void Should_HaveError_When_NoFieldProvided()
@@ -126,7 +126,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the have error when non admin tries to change privileges.
+        ///     Shoulds the have error when non admin tries to change privileges.
         /// </summary>
         [Test]
         public void Should_HaveError_When_NonAdmin_TriesToChangePrivileges()
@@ -144,7 +144,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the not have error when admin changes privileges.
+        ///     Shoulds the not have error when admin changes privileges.
         /// </summary>
         [Test]
         public void Should_NotHaveError_When_Admin_ChangesPrivileges()
@@ -161,7 +161,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         }
 
         /// <summary>
-        /// Shoulds the not have error for valid command.
+        ///     Shoulds the not have error for valid command.
         /// </summary>
         [Test]
         public void Should_NotHaveError_For_ValidCommand()
