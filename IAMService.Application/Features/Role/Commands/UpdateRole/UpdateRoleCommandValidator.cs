@@ -4,19 +4,19 @@ using IAMService.Application.Interfaces;
 namespace IAMService.Application.Features.Role.Commands.UpdateRole
 {
     /// <summary>
-    /// The update role command validator class
+    ///     The update role command validator class
     /// </summary>
-    /// <seealso cref="AbstractValidator{UpdateRoleCommand}"/>
+    /// <seealso cref="AbstractValidator{UpdateRoleCommand}" />
     public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
     {
         /// <summary>
-        /// The role repository
-        /// </summary>
-        private readonly IRoleRepository _roleRepository;
-        /// <summary>
-        /// The read only code
+        ///     The read only code
         /// </summary>
         private const string ReadOnlyCode = "ReadOnly";
+        /// <summary>
+        ///     The role repository
+        /// </summary>
+        private readonly IRoleRepository _roleRepository;
         public UpdateRoleCommandValidator(
             IRoleRepository roleRepository,
             IPrivilegeRepository privilegeRepository)
@@ -45,9 +45,9 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
                 .MustHaveValidPrivileges(privilegeRepository)
                 .When(r => r.PrivilegeIds.Any());
         }
-        
+
         /// <summary>
-        /// Validates all role-related business rules in a single database call.
+        ///     Validates all role-related business rules in a single database call.
         /// </summary>
         private async Task ValidateRoleAsync(
             int roleId,
@@ -69,7 +69,7 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
                 context.AddFailure("RoleId", "Default roles cannot be updated.");
                 return;
             }
-            
+
             // Check if it's the ReadOnly role
             if (role.RoleCode == ReadOnlyCode)
             {

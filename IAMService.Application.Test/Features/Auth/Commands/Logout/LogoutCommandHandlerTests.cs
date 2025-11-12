@@ -2,15 +2,11 @@
 using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.AuthenticationServices;
 using Moq;
-
 namespace IAMService.Application.Test.Features.Auth.Commands.Logout
 {
     [TestFixture]
     public class LogoutCommandHandlerTests
     {
-        private Mock<IAuthRepository> _authRepositoryMock = null!;
-        private Mock<IUnitOfWork> _unitOfWorkMock = null!;
-        private LogoutCommandHandler _handler = null!;
 
         [SetUp]
         public void SetUp()
@@ -20,6 +16,9 @@ namespace IAMService.Application.Test.Features.Auth.Commands.Logout
 
             _handler = new LogoutCommandHandler(_authRepositoryMock.Object, _unitOfWorkMock.Object);
         }
+        private Mock<IAuthRepository> _authRepositoryMock = null!;
+        private Mock<IUnitOfWork> _unitOfWorkMock = null!;
+        private LogoutCommandHandler _handler = null!;
 
         [Test]
         public async Task Handle_Should_Return_True_When_Delete_Successful()

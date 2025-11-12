@@ -1,28 +1,28 @@
 namespace IAMService.Application.DTOs
 {
     /// <summary>
-    /// The role dto class
+    ///     The role dto class
     /// </summary>
     public class RoleDto
     {
         /// <summary>
-        /// Gets or sets the value of the id
+        ///     Gets or sets the value of the id
         /// </summary>
         public int RoleId { get; init; }
         /// <summary>
-        /// Gets or sets the value of the name
+        ///     Gets or sets the value of the name
         /// </summary>
         public required string RoleName { get; init; }
         /// <summary>
-        /// Gets or sets the value of the code
+        ///     Gets or sets the value of the code
         /// </summary>
         public required string RoleCode { get; init; }
         /// <summary>
-        /// Gets or sets the value of the description
+        ///     Gets or sets the value of the description
         /// </summary>
         public required string Description { get; init; }
         /// <summary>
-        /// Gets or sets the value of the privileges
+        ///     Gets or sets the value of the privileges
         /// </summary>
         public required List<PrivilegeDto> Privileges { get; init; }
     }

@@ -2,29 +2,26 @@
 using IAMService.API.Middleware;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.CreateUser;
-using IAMService.Application.Features.User.Commands.UpdateUser;
-using IAMService.Application.Features.User.Queries.ViewUserInformation;
 using IAMService.Application.Features.User.Commands.DeleteUser;
+using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Features.User.Queries.GetAllUser;
+using IAMService.Application.Features.User.Queries.ViewUserInformation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-
 namespace IAMService.API.Controllers
 {
     /// <summary>
-    /// Controller for user management operations
-    /// Handles user creation, retrieval, and management
+    ///     Controller for user management operations
+    ///     Handles user creation, retrieval, and management
     /// </summary>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Produces("application/json")]
+    [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class UsersController : ControllerBase
     {
         private readonly ISender _sender;
 
         /// <summary>
-        /// Constructor with dependency injection
+        ///     Constructor with dependency injection
         /// </summary>
         /// <param name="sender">MediatR sender instance</param>
         public UsersController(ISender sender)
@@ -33,17 +30,12 @@ namespace IAMService.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new user account
+        ///     Creates a new user account
         /// </summary>
         /// <param name="command">User creation command containing all required information</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Created user information</returns>
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        [HttpPost, ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateUser(
             [FromBody] CreateUserCommand command,
             CancellationToken cancellationToken)
@@ -61,25 +53,18 @@ namespace IAMService.API.Controllers
         }
 
         /// <summary>
-        /// Updates the user information.
-        /// Only the owner, Admin, or Manager can update user information.
+        ///     Updates the user information.
+        ///     Only the owner, Admin, or Manager can update user information.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
         /// <param name="dto">The dto.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        [Authorize]
-        [HttpPut("{userId:guid}")]
-        [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        [Authorize, HttpPut("{userId:guid}"), ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateUser(
-    Guid userId,
-    [FromBody][BindingBehavior(BindingBehavior.Optional)] UpdateUserRequestDto dto,
-    CancellationToken cancellationToken)
+            Guid userId,
+            [FromBody, BindingBehavior(BindingBehavior.Optional)] UpdateUserRequestDto dto,
+            CancellationToken cancellationToken)
         {
             //  1. Validate the request body
             if (dto == null)
@@ -120,13 +105,13 @@ namespace IAMService.API.Controllers
 
             // 4️⃣ Extract user claims from the JWT
             var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+                                  ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             var currentRole =
                 User.FindFirst(ClaimTypes.Role)?.Value
-                ?? User.FindFirst("role")?.Value
-                ?? User.FindFirst("roles")?.Value
-                ?? "User";
+             ?? User.FindFirst("role")?.Value
+             ?? User.FindFirst("roles")?.Value
+             ?? "User";
 
             if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
@@ -138,11 +123,11 @@ namespace IAMService.API.Controllers
             }
 
             // 5️⃣ Determine user permissions
-            bool isAdminOrManager =
+            var isAdminOrManager =
                 currentRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
                 currentRole.Equals("Manager", StringComparison.OrdinalIgnoreCase);
 
-            bool isOwner = currentUserId == userId;
+            var isOwner = currentUserId == userId;
 
             if (!isOwner && !isAdminOrManager)
             {
@@ -167,25 +152,19 @@ namespace IAMService.API.Controllers
             //  7. Return success response
             var response = ApiResponse<UserResponseDto>.Success(
                 result,
-                "User updated successfully.",
-                200
+                "User updated successfully."
             );
 
             return Ok(response);
         }
 
         /// <summary>
-        /// View detailed information of a specific user.
+        ///     View detailed information of a specific user.
         /// </summary>
         /// <param name="userId">The ID of the user to view.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns></returns>
-        [HttpGet("{userId:guid}")]
-        [Authorize]
-        [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [HttpGet("{userId:guid}"), Authorize, ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUserById(Guid userId, CancellationToken cancellationToken)
         {
             // 🔹 Kiểm tra xác thực
@@ -241,30 +220,24 @@ namespace IAMService.API.Controllers
 
             var response = ApiResponse<UserResponseDto>.Success(
                 result,
-                "User information retrieved successfully.",
-                200
+                "User information retrieved successfully."
             );
 
             return Ok(response);
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns> <summary>
-        /// Delete one user
         /// </summary>
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [HttpDelete("{id:guid}")]
-        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        /// <summary>
+        ///     Delete one user
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpDelete("{id:guid}"), ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUser(
             [FromRoute] Guid id,
             CancellationToken cancellationToken)
@@ -275,28 +248,22 @@ namespace IAMService.API.Controllers
 
             var response = ApiResponse<bool>.Success(
                 result,
-                "User deleted successfully.",
-                StatusCodes.Status200OK
+                "User deleted successfully."
             );
 
             return Ok(response);
         }
 
         /// <summary>
-        /// Get
+        ///     Get
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        [HttpGet]
-        [Authorize(Policy = "view_user")]
-        [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [HttpGet, Authorize(Policy = "view_user"), ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status401Unauthorized), ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetUsers([FromQuery] GetUsersQuery query)
         {
             var result = await _sender.Send(query);
             return Ok(result);
         }
-
     }
 }

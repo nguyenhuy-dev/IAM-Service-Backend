@@ -1,23 +1,24 @@
-﻿namespace IAMService.API.Bootstraping;
-
-/// <summary>
-/// Lab authorization extensions.
-/// </summary>
-public static class LabAuthorizationExtensions
+﻿namespace IAMService.API.Bootstraping
 {
     /// <summary>
-    /// Adds the lab authorization.
+    ///     Lab authorization extensions.
     /// </summary>
-    /// <param name="services">The services.</param>
-    /// <returns></returns>
-    public static IServiceCollection AddLabAuthorization(this IServiceCollection services)
+    public static class LabAuthorizationExtensions
     {
-        services.AddMemoryCache();
-        services.AddScoped<IAuthorizationCacheService, AuthorizationCacheService>();
-        services.AddSingleton<IAuthorizationPolicyProvider, DynamicAuthorizationPolicyProvider>();
+        /// <summary>
+        ///     Adds the lab authorization.
+        /// </summary>
+        /// <param name="services">The services.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddLabAuthorization(this IServiceCollection services)
+        {
+            services.AddMemoryCache();
+            services.AddScoped<IAuthorizationCacheService, AuthorizationCacheService>();
+            services.AddSingleton<IAuthorizationPolicyProvider, DynamicAuthorizationPolicyProvider>();
 
-        services.AddAuthorization();
+            services.AddAuthorization();
 
-        return services;
+            return services;
+        }
     }
 }

@@ -3,38 +3,37 @@ using IAMService.Application.Features.User.Commands.CreateUser;
 namespace IAMService.Application.Test.Features.User.Commands.CreateUser
 {
     /// <summary>
-    /// Unit tests for the CreateUserCommandValidator class.
-    /// Tests the validation rules for user creation requests.
-    /// 
-    /// Test cases include:
-    /// 1. Valid employee user data validation
-    /// 2. Valid patient user data validation
-    /// 3. Email format validation
-    /// 4. Password requirements validation
-    /// 5. Required field validations
-    /// 6. Date format validations
-    /// 7. Phone number format validation
-    /// 8. Identity number format validation
+    ///     Unit tests for the CreateUserCommandValidator class.
+    ///     Tests the validation rules for user creation requests.
+    ///     Test cases include:
+    ///     1. Valid employee user data validation
+    ///     2. Valid patient user data validation
+    ///     3. Email format validation
+    ///     4. Password requirements validation
+    ///     5. Required field validations
+    ///     6. Date format validations
+    ///     7. Phone number format validation
+    ///     8. Identity number format validation
     /// </summary>
     [TestFixture]
     public class CreateUserCommandValidatorTests
     {
-        /// <summary>
-        /// The validator
-        /// </summary>
-        private CreateUserCommandValidator _validator;
 
         /// <summary>
-        /// Setups this instance.
+        ///     Setups this instance.
         /// </summary>
         [SetUp]
         public void Setup()
         {
             _validator = new CreateUserCommandValidator();
         }
+        /// <summary>
+        ///     The validator
+        /// </summary>
+        private CreateUserCommandValidator _validator;
 
         /// <summary>
-        /// Validates the valid employee user should not have validation error.
+        ///     Validates the valid employee user should not have validation error.
         /// </summary>
         [Test]
         public async Task Validate_ValidEmployeeUser_ShouldNotHaveValidationError()
@@ -62,7 +61,7 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the valid patient user should not have validation error.
+        ///     Validates the valid patient user should not have validation error.
         /// </summary>
         [Test]
         public async Task Validate_ValidPatientUser_ShouldNotHaveValidationError()
@@ -90,13 +89,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the invalid email should have validation error.
+        ///     Validates the invalid email should have validation error.
         /// </summary>
         /// <param name="invalidEmail">The invalid email.</param>
-        [TestCase("")]
-        [TestCase("invalid")]
-        [TestCase("invalid@")]
-        [TestCase("@invalid.com")]
+        [TestCase(""), TestCase("invalid"), TestCase("invalid@"), TestCase("@invalid.com")]
         public async Task Validate_InvalidEmail_ShouldHaveValidationError(string invalidEmail)
         {
             // Arrange
@@ -122,13 +118,13 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the invalid phone number should have validation error.
+        ///     Validates the invalid phone number should have validation error.
         /// </summary>
         /// <param name="invalidPhone">The invalid phone.</param>
-        [TestCase("")]
-        [TestCase("123456789")] // 9 digits
-        [TestCase("12345678901")] // 11 digits
-        [TestCase("1234567890")] // Doesn't start with 0
+        [TestCase(""), TestCase("123456789"), TestCase("12345678901"), TestCase("1234567890")]
+        // 9 digits
+        // 11 digits
+         // Doesn't start with 0
         public async Task Validate_InvalidPhoneNumber_ShouldHaveValidationError(string invalidPhone)
         {
             // Arrange
@@ -154,13 +150,13 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the invalid identity number should have validation error.
+        ///     Validates the invalid identity number should have validation error.
         /// </summary>
         /// <param name="invalidId">The invalid identifier.</param>
-        [TestCase("")]
-        [TestCase("12345678901")] // 11 digits
-        [TestCase("1234567890123")] // 13 digits
-        [TestCase("12345abcd890")] // Contains letters
+        [TestCase(""), TestCase("12345678901"), TestCase("1234567890123"), TestCase("12345abcd890")]
+        // 11 digits
+        // 13 digits
+         // Contains letters
         public async Task Validate_InvalidIdentityNumber_ShouldHaveValidationError(string invalidId)
         {
             // Arrange
@@ -186,13 +182,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the invalid gender should have validation error.
+        ///     Validates the invalid gender should have validation error.
         /// </summary>
         /// <param name="invalidGender">The invalid gender.</param>
-        [TestCase("")]
-        [TestCase("Other")]
-        [TestCase("M")]
-        [TestCase("F")]
+        [TestCase(""), TestCase("Other"), TestCase("M"), TestCase("F")]
         public async Task Validate_InvalidGender_ShouldHaveValidationError(string invalidGender)
         {
             // Arrange
@@ -218,14 +211,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the invalid date of birth should have validation error.
+        ///     Validates the invalid date of birth should have validation error.
         /// </summary>
         /// <param name="invalidDate">The invalid date.</param>
-        [TestCase("")]
-        [TestCase("13/13/2020")]
-        [TestCase("2020/01/01")]
-        [TestCase("01-01-2020")]
-        [TestCase("invalid")]
+        [TestCase(""), TestCase("13/13/2020"), TestCase("2020/01/01"), TestCase("01-01-2020"), TestCase("invalid")]
         public async Task Validate_InvalidDateOfBirth_ShouldHaveValidationError(string invalidDate)
         {
             // Arrange
@@ -251,7 +240,7 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the patient with password should have validation error.
+        ///     Validates the patient with password should have validation error.
         /// </summary>
         [Test]
         public async Task Validate_PatientWithPassword_ShouldHaveValidationError()
@@ -279,7 +268,7 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the employee without password should have validation error.
+        ///     Validates the employee without password should have validation error.
         /// </summary>
         [Test]
         public async Task Validate_EmployeeWithoutPassword_ShouldHaveValidationError()
@@ -307,14 +296,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Validates the weak password should have validation error.
+        ///     Validates the weak password should have validation error.
         /// </summary>
         /// <param name="weakPassword">The weak password.</param>
-        [TestCase("short")]
-        [TestCase("nouppercase123!")]
-        [TestCase("NOLOWERCASE123!")]
-        [TestCase("NoSpecialChar123")]
-        [TestCase("No@Numbers")]
+        [TestCase("short"), TestCase("nouppercase123!"), TestCase("NOLOWERCASE123!"), TestCase("NoSpecialChar123"), TestCase("No@Numbers")]
         public async Task Validate_WeakPassword_ShouldHaveValidationError(string weakPassword)
         {
             // Arrange

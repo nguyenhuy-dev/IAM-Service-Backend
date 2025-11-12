@@ -2,13 +2,13 @@
 namespace IAMService.Application.Features.User.Commands.UpdateUser
 {
     /// <summary>
-    /// The update user command validator class.
+    ///     The update user command validator class.
     /// </summary>
-    /// <seealso cref="AbstractValidator{UpdateUserCommand}"/>
+    /// <seealso cref="AbstractValidator{UpdateUserCommand}" />
     public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="UpdateUserCommandValidator"/> class.
+        ///     Initializes a new instance of the <see cref="UpdateUserCommandValidator" /> class.
         /// </summary>
         public UpdateUserCommandValidator()
         {
@@ -63,7 +63,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                     dto.IdentityNumber != null ||
                     dto.DateOfBirth != null ||
                     dto.Address != null ||
-                    (dto.PrivilegeIds != null && dto.PrivilegeIds.Any()))
+                    dto.PrivilegeIds != null && dto.PrivilegeIds.Any())
                 .WithMessage("At least one field must be provided for update.");
 
             //  Privilege rule — only admin can modify privileges

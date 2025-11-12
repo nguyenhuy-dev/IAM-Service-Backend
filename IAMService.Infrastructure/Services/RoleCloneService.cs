@@ -3,26 +3,25 @@ using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    ///  Service responsible for creating a custom role for a user
+    ///     Service responsible for creating a custom role for a user
     /// </summary>
     /// <seealso cref="IAMService.Application.Interfaces.IRoleCloneService" />
     public class RoleCloneService : IRoleCloneService
     {
         /// <summary>
-        /// The context
+        ///     The context
         /// </summary>
         private readonly IAMServiceDbContext _context;
         /// <summary>
-        /// The logger
+        ///     The logger
         /// </summary>
         private readonly ILogger<RoleCloneService> _logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RoleCloneService"/> class.
+        ///     Initializes a new instance of the <see cref="RoleCloneService" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="logger">The logger.</param>
@@ -32,19 +31,19 @@ namespace IAMService.Infrastructure.Services
             _logger = logger;
         }
         /// <summary>
-        /// Clones an existing user's role and assigns a customized set of privileges.
+        ///     Clones an existing user's role and assigns a customized set of privileges.
         /// </summary>
         /// <param name="user">The user whose role will be cloned.</param>
         /// <param name="privilegeIds">The identifiers of privileges to associate with the cloned role.</param>
         /// <param name="cancellationToken">The cancellation token to observe during the operation.</param>
         /// <returns>
-        /// The newly created role that contains the customized set of privileges.
+        ///     The newly created role that contains the customized set of privileges.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">user</exception>
         /// <exception cref="System.InvalidOperationException">
-        /// Privilege list cannot be empty.
-        /// or
-        /// No valid privileges found for provided IDs.
+        ///     Privilege list cannot be empty.
+        ///     or
+        ///     No valid privileges found for provided IDs.
         /// </exception>
         public async Task<Role> CloneRoleWithPrivilegesAsync(User user, List<int> privilegeIds, CancellationToken cancellationToken)
         {
@@ -84,7 +83,7 @@ namespace IAMService.Infrastructure.Services
             var shortId = user.UserId.ToString()[..6];
             var baseName = $"Custom_{shortId}";
             var roleName = baseName;
-            int version = 1;
+            var version = 1;
             while (await _context.Roles.AnyAsync(r => r.RoleName == roleName, cancellationToken))
                 roleName = $"{baseName}_v{++version}";
 
@@ -95,8 +94,8 @@ namespace IAMService.Infrastructure.Services
             foreach (var privilege in privileges)
             {
                 var trackedPrivilege = _context.Privileges.Local
-                    .FirstOrDefault(p => p.PrivilegeId == privilege.PrivilegeId)
-                    ?? _context.Privileges.Attach(privilege).Entity;
+                                           .FirstOrDefault(p => p.PrivilegeId == privilege.PrivilegeId)
+                                    ?? _context.Privileges.Attach(privilege).Entity;
 
                 newRole.Privileges.Add(trackedPrivilege);
             }
@@ -109,6 +108,5 @@ namespace IAMService.Infrastructure.Services
 
             return newRole;
         }
-
     }
 }

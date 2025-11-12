@@ -3,18 +3,11 @@ using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.AuthenticationServices;
 using IAMService.Domain.Entities;
 using Moq;
-using NSubstitute;
-
-
 namespace IAMService.Application.Test.Features.Auth.Commands.Login
 {
     [TestFixture]
     public class LoginCommandHandlerTests
     {
-        private Mock<IAuthRepository> _authRepositoryMock;
-        private Mock<IUserTokenGenerator> _userTokenGeneratorMock;
-        private Mock<IUnitOfWork> _unitOfWorkMock;
-        private LoginCommandHandler _handler;
 
         [SetUp]
         public void SetUp()
@@ -29,6 +22,10 @@ namespace IAMService.Application.Test.Features.Auth.Commands.Login
                 _unitOfWorkMock.Object
             );
         }
+        private Mock<IAuthRepository> _authRepositoryMock;
+        private Mock<IUserTokenGenerator> _userTokenGeneratorMock;
+        private Mock<IUnitOfWork> _unitOfWorkMock;
+        private LoginCommandHandler _handler;
 
         [Test]
         public async Task Handle_ShouldReturnLoginResponse_WhenLoginIsSuccessful()

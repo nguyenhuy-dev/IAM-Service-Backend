@@ -2,17 +2,17 @@
 using IAMService.Application.Interfaces.ForgetPassword;
 using IAMService.Domain.Entities;
 using MediatR;
-
+using System.Net.Mail;
 namespace IAMService.Application.Features.ForgotPassword.Commands
 {
     public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, bool>
     {
-        private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
+        private readonly IStringEncryptionService _stringEncryptionService;
         private readonly ITokenHasher _tokenHasher;
         private readonly IPasswordResetTokenRepository _tokenRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IStringEncryptionService _stringEncryptionService;
+        private readonly IUserRepository _userRepository;
 
         public ForgotPasswordCommandHandler(
             IUserRepository userRepository,
@@ -30,7 +30,7 @@ namespace IAMService.Application.Features.ForgotPassword.Commands
             _stringEncryptionService = stringEncryptionService;
         }
 
-                public async Task<bool> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetByEmailAsync(request.Email);
 
@@ -38,14 +38,14 @@ namespace IAMService.Application.Features.ForgotPassword.Commands
             {
                 return true; // Security: Always return true to prevent email enumeration
             }
-            
+
             if (user.IsLockedOut)
             {
                 return true; // Security: Don't reveal locked status
             }
 
             var decryptedEmail = _stringEncryptionService.DecryptString(user.Email);
-            
+
             if (string.IsNullOrEmpty(decryptedEmail) || !IsValidEmail(decryptedEmail))
             {
                 return true; // Security: Don't reveal invalid email status
@@ -81,7 +81,7 @@ namespace IAMService.Application.Features.ForgotPassword.Commands
         {
             try
             {
-                var mailAddress = new System.Net.Mail.MailAddress(email);
+                var mailAddress = new MailAddress(email);
                 return mailAddress.Address == email;
             }
             catch
@@ -91,4 +91,3 @@ namespace IAMService.Application.Features.ForgotPassword.Commands
         }
     }
 }
-

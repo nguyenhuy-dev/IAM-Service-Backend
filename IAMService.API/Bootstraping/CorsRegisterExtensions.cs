@@ -1,29 +1,30 @@
-﻿namespace IAMService.API.Bootstraping;
-
-/// <summary>
-/// Cors extensions for Program.
-/// </summary>
-public static class CorsRegisterExtensions
+﻿namespace IAMService.API.Bootstraping
 {
     /// <summary>
-    /// Adds the cors lab.
+    ///     Cors extensions for Program.
     /// </summary>
-    /// <param name="services">The services.</param>
-    /// <param name="namePolicy">The name policy.</param>
-    /// <param name="args">The arguments.</param>
-    /// <returns></returns>
-    public static IServiceCollection AddCorsLab(this IServiceCollection services, string namePolicy, string[] args)
+    public static class CorsRegisterExtensions
     {
-        return services.AddCors(options =>
+        /// <summary>
+        ///     Adds the cors lab.
+        /// </summary>
+        /// <param name="services">The services.</param>
+        /// <param name="namePolicy">The name policy.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddCorsLab(this IServiceCollection services, string namePolicy, string[] args)
         {
-            options.AddPolicy(namePolicy, policy =>
+            return services.AddCors(options =>
             {
-                policy
-                    .WithOrigins(args)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
+                options.AddPolicy(namePolicy, policy =>
+                {
+                    policy
+                        .WithOrigins(args)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
             });
-        });
+        }
     }
 }

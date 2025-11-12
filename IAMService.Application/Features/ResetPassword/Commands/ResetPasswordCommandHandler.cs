@@ -1,16 +1,15 @@
 ﻿using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.ForgetPassword;
 using MediatR;
-
 namespace IAMService.Application.Features.ResetPassword.Commands
 {
     public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, bool>
     {
-        private readonly IUserRepository _userRepository;
-        private readonly ITokenHasher _tokenHasher;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly ITokenHasher _tokenHasher;
         private readonly IPasswordResetTokenRepository _tokenRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserRepository _userRepository;
 
         public ResetPasswordCommandHandler(IUserRepository userRepository, ITokenHasher tokenHasher, IPasswordHasher passwordHasher, IPasswordResetTokenRepository tokenRepository, IUnitOfWork unitOfWork)
         {
@@ -22,14 +21,14 @@ namespace IAMService.Application.Features.ResetPassword.Commands
         }
         public async Task<bool> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
         {
-            
+
             var hashedToken = _tokenHasher.Hash(request.Token);
             var tokenEntity = await _tokenRepository.GetValidTokenByHashedTokenAsync(hashedToken);
             if (tokenEntity == null || tokenEntity.UserId != request.UserId)
             {
                 return false;
             }
-            var user = await _userRepository.GetByIdAsync(request.UserId, tracking: true);
+            var user = await _userRepository.GetByIdAsync(request.UserId, true);
             if (user == null || user.IsLockedOut)
             {
                 return false;
@@ -47,5 +46,5 @@ namespace IAMService.Application.Features.ResetPassword.Commands
 
             return true;
         }
-    }   
+    }
 }

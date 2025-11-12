@@ -1,22 +1,20 @@
 ﻿using IAMService.Application.Interfaces;
-using System;
 using System.Security.Cryptography;
 using System.Text;
-
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    /// Implements the <see cref="ITokenHasher"/> contract using SHA256 for one-way hashing of tokens
-    /// (e.g., Refresh Tokens) for secure storage and efficient lookup in the database.
+    ///     Implements the <see cref="ITokenHasher" /> contract using SHA256 for one-way hashing of tokens
+    ///     (e.g., Refresh Tokens) for secure storage and efficient lookup in the database.
     /// </summary>
     /// <remarks>
-    /// NOTE: SHA256 is a fast cryptographic hash, suitable for unique token identification and integrity checking, 
-    /// but NOT suitable for password hashing, which requires slow, salted, adaptive functions like Argon2 or PBKDF2.
+    ///     NOTE: SHA256 is a fast cryptographic hash, suitable for unique token identification and integrity checking,
+    ///     but NOT suitable for password hashing, which requires slow, salted, adaptive functions like Argon2 or PBKDF2.
     /// </remarks>
     public class TokenHasher : ITokenHasher
     {
         /// <summary>
-        /// Generates a cryptographic hash of the provided plain-text token using SHA256.
+        ///     Generates a cryptographic hash of the provided plain-text token using SHA256.
         /// </summary>
         /// <param name="token">The plain-text token string (e.g., the opaque Refresh Token) to hash.</param>
         /// <returns>A Base64-encoded string representing the SHA256 hash of the token.</returns>
@@ -33,7 +31,7 @@ namespace IAMService.Infrastructure.Services
         }
 
         /// <summary>
-        /// Verifies a plain-text token against a stored hash to confirm a match.
+        ///     Verifies a plain-text token against a stored hash to confirm a match.
         /// </summary>
         /// <param name="plainToken">The plain-text token provided by the client.</param>
         /// <param name="hashedToken">The secure hash retrieved from the database.</param>

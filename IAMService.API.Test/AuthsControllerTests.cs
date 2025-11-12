@@ -13,14 +13,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System.Security.Claims;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class AuthsControllerTests
     {
-        private Mock<ISender> _mockSender;
-        private AuthsController _controller;
 
         [SetUp]
         public void Setup()
@@ -28,12 +25,14 @@ namespace IAMService.API.Test
             _mockSender = new Mock<ISender>();
             _controller = new AuthsController(_mockSender.Object)
             {
-                ControllerContext = new ControllerContext()
+                ControllerContext = new ControllerContext
                 {
                     HttpContext = new DefaultHttpContext()
                 }
             };
         }
+        private Mock<ISender> _mockSender;
+        private AuthsController _controller;
 
         [Test]
         public async Task Login_ReturnsOk_WhenValid()
@@ -43,7 +42,7 @@ namespace IAMService.API.Test
             var loginResponse = new LoginResponse { AccessToken = "token" };
 
             _mockSender.Setup(s => s.Send(command, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(loginResponse);
+                .ReturnsAsync(loginResponse);
 
             // Act
             var result = await _controller.Login(command, CancellationToken.None) as OkObjectResult;
@@ -86,7 +85,7 @@ namespace IAMService.API.Test
             );
 
             _mockSender.Setup(s => s.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(true);
+                .ReturnsAsync(true);
 
             // Act
             var result = await _controller.Logout(CancellationToken.None) as OkObjectResult;
@@ -121,7 +120,7 @@ namespace IAMService.API.Test
             var refreshResponse = new RefreshTokenResponse { AccessToken = "newToken" };
 
             _mockSender.Setup(s => s.Send(It.IsAny<RefreshTokenCommand>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(refreshResponse);
+                .ReturnsAsync(refreshResponse);
 
             // Act
             var result = await _controller.RefreshToken(CancellationToken.None) as OkObjectResult;
@@ -139,7 +138,7 @@ namespace IAMService.API.Test
             var request = new ForgotPasswordRequestDto { Email = "test@example.com" };
 
             _mockSender.Setup(s => s.Send(It.IsAny<ForgotPasswordCommand>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(true);
+                .ReturnsAsync(true);
 
             // Act
             var result = await _controller.ForgotPassword(request, CancellationToken.None) as OkObjectResult;
@@ -182,7 +181,7 @@ namespace IAMService.API.Test
             };
 
             _mockSender.Setup(s => s.Send(It.IsAny<ResetPasswordCommand>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(true);
+                .ReturnsAsync(true);
 
             // Act
             var result = await _controller.ResetPassword(request, CancellationToken.None) as OkObjectResult;
@@ -206,7 +205,7 @@ namespace IAMService.API.Test
             };
 
             _mockSender.Setup(s => s.Send(It.IsAny<ResetPasswordCommand>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(false);
+                .ReturnsAsync(false);
 
             // Act
             var result = await _controller.ResetPassword(request, CancellationToken.None) as BadRequestObjectResult;

@@ -3,16 +3,11 @@ using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.AuthenticationServices;
 using IAMService.Domain.Entities;
 using Moq;
-
 namespace IAMService.Application.Test.Features.Auth.Commands.RefreshToken
 {
     [TestFixture]
     public class RefreshTokenCommandHandlerTests
     {
-        private Mock<IAuthRepository> _authRepositoryMock = null!;
-        private Mock<IUserTokenGenerator> _tokenGeneratorMock = null!;
-        private Mock<IUnitOfWork> _unitOfWorkMock = null!;
-        private RefreshTokenCommandHandler _handler = null!;
 
         [SetUp]
         public void SetUp()
@@ -27,6 +22,10 @@ namespace IAMService.Application.Test.Features.Auth.Commands.RefreshToken
                 _unitOfWorkMock.Object
             );
         }
+        private Mock<IAuthRepository> _authRepositoryMock = null!;
+        private Mock<IUserTokenGenerator> _tokenGeneratorMock = null!;
+        private Mock<IUnitOfWork> _unitOfWorkMock = null!;
+        private RefreshTokenCommandHandler _handler = null!;
 
         [Test]
         public async Task Handle_ShouldReturnNewToken_WhenRefreshSuccessful()

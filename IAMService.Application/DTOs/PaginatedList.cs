@@ -1,43 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
 namespace IAMService.Application.DTOs
 {
     /// <summary>
-    /// Paginated list of items
+    ///     Paginated list of items
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class PaginatedList<T>
     {
         /// <summary>
-        /// Gets the items.
-        /// </summary>
-        /// <value>
-        /// The items.
-        /// </value>
-        public List<T> Items { get; }
-        /// <summary>
-        /// Gets the page number.
-        /// </summary>
-        /// <value>
-        /// The page number.
-        /// </value>
-        public int PageNumber { get; }
-        /// <summary>
-        /// Gets the total pages.
-        /// </summary>
-        /// <value>
-        /// The total pages.
-        /// </value>
-        public int TotalPages { get; }
-        /// <summary>
-        /// Gets the total count.
-        /// </summary>
-        /// <value>
-        /// The total count.
-        /// </value>
-        public int TotalCount { get; }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PaginatedList{T}"/> class.
+        ///     Initializes a new instance of the <see cref="PaginatedList{T}" /> class.
         /// </summary>
         /// <param name="items">The items.</param>
         /// <param name="count">The count.</param>
@@ -50,24 +21,58 @@ namespace IAMService.Application.DTOs
             TotalCount = count;
             Items = items;
         }
-
         /// <summary>
-        /// Gets a value indicating whether this instance has previous page.
+        ///     Gets the items.
         /// </summary>
         /// <value>
-        ///   <c>true</c> if this instance has previous page; otherwise, <c>false</c>.
+        ///     The items.
         /// </value>
-        public bool HasPreviousPage => PageNumber > 1;
+        public List<T> Items { get; }
         /// <summary>
-        /// Gets a value indicating whether this instance has next page.
+        ///     Gets the page number.
         /// </summary>
         /// <value>
-        ///   <c>true</c> if this instance has next page; otherwise, <c>false</c>.
+        ///     The page number.
         /// </value>
-        public bool HasNextPage => PageNumber < TotalPages;
+        public int PageNumber { get; }
+        /// <summary>
+        ///     Gets the total pages.
+        /// </summary>
+        /// <value>
+        ///     The total pages.
+        /// </value>
+        public int TotalPages { get; }
+        /// <summary>
+        ///     Gets the total count.
+        /// </summary>
+        /// <value>
+        ///     The total count.
+        /// </value>
+        public int TotalCount { get; }
 
         /// <summary>
-        /// Creates the asynchronous.
+        ///     Gets a value indicating whether this instance has previous page.
+        /// </summary>
+        /// <value>
+        ///     <c>true</c> if this instance has previous page; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasPreviousPage
+        {
+            get => PageNumber > 1;
+        }
+        /// <summary>
+        ///     Gets a value indicating whether this instance has next page.
+        /// </summary>
+        /// <value>
+        ///     <c>true</c> if this instance has next page; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasNextPage
+        {
+            get => PageNumber < TotalPages;
+        }
+
+        /// <summary>
+        ///     Creates the asynchronous.
         /// </summary>
         /// <param name="source">The source.</param>
         /// <param name="pageNumber">The page number.</param>

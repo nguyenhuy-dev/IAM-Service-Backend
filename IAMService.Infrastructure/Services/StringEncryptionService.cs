@@ -1,18 +1,17 @@
 ﻿using IAMService.Application.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
-
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    /// Provides functionality to encrypt and decrypt strings using AES encryption.
+    ///     Provides functionality to encrypt and decrypt strings using AES encryption.
     /// </summary>
     /// <seealso cref="IAMService.Application.Interfaces.IStringEncryptionService" />
     public class StringEncryptionService : IStringEncryptionService
     {
         // Fixed IV (128 bits). For stronger security consider random IV per-encryption and storing alongside ciphertext.
         /// <summary>
-        /// The iv
+        ///     The iv
         /// </summary>
         private static readonly byte[] IV =
         {
@@ -20,11 +19,11 @@ namespace IAMService.Infrastructure.Services
             0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16
         };
         /// <summary>
-        /// The passphrase
+        ///     The passphrase
         /// </summary>
         private readonly string _passphrase;
         /// <summary>
-        /// Initializes a new instance of the <see cref="StringEncryptionService"/> class.
+        ///     Initializes a new instance of the <see cref="StringEncryptionService" /> class.
         /// </summary>
         /// <param name="passphrase">The passphrase.</param>
         /// <exception cref="System.ArgumentException">Passphrase must be non-empty. - passphrase</exception>
@@ -35,27 +34,8 @@ namespace IAMService.Infrastructure.Services
 
             _passphrase = passphrase;
         }
-
         /// <summary>
-        /// Derives the key from password.
-        /// </summary>
-        /// <param name="password">The password.</param>
-        /// <returns></returns>
-        private static byte[] DeriveKeyFromPassword(string password)
-        {
-            var emptySalt = Array.Empty<byte>();
-            var iterations = 1000;
-            var desiredKeyLength = 16; // 16 bytes = 128 bits
-            var hashMethod = HashAlgorithmName.SHA384;
-
-            return Rfc2898DeriveBytes.Pbkdf2(Encoding.Unicode.GetBytes(password),
-                                             emptySalt,
-                                             iterations,
-                                             hashMethod,
-                                             desiredKeyLength);
-        }
-        /// <summary>
-        /// Encrypts the string.
+        ///     Encrypts the string.
         /// </summary>
         /// <param name="plainText">The plain text.</param>
         /// <returns></returns>
@@ -81,7 +61,7 @@ namespace IAMService.Infrastructure.Services
             return Convert.ToBase64String(encrypted);
         }
         /// <summary>
-        /// Decrypts the string.
+        ///     Decrypts the string.
         /// </summary>
         /// <param name="base64CipherText">The base64 cipher text.</param>
         /// <returns></returns>
@@ -120,6 +100,25 @@ namespace IAMService.Infrastructure.Services
             {
                 return base64CipherText;
             }
+        }
+
+        /// <summary>
+        ///     Derives the key from password.
+        /// </summary>
+        /// <param name="password">The password.</param>
+        /// <returns></returns>
+        private static byte[] DeriveKeyFromPassword(string password)
+        {
+            var emptySalt = Array.Empty<byte>();
+            var iterations = 1000;
+            var desiredKeyLength = 16; // 16 bytes = 128 bits
+            var hashMethod = HashAlgorithmName.SHA384;
+
+            return Rfc2898DeriveBytes.Pbkdf2(Encoding.Unicode.GetBytes(password),
+                emptySalt,
+                iterations,
+                hashMethod,
+                desiredKeyLength);
         }
     }
 }

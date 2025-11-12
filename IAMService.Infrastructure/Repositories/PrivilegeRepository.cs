@@ -1,21 +1,20 @@
-using IAMService.Domain.Entities;
 using IAMService.Application.Interfaces;
+using IAMService.Domain.Entities;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
 namespace IAMService.Infrastructure.Repositories
 {
     /// <summary>
-    /// Repository implementation for Privilege entity operations.
+    ///     Repository implementation for Privilege entity operations.
     /// </summary>
     public class PrivilegeRepository(IAMServiceDbContext context) : IPrivilegeRepository
     {
         /// <summary>
-        /// The context
+        ///     The context
         /// </summary>
         private readonly IAMServiceDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<Privilege> CreateAsync(Privilege privilege)
         {
             ArgumentNullException.ThrowIfNull(privilege);
@@ -26,14 +25,14 @@ namespace IAMService.Infrastructure.Repositories
             return privilege;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<Privilege?> GetByIdAsync(int privilegeId)
         {
             return await _context.Privileges
                 .FirstOrDefaultAsync(p => p.PrivilegeId == privilegeId);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<Privilege?> GetByNameAsync(string privilegeName)
         {
             if (string.IsNullOrWhiteSpace(privilegeName))
@@ -43,7 +42,7 @@ namespace IAMService.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.PrivilegeName == privilegeName);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<IEnumerable<Privilege>> GetByIdsAsync(IEnumerable<int> privilegeIds)
         {
             ArgumentNullException.ThrowIfNull(privilegeIds);
@@ -58,14 +57,14 @@ namespace IAMService.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<IEnumerable<Privilege>> GetAllAsync()
         {
             return await _context.Privileges
                 .ToListAsync();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<Privilege> UpdateAsync(Privilege privilege)
         {
             ArgumentNullException.ThrowIfNull(privilege);
@@ -76,7 +75,7 @@ namespace IAMService.Infrastructure.Repositories
             return privilege;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> DeleteAsync(int privilegeId)
         {
             var privilege = await _context.Privileges
@@ -91,7 +90,7 @@ namespace IAMService.Infrastructure.Repositories
             return true;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> ExistsByNameAsync(string privilegeName)
         {
             if (string.IsNullOrWhiteSpace(privilegeName))
@@ -102,7 +101,7 @@ namespace IAMService.Infrastructure.Repositories
             return await query.AnyAsync();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public async Task<bool> AllExistAsync(IEnumerable<int> privilegeIds)
         {
             ArgumentNullException.ThrowIfNull(privilegeIds);

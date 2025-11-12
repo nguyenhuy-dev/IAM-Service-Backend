@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace IAMService.API.Middleware
 {
     /// <summary>
-    /// The global exception handler middleware class
+    ///     The global exception handler middleware class
     /// </summary>
     public class GlobalExceptionHandlerMiddleware(
         RequestDelegate next,
@@ -14,7 +14,7 @@ namespace IAMService.API.Middleware
     {
 
         /// <summary>
-        /// Invokes the context
+        ///     Invokes the context
         /// </summary>
         /// <param name="context">The context</param>
         public async Task InvokeAsync(HttpContext context)
@@ -30,7 +30,7 @@ namespace IAMService.API.Middleware
         }
 
         /// <summary>
-        /// Handles the exception using the specified context
+        ///     Handles the exception using the specified context
         /// </summary>
         /// <param name="context">The context</param>
         /// <param name="exception">The exception</param>
@@ -115,36 +115,36 @@ namespace IAMService.API.Middleware
     }
 
     /// <summary>
-    /// Standard error response model
+    ///     Standard error response model
     /// </summary>
     public class ErrorResponse
     {
         /// <summary>
-        /// Gets or sets the value of the status code
+        ///     Gets or sets the value of the status code
         /// </summary>
         public int StatusCode { get; set; }
         /// <summary>
-        /// Gets or sets the value of the message
+        ///     Gets or sets the value of the message
         /// </summary>
         public string Message { get; set; } = string.Empty;
         /// <summary>
-        /// Gets or sets the value of the errors
+        ///     Gets or sets the value of the errors
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<ErrorDetail>? Errors { get; set; }
     }
 
     /// <summary>
-    /// Detailed error information for validation failures
+    ///     Detailed error information for validation failures
     /// </summary>
     public class ErrorDetail
     {
         /// <summary>
-        /// Gets or sets the value of the field
+        ///     Gets or sets the value of the field
         /// </summary>
         public string Field { get; set; } = string.Empty;
         /// <summary>
-        /// Gets or sets the value of the message
+        ///     Gets or sets the value of the message
         /// </summary>
         public string Message { get; set; } = string.Empty;
     }
