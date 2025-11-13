@@ -1,30 +1,159 @@
-**/.classpath
-**/.dockerignore
-**/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/bin
-**/charts
-**/docker-compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
-LICENSE
+# .dockerignore
+# Optimized for React (Vite) + .NET microservices on GKE
+
+# ==============================================================================
+# Node.js / React / Frontend
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+.pnp.*
+.node_repl_history
+.nyc_output
+coverage/
+*.lcov
+
+# DON'T exclude dist/ or build/ - needed for multi-stage builds!
+# The Dockerfile COPY will handle these correctly
+
+# Environment files (keep .env.example if you have it)
+.env
+.env.local
+.env.*.local
+
+# ==============================================================================
+# .NET / Backend
+# ==============================================================================
+**/bin/
+**/obj/
+**/*.user
+**/*.userosscache
+**/*.suo
+**/.vs/
+**/packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Build outputs - these are recreated during docker build
+**/[Dd]ebug/
+**/[Rr]elease/
+**/x64/
+**/x86/
+**/[Bb]ld/
+**/[Ll]og/
+
+# Test results
+**/*.trx
+**/*.coverage
+**/TestResults/
+
+# ==============================================================================
+# Version Control
+# ==============================================================================
+.git/
+.gitignore
+.gitattributes
+.svn/
+.hg/
+.bzr/
+
+# ==============================================================================
+# IDEs & Editors
+# ==============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# ==============================================================================
+# Documentation & Markdown
+# ==============================================================================
 README.md
-!**/.gitignore
-!.git/HEAD
-!.git/config
-!.git/packed-refs
-!.git/refs/heads/**
+CHANGELOG.md
+LICENSE
+*.md
+docs/
+**/*.md
+!**/README.Docker.md
+
+# ==============================================================================
+# CI/CD & DevOps (exclude deployment configs from images)
+# ==============================================================================
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+.circleci/
+k8s/
+kubernetes/
+helm/
+terraform/
+*.kubeconfig
+
+# Docker files (optional - keep if you want them for reference)
+**/.dockerignore
+**/docker-compose*.yml
+**/docker-compose*.yaml
+
+# ==============================================================================
+# Secrets & Sensitive Data (CRITICAL)
+# ==============================================================================
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/secrets/
+**/.env.*
+!**/.env.example
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# ==============================================================================
+# Logs & Temporary Files
+# ==============================================================================
+**/logs/
+**/tmp/
+**/temp/
+**/*.tmp
+**/*.log
+**/*.pid
+**/*.seed
+**/*.pid.lock
+.cache/
+
+# ==============================================================================
+# Tests & Quality Tools
+# ==============================================================================
+**/*.test.js
+**/*.spec.js
+**/__tests__/
+**/__mocks__/
+**/test/
+**/tests/
+**/.eslintrc*
+**/.prettierrc*
+**/jest.config.*
+**/vitest.config.*
+**/.babelrc
+
+# .NET Test Projects (CRITICAL for Docker builds)
+**/*.Test/
+**/*.Tests/
+**/*.IntegrationTests/
+**/*.UnitTests/
+**/TestResults/
+
+# ==============================================================================
+# Misc
+# ==============================================================================
+.editorconfig
+.nvmrc
+.npmrc
