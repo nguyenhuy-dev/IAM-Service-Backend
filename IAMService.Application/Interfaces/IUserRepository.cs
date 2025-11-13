@@ -2,56 +2,56 @@
 namespace IAMService.Application.Interfaces
 {
     /// <summary>
-    /// Repository interface for User entity operations
-    /// Defines data access methods for user management
+    ///     Repository interface for User entity operations
+    ///     Defines data access methods for user management
     /// </summary>
     public interface IUserRepository
     {
         /// <summary>
-        /// Creates a new user in the database
+        ///     Creates a new user in the database
         /// </summary>
         /// <param name="user">The user.</param>
         /// <returns>The created user with generated ID</returns>
         Task<User> CreateAsync(User user);
 
         /// <summary>
-        /// Checks if an email address is already registered
+        ///     Checks if an email address is already registered
         /// </summary>
         /// <param name="email">Email address to check</param>
         /// <returns>>True if email exists, false otherwise</returns>
         Task<bool> ExistsByEmailAsync(string email);
 
         /// <summary>
-        /// Existses the by identity number asynchronous.
+        ///     Existses the by identity number asynchronous.
         /// </summary>
         /// <param name="identityNumber">The identity number.</param>
         /// <returns>True if identity number exists, false otherwise</returns>
         Task<bool> ExistsByIdentityNumberAsync(string identityNumber);
 
-    /// Gets a user by their ID
-    /// <summary>
-    /// Gets a user by their unique identifier.
-    /// </summary>
-    /// <param name="userId">The user identifier (GUID).</param>
-    /// <param name="tracking">Whether to track the entity in the context (default: false).</param>
-    /// <returns>
-    /// The <see cref="User"/> entity if found; otherwise, <c>null</c>.
-    /// </returns>
-    Task<User?> GetByIdAsync(Guid userId, bool tracking = false);
+        /// Gets a user by their ID
+        /// <summary>
+        ///     Gets a user by their unique identifier.
+        /// </summary>
+        /// <param name="userId">The user identifier (GUID).</param>
+        /// <param name="tracking">Whether to track the entity in the context (default: false).</param>
+        /// <returns>
+        ///     The <see cref="User" /> entity if found; otherwise, <c>null</c>.
+        /// </returns>
+        Task<User?> GetByIdAsync(Guid userId, bool tracking = false);
 
         /// <summary>
-        /// Gets a user by their email address
+        ///     Gets a user by their email address
         /// </summary>
         /// <param name="email">The email.</param>
         /// <returns>User if found, null otherwise</returns>
         Task<User?> GetByEmailAsync(string email);
 
         /// <summary>
-        /// Updates an existing user with the provided information.
+        ///     Updates an existing user with the provided information.
         /// </summary>
-        /// <param name="user">The <see cref="User"/> entity containing updated information.</param>
+        /// <param name="user">The <see cref="User" /> entity containing updated information.</param>
         /// <returns>
-        /// A task that represents the asynchronous update operation.
+        ///     A task that represents the asynchronous update operation.
         /// </returns>
         Task UpdateAsync(User user);
 
@@ -60,21 +60,20 @@ namespace IAMService.Application.Interfaces
         Task<List<User>> GetByRoleIdAsync(int roleId);
 
         /// <summary>
-        /// Marks a collection of user entities for update in the change tracker.
+        ///     Marks a collection of user entities for update in the change tracker.
         /// </summary>
         /// <param name="users">The collection of users to update.</param>
         void UpdateRange(IEnumerable<User> users);
         /// <summary>
-        /// Removes a user from the repository
+        ///     Removes a user from the repository
         /// </summary>
         /// <param name="user">The user to delete</param>
         void Delete(User user);
 
         /// <summary>
-        /// Gets a queryable collection of users with their roles
+        ///     Gets a queryable collection of users with their roles
         /// </summary>
         /// <returns>IQueryable of users for deferred execution</returns>
         IQueryable<User> GetUsersQueryable();
-
     }
 }

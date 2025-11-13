@@ -1,49 +1,50 @@
 ﻿using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
 using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
+using IAMService.Application.Services;
 using MediatR;
 using System.Globalization;
-using FluentValidation.Results;
-
 namespace IAMService.Application.Features.User.Commands.CreateUser
 {
     /// <summary>
-    /// Handler for CreateUserCommand
+    ///     Handler for CreateUserCommand
     /// </summary>
     public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
     {
         /// <summary>
-        /// The user repository
+        ///     The audit log service
         /// </summary>
-        private readonly IUserRepository _userRepository;
+        private readonly IAuditLogService _auditLogService;
         /// <summary>
-        /// The role repository
-        /// </summary>
-        private readonly IRoleRepository _roleRepository;
-        /// <summary>
-        /// The privilege repository
-        /// </summary>
-        private readonly IPrivilegeRepository _privilegeRepository;
-        /// <summary>
-        /// The password hasher
-        /// </summary>
-        private readonly IPasswordHasher _passwordHasher;
-        /// <summary>
-        /// The email service
+        ///     The email service
         /// </summary>
         private readonly IEmailService _emailService;
         /// <summary>
-        /// The audit log service
-        /// </summary>
-        private readonly IAuditLogService _auditLogService;
-        private readonly IStringEncryptionService _stringEncryptionService;
-        /// <summary>
-        /// The mapper
+        ///     The mapper
         /// </summary>
         private readonly IMapper _mapper;
+        /// <summary>
+        ///     The password hasher
+        /// </summary>
+        private readonly IPasswordHasher _passwordHasher;
+        /// <summary>
+        ///     The privilege repository
+        /// </summary>
+        private readonly IPrivilegeRepository _privilegeRepository;
+        /// <summary>
+        ///     The role repository
+        /// </summary>
+        private readonly IRoleRepository _roleRepository;
+        private readonly IStringEncryptionService _stringEncryptionService;
+        /// <summary>
+        ///     The user repository
+        /// </summary>
+        private readonly IUserRepository _userRepository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CreateUserCommandHandler"/> class.
+        ///     Initializes a new instance of the <see cref="CreateUserCommandHandler" /> class.
         /// </summary>
         /// <param name="userRepository">The user repository.</param>
         /// <param name="roleRepository">The role repository.</param>
@@ -53,7 +54,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// <param name="auditLogService">The audit log service.</param>
         /// <param name="mapper">The mapper.</param>
         public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper)
-            : this(userRepository, roleRepository, privilegeRepository, passwordHasher, emailService, auditLogService, mapper, new IAMService.Application.Services.NoOpStringEncryptionService())
+            : this(userRepository, roleRepository, privilegeRepository, passwordHasher, emailService, auditLogService, mapper, new NoOpStringEncryptionService())
         {
         }
         public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper, IStringEncryptionService stringEncryptionService)
@@ -69,12 +70,12 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         }
 
         /// <summary>
-        /// Handles the CreateUserCommand
+        ///     Handles the CreateUserCommand
         /// </summary>
         /// <param name="request">The create user command</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>
-        /// UserDto with created user information
+        ///     UserDto with created user information
         /// </returns>
         /// <exception cref="FluentValidation.ValidationException"></exception>
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -116,13 +117,13 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             }
             //Throw validation exception if any failures occurred 
             if (failures.Count > 0)
-                throw new FluentValidation.ValidationException(failures);
+                throw new ValidationException(failures);
             //Handle password based on user type
             string passwordToUse;
             string? generatedPassword = null;
             if (request.IsPatient)
             {
-                generatedPassword = _passwordHasher.GenerateRandomPassword(12);
+                generatedPassword = _passwordHasher.GenerateRandomPassword();
                 passwordToUse = generatedPassword;
             }
             else
@@ -146,28 +147,28 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                 roleId = 8;
             }
             //Create the user entity
-      
+
             var newUser = new Domain.Entities.User(
-                fullName: request.FullName,
-                phoneNumber: request.PhoneNumber,
-                email: request.Email,
-                hashedPassword: hashedPassword,
-                gender: genderBool,
-                identityNumber: request.IdentityNumber,
-                dateOfBirth: dateOfBirth,
-                address: request.Address,
-                roleId: roleId,
-                isPatient: request.IsPatient
+                request.FullName,
+                request.PhoneNumber,
+                request.Email,
+                hashedPassword,
+                genderBool,
+                request.IdentityNumber,
+                dateOfBirth,
+                request.Address,
+                roleId,
+                request.IsPatient
             );
 
-      
+
             newUser.FullName = _stringEncryptionService.EncryptString(newUser.FullName);
             newUser.PhoneNumber = _stringEncryptionService.EncryptString(newUser.PhoneNumber);
             newUser.Email = _stringEncryptionService.EncryptString(newUser.Email);
             newUser.IdentityNumber = _stringEncryptionService.EncryptString(newUser.IdentityNumber);
             newUser.Address = _stringEncryptionService.EncryptString(newUser.Address);
 
-         
+
 
             //Save user to database
             var createdUser = await _userRepository.CreateAsync(newUser);
@@ -191,8 +192,8 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                     createdUser.UserId,
                     createdUser.Email,
                     "Patient",
-                    "System"// TODO: Replace with actual admin/user who created this account
-                    );
+                    "System" // TODO: Replace with actual admin/user who created this account
+                );
             }
             else
             {
@@ -207,7 +208,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                     decryptedEmail,
                     "Employee",
                     "System" // TODO: Replace with actual admin/user who created this account
-                    );
+                );
             }
 
             //Map entity to DTO and return

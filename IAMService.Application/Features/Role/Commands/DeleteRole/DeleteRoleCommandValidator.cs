@@ -1,24 +1,22 @@
 ﻿using FluentValidation;
 using IAMService.Application.Interfaces;
-
-
 namespace IAMService.Application.Features.Role.Commands.DeleteRole
 {
     /// <summary>
-    /// The validator for <see cref="DeleteRoleCommand"/>.
+    ///     The validator for <see cref="DeleteRoleCommand" />.
     /// </summary>
-    public class DeleteRoleCommandValidator: AbstractValidator<DeleteRoleCommand>
+    public class DeleteRoleCommandValidator : AbstractValidator<DeleteRoleCommand>
     {
         /// <summary>
-        /// The role repository
-        /// </summary>
-        private readonly IRoleRepository _roleRepository;
-        /// <summary>
-        /// The read only code
+        ///     The read only code
         /// </summary>
         private const string ReadOnlyCode = "ReadOnly";
         /// <summary>
-        /// Initializes a new instance of the <see cref="DeleteRoleCommandValidator"/> class.
+        ///     The role repository
+        /// </summary>
+        private readonly IRoleRepository _roleRepository;
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="DeleteRoleCommandValidator" /> class.
         /// </summary>
         /// <param name="roleRepository">The role repository.</param>
         public DeleteRoleCommandValidator(IRoleRepository roleRepository)
@@ -31,7 +29,7 @@ namespace IAMService.Application.Features.Role.Commands.DeleteRole
                 .CustomAsync(ValidateRoleAsync);
         }
         /// <summary>
-        /// Validates all role-related business rules in a single database call.
+        ///     Validates all role-related business rules in a single database call.
         /// </summary>
         private async Task ValidateRoleAsync(
             int roleId,

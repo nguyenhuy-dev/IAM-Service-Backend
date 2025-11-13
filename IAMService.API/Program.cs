@@ -16,7 +16,7 @@ using Scalar.AspNetCore;
 using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("/run/secrets/secrets_file", optional: true);
+builder.Configuration.AddJsonFile("/run/secrets/secrets_file", true);
 
 var configuration = builder.Configuration;
 var redisConnectionString = configuration.GetConnectionString("RedisConnection");
@@ -49,7 +49,7 @@ builder.Services.AddScoped<ITokenHasher, TokenHasher>();
 builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenService>();
 builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
 var encryptionPassphrase = configuration["ENCRYPTION_PASSPHRASE"] ??
-    Environment.GetEnvironmentVariable("ENCRYPTION_PASSPHRASE");
+                           Environment.GetEnvironmentVariable("ENCRYPTION_PASSPHRASE");
 
 if (string.IsNullOrEmpty(encryptionPassphrase))
 {
@@ -59,14 +59,14 @@ if (string.IsNullOrEmpty(encryptionPassphrase))
 
 // Register encryption service as singleton
 builder.Services.AddSingleton<IStringEncryptionService>(sp =>
-    new IAMService.Infrastructure.Services.StringEncryptionService(encryptionPassphrase));
+    new StringEncryptionService(encryptionPassphrase));
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(IAssemblyReference).Assembly);
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 });
 builder.Services.AddValidatorsFromAssembly(typeof(IAssemblyReference).Assembly);
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = "", typeof(MappingProfile));
 
 builder.Logging.AddFilter("Microsoft.AspNetCore.Authorization", LogLevel.Debug);
 builder.Services.AddAuthentication("Token")
@@ -88,9 +88,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:5173") // FE chạy ở đây
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 var app = builder.Build();

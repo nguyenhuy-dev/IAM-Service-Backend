@@ -1,30 +1,27 @@
-using System.Text.Json.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 namespace IAMService.API.Common
 {
     /// <summary>
-    /// The api response class
+    ///     The api response class
     /// </summary>
     public class ApiResponse<T>
     {
         /// <summary>
-        /// The HTTP status code.
+        ///     The HTTP status code.
         /// </summary>
         public int StatusCode { get; set; }
 
         /// <summary>
-        /// A developer-friendly message.
+        ///     A developer-friendly message.
         /// </summary>
         public string Message { get; set; } = string.Empty;
 
         /// <summary>
-        /// The actual data payload of the response.
+        ///     The actual data payload of the response.
         /// </summary>
         public T? Data { get; set; }
 
         /// <summary>
-        /// Creates a new success response.
+        ///     Creates a new success response.
         /// </summary>
         /// <param name="data">The data payload.</param>
         /// <param name="message">An optional success message.</param>

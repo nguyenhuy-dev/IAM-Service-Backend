@@ -1,15 +1,15 @@
 ﻿using IAMService.Application.Interfaces;
 using IAMService.Infrastructure.Settings;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
-
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    /// Implementation of email service
-    /// Currently logs emails to console - integrate with actual email provider (SendGrid, SMTP, etc.) in production
+    ///     Implementation of email service
+    ///     Currently logs emails to console - integrate with actual email provider (SendGrid, SMTP, etc.) in production
     /// </summary>
     public class EmailService : IEmailService
     {
@@ -17,7 +17,7 @@ namespace IAMService.Infrastructure.Services
         private readonly EmailSettings _settings;
 
         /// <summary>
-        /// Constructor with dependency injection
+        ///     Constructor with dependency injection
         /// </summary>
         /// <param name="logger">Logger instance</param>
         public EmailService(IOptions<EmailSettings> settings, ILogger<EmailService> logger)
@@ -27,7 +27,7 @@ namespace IAMService.Infrastructure.Services
         }
 
         /// <summary>
-        /// Sends welcome email with auto-generated password to new patient
+        ///     Sends welcome email with auto-generated password to new patient
         /// </summary>
         /// <param name="toEmail">Patient's email address</param>
         /// <param name="fullName">Patient's full name</param>
@@ -102,7 +102,7 @@ namespace IAMService.Infrastructure.Services
                 await client.ConnectAsync(
                     _settings.Host,
                     _settings.Port,
-                    MailKit.Security.SecureSocketOptions.StartTls,
+                    SecureSocketOptions.StartTls,
                     cancellationToken);
                 await client.AuthenticateAsync(
                     _settings.Username,
@@ -121,15 +121,15 @@ namespace IAMService.Infrastructure.Services
         }
 
         /// <summary>
-        /// Sends welcome email to new employee
+        ///     Sends welcome email to new employee
         /// </summary>
         /// <param name="toEmail">Employee's email address</param>
         /// <param name="fullName">Employee's full name</param>
         /// <param name="cancellationToken">Cancellation token</param>
         public async Task SendNewEmployeeAccountEmailAsync(
-           string toEmail,
-           string fullName,
-           CancellationToken cancellationToken = default)
+            string toEmail,
+            string fullName,
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace IAMService.Infrastructure.Services
                 await client.ConnectAsync(
                     _settings.Host,
                     _settings.Port,
-                    MailKit.Security.SecureSocketOptions.StartTls,
+                    SecureSocketOptions.StartTls,
                     cancellationToken);
 
                 await client.AuthenticateAsync(
@@ -328,7 +328,7 @@ namespace IAMService.Infrastructure.Services
                 await client.ConnectAsync(
                     _settings.Host,
                     _settings.Port,
-                    MailKit.Security.SecureSocketOptions.StartTls,
+                    SecureSocketOptions.StartTls,
                     cancellationToken);
                 await client.AuthenticateAsync(
                     _settings.Username,

@@ -1,21 +1,23 @@
 ﻿using IAMService.Application.Interfaces.AccessToken;
 using System.IdentityModel.Tokens.Jwt;
-using System;
-using System.Linq; // Added for FirstOrDefault
+// Added for FirstOrDefault
 
 namespace IAMService.Infrastructure.Services.AccessToken
 {
     /// <summary>
-    /// A service implementation for decoding and extracting information from a JSON Web Token (JWT),
-    /// adhering to the <see cref="ITokenDecoderService"/> interface.
+    ///     A service implementation for decoding and extracting information from a JSON Web Token (JWT),
+    ///     adhering to the <see cref="ITokenDecoderService" /> interface.
     /// </summary>
     public class TokenDecoderService : ITokenDecoderService
     {
         /// <summary>
-        /// Calculates the time remaining until the token expires based on the 'exp' claim.
+        ///     Calculates the time remaining until the token expires based on the 'exp' claim.
         /// </summary>
         /// <param name="token">The raw JWT string.</param>
-        /// <returns>A <see cref="TimeSpan"/> representing the remaining valid duration. Returns <see cref="TimeSpan.Zero"/> if the token is invalid or already expired.</returns>
+        /// <returns>
+        ///     A <see cref="TimeSpan" /> representing the remaining valid duration. Returns <see cref="TimeSpan.Zero" /> if
+        ///     the token is invalid or already expired.
+        /// </returns>
         public TimeSpan GetRemainingExpirationTime(string token)
         {
             try
@@ -39,7 +41,7 @@ namespace IAMService.Infrastructure.Services.AccessToken
 
 
         /// <summary>
-        /// Extracts the unique identifier (JTI - JWT ID) from the claims of the token.
+        ///     Extracts the unique identifier (JTI - JWT ID) from the claims of the token.
         /// </summary>
         /// <param name="token">The raw JWT string.</param>
         /// <returns>The JTI value as a string.</returns>

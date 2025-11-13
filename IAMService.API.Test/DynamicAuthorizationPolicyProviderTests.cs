@@ -8,21 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class DynamicAuthorizationPolicyProviderTests
     {
-        private Mock<IOptions<AuthorizationOptions>> _optionsMock = null!;
-        private AuthorizationOptions _authOptions = null!;
-        private Mock<IServiceScopeFactory> _scopeFactoryMock = null!;
-        private Mock<IServiceScope> _scopeMock = null!;
-        private Mock<IServiceProvider> _serviceProviderMock = null!;
-        private Mock<IAuthorizationCacheService> _cacheServiceMock = null!;
-        private DbContextOptions<IAMServiceDbContext> _dbOptions = null!;
-        private IAMServiceDbContext _dbContext = null!;
-        private DynamicAuthorizationPolicyProvider _provider = null!;
 
         [SetUp]
         public void SetUp()
@@ -62,6 +52,15 @@ namespace IAMService.API.Test
             _dbContext.Database.EnsureDeleted();
             _dbContext.Dispose();
         }
+        private Mock<IOptions<AuthorizationOptions>> _optionsMock = null!;
+        private AuthorizationOptions _authOptions = null!;
+        private Mock<IServiceScopeFactory> _scopeFactoryMock = null!;
+        private Mock<IServiceScope> _scopeMock = null!;
+        private Mock<IServiceProvider> _serviceProviderMock = null!;
+        private Mock<IAuthorizationCacheService> _cacheServiceMock = null!;
+        private DbContextOptions<IAMServiceDbContext> _dbOptions = null!;
+        private IAMServiceDbContext _dbContext = null!;
+        private DynamicAuthorizationPolicyProvider _provider = null!;
 
         [Test]
         public async Task GetPolicyAsync_ReturnsExistingPolicy_FromOptions()
@@ -81,7 +80,7 @@ namespace IAMService.API.Test
         public async Task GetPolicyAsync_ReturnsCachedPolicy_WhenFoundInCache()
         {
             var cachedPolicy = new AuthorizationPolicyBuilder().RequireRole("User").Build();
-            AuthorizationPolicy? outPolicy = cachedPolicy;
+            var outPolicy = cachedPolicy;
 
             _cacheServiceMock.Setup(c => c.TryGetPolicy("CachedPolicy", out outPolicy))
                 .Returns(true);
@@ -126,9 +125,9 @@ namespace IAMService.API.Test
             _cacheServiceMock.Setup(c => c.TryGetPolicy(It.IsAny<string>(), out dummy))
                 .Returns(false);
 
-            bool cacheSetCalled = false;
+            var cacheSetCalled = false;
             _cacheServiceMock.Setup(c =>
-                c.SetPolicy(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
+                    c.SetPolicy(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<TimeSpan?>()))
                 .Callback(() => cacheSetCalled = true);
 
             // Act
@@ -195,7 +194,9 @@ namespace IAMService.API.Test
     public class FakeFailingPolicyProvider : DynamicAuthorizationPolicyProvider
     {
         public FakeFailingPolicyProvider(IOptions<AuthorizationOptions> options, IServiceScopeFactory scopeFactory)
-            : base(options, scopeFactory) { }
+            : base(options, scopeFactory)
+        {
+        }
 
         public override Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
         {

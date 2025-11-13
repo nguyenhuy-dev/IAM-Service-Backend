@@ -1,21 +1,16 @@
-﻿using IAMService.API.Common;
+﻿using FluentValidation;
+using FluentValidation.Results;
 using IAMService.API.Middleware;
-using FluentValidation;
+using IAMService.Application.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Text.Json;
-using IAMService.Application.Exceptions;
-
 namespace IAMService.API.Test
 {
     [TestFixture]
     public class GlobalExceptionHandlerMiddlewareTests
     {
-        private GlobalExceptionHandlerMiddleware _middleware;
-        private RequestDelegate _next;
-        private DefaultHttpContext _httpContext;
-        private ILogger<GlobalExceptionHandlerMiddleware> _logger;
 
         [SetUp]
         public void SetUp()
@@ -26,8 +21,10 @@ namespace IAMService.API.Test
             _httpContext = new DefaultHttpContext();
             _httpContext.Response.Body = new MemoryStream();
         }
-
-        #region Success Path Tests
+        private GlobalExceptionHandlerMiddleware _middleware;
+        private RequestDelegate _next;
+        private DefaultHttpContext _httpContext;
+        private ILogger<GlobalExceptionHandlerMiddleware> _logger;
 
         [Test]
         public async Task InvokeAsync_ShouldCallNextDelegate_WhenNoExceptionIsThrown()
@@ -42,10 +39,6 @@ namespace IAMService.API.Test
             await _next.Received(1).Invoke(_httpContext);
             Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         }
-
-        #endregion
-
-        #region KeyNotFoundException Tests
 
         [Test]
         public async Task InvokeAsync_ShouldReturn500_WhenKeyNotFoundExceptionIsThrown()
@@ -82,19 +75,15 @@ namespace IAMService.API.Test
                 Arg.Any<Func<object, Exception?, string>>());
         }
 
-        #endregion
-
-        #region ValidationException Tests (FluentValidation)
-
         [Test]
         public async Task InvokeAsync_ShouldReturn400_WhenFluentValidationExceptionIsThrown()
         {
             // Arrange
-            var failures = new List<FluentValidation.Results.ValidationFailure>
+            var failures = new List<ValidationFailure>
             {
-                new FluentValidation.Results.ValidationFailure("Email", "Email is required"),
-                new FluentValidation.Results.ValidationFailure("Email", "Email format is invalid"),
-                new FluentValidation.Results.ValidationFailure("PhoneNumber", "Phone number must be 10 digits")
+                new ValidationFailure("Email", "Email is required"),
+                new ValidationFailure("Email", "Email format is invalid"),
+                new ValidationFailure("PhoneNumber", "Phone number must be 10 digits")
             };
             var validationException = new ValidationException(failures);
             _next.Invoke(_httpContext).Returns(Task.FromException(validationException));
@@ -116,10 +105,10 @@ namespace IAMService.API.Test
         public async Task InvokeAsync_ShouldIncludeAllValidationErrors_WhenFluentValidationExceptionIsThrown()
         {
             // Arrange
-            var failures = new List<FluentValidation.Results.ValidationFailure>
+            var failures = new List<ValidationFailure>
             {
-                new FluentValidation.Results.ValidationFailure("Email", "Email is required"),
-                new FluentValidation.Results.ValidationFailure("Password", "Password must be at least 8 characters")
+                new ValidationFailure("Email", "Email is required"),
+                new ValidationFailure("Password", "Password must be at least 8 characters")
             };
             var validationException = new ValidationException(failures);
             _next.Invoke(_httpContext).Returns(Task.FromException(validationException));
@@ -142,7 +131,7 @@ namespace IAMService.API.Test
         public async Task InvokeAsync_ShouldHandleValidationExceptionWithEmptyErrors()
         {
             // Arrange
-            var failures = new List<FluentValidation.Results.ValidationFailure>();
+            var failures = new List<ValidationFailure>();
             var validationException = new ValidationException(failures);
             _next.Invoke(_httpContext).Returns(Task.FromException(validationException));
 
@@ -155,10 +144,6 @@ namespace IAMService.API.Test
             var response = await GetResponseBody();
             Assert.That(response.Errors, Is.Not.Null);
         }
-
-        #endregion
-
-        #region UnauthorizedAccessException Tests
 
         [Test]
         public async Task InvokeAsync_ShouldReturn401_WhenUnauthorizedAccessExceptionIsThrown()
@@ -173,11 +158,6 @@ namespace IAMService.API.Test
             Assert.That(response.Message, Is.EqualTo("Unauthorized access")); // fixed message
         }
 
-
-        #endregion
-
-        #region InvalidOperationException Tests
-
         [Test]
         public async Task InvokeAsync_ShouldReturn500_WhenInvalidOperationExceptionIsThrown()
         {
@@ -189,10 +169,6 @@ namespace IAMService.API.Test
             Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
         }
 
-        #endregion
-
-        #region ArgumentException Tests
-
         [Test]
         public async Task InvokeAsync_ShouldReturn500_WhenArgumentExceptionIsThrown()
         {
@@ -203,10 +179,6 @@ namespace IAMService.API.Test
 
             Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
         }
-
-        #endregion
-
-        #region General Exception Tests
 
         [Test]
         public async Task InvokeAsync_ShouldReturn500_WhenUnhandledExceptionIsThrown()
@@ -275,10 +247,6 @@ namespace IAMService.API.Test
             Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
         }
 
-        #endregion
-
-        #region Edge Cases
-
         [Test]
         public async Task InvokeAsync_ShouldHandleEmptyExceptionMessage()
         {
@@ -316,11 +284,11 @@ namespace IAMService.API.Test
         public async Task InvokeAsync_ShouldHandleMultipleValidationErrorsForSameField()
         {
             // Arrange
-            var failures = new List<FluentValidation.Results.ValidationFailure>
+            var failures = new List<ValidationFailure>
             {
-                new FluentValidation.Results.ValidationFailure("Email", "Email is required"),
-                new FluentValidation.Results.ValidationFailure("Email", "Email format is invalid"),
-                new FluentValidation.Results.ValidationFailure("Email", "Email must be unique")
+                new ValidationFailure("Email", "Email is required"),
+                new ValidationFailure("Email", "Email format is invalid"),
+                new ValidationFailure("Email", "Email must be unique")
             };
             var validationException = new ValidationException(failures);
             _next.Invoke(_httpContext).Returns(Task.FromException(validationException));
@@ -351,10 +319,6 @@ namespace IAMService.API.Test
             Assert.That(response.Message, Does.Not.Contain("secret"));
         }
 
-        #endregion
-
-        #region Helper Methods  
-
         private async Task<ErrorResponse> GetResponseBody()
         {
             _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
@@ -365,9 +329,6 @@ namespace IAMService.API.Test
                 PropertyNameCaseInsensitive = true
             })!;
         }
-
-        #endregion
-        #region NotFoundException Tests
 
         [Test]
         public async Task InvokeAsync_ShouldReturn404_WhenNotFoundExceptionIsThrown()
@@ -392,10 +353,6 @@ namespace IAMService.API.Test
                 Arg.Any<Func<object, Exception?, string>>());
         }
 
-        #endregion
-
-        #region BusinessRuleViolationException Tests
-
         [Test]
         public async Task InvokeAsync_ShouldReturn400_WhenBusinessRuleViolationExceptionIsThrown()
         {
@@ -419,10 +376,6 @@ namespace IAMService.API.Test
                 Arg.Any<Func<object, Exception?, string>>());
         }
 
-        #endregion
-
-        #region ForbiddenAccessException Tests
-
         [Test]
         public async Task InvokeAsync_ShouldReturn403_WhenForbiddenAccessExceptionIsThrown()
         {
@@ -444,8 +397,5 @@ namespace IAMService.API.Test
                 exception,
                 Arg.Any<Func<object, Exception?, string>>());
         }
-
-        #endregion
-
     }
 }

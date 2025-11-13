@@ -1,17 +1,16 @@
 using AutoMapper;
 using IAMService.Application.DTOs;
 using IAMService.Domain.Entities;
-
 namespace IAMService.Application.Mappings
 {
     /// <summary>
-    /// The mapping profile class
+    ///     The mapping profile class
     /// </summary>
-    /// <seealso cref="Profile"/>
+    /// <seealso cref="Profile" />
     public class MappingProfile : Profile
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MappingProfile"/> class
+        ///     Initializes a new instance of the <see cref="MappingProfile" /> class
         /// </summary>
         public MappingProfile()
         {
@@ -39,6 +38,5 @@ namespace IAMService.Application.Mappings
                         ? src.Role.Privileges.Select(p => p.PrivilegeName).ToList()
                         : new List<string>()));
         }
-
     }
 }

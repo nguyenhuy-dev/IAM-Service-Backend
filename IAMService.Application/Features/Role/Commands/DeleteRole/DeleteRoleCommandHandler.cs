@@ -2,25 +2,25 @@
 using IAMService.Application.Exceptions;
 using IAMService.Application.Interfaces;
 using MediatR;
-
 namespace IAMService.Application.Features.Role.Commands.DeleteRole
 {
     /// <summary>
-    /// The handler for deleting a role command.
+    ///     The handler for deleting a role command.
     /// </summary>
-    /// <seealso cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.Role.Commands.DeleteRole.DeleteRoleCommand&gt;" />
+    /// <seealso
+    ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.Role.Commands.DeleteRole.DeleteRoleCommand&gt;" />
     public class DeleteRoleCommandHandler(
         IRoleRepository roleRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork
-        ) : IRequestHandler<DeleteRoleCommand, bool>
+    ) : IRequestHandler<DeleteRoleCommand, bool>
     {
         private const string ReadOnlyCode = "READ_ONLY";
         /// <summary>
-        /// The read only code
+        ///     The read only code
         /// </summary>
         /// <summary>
-        /// Handles a request
+        ///     Handles a request
         /// </summary>
         /// <param name="request">The request</param>
         /// <param name="cancellationToken">Cancellation token</param>

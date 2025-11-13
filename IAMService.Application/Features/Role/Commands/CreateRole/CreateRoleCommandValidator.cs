@@ -4,13 +4,13 @@ using IAMService.Application.Interfaces;
 namespace IAMService.Application.Features.Role.Commands.CreateRole
 {
     /// <summary>
-    /// The create role command validator class
+    ///     The create role command validator class
     /// </summary>
-    /// <seealso cref="AbstractValidator{CreateRoleCommand}"/>
+    /// <seealso cref="AbstractValidator{CreateRoleCommand}" />
     public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CreateRoleCommandValidator"/> class
+        ///     Initializes a new instance of the <see cref="CreateRoleCommandValidator" /> class
         /// </summary>
         public CreateRoleCommandValidator(
             IRoleRepository roleRepository,

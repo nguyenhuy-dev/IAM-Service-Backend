@@ -3,61 +3,61 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-namespace IAMService.Infrastructure.DatabaseMigrationHelpers;
-
-/// <summary>
-/// Add migration services.
-/// </summary>
-public static class DbContextMigrationExtensions
+namespace IAMService.Infrastructure.DatabaseMigrationHelpers
 {
     /// <summary>
-    /// Migrates the database context asynchronous.
+    ///     Add migration services.
     /// </summary>
-    /// <typeparam name="TContext">The type of the context.</typeparam>
-    /// <param name="app">The application.</param>
-    /// <param name="postMigration">The post migration.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns></returns>
-    public static async Task<IApplicationBuilder> MigrateDbContextAsync<TContext>(this IApplicationBuilder app, Func<DatabaseFacade, CancellationToken?, Task>? postMigration = null, CancellationToken cancellationToken = default) where TContext : DbContext
+    public static class DbContextMigrationExtensions
     {
-        using var scope = app.ApplicationServices.CreateScope();
-        var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<TContext>>();
-        var context = services.GetService<TContext>();
-        if (context is not null)
+        /// <summary>
+        ///     Migrates the database context asynchronous.
+        /// </summary>
+        /// <typeparam name="TContext">The type of the context.</typeparam>
+        /// <param name="app">The application.</param>
+        /// <param name="postMigration">The post migration.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task<IApplicationBuilder> MigrateDbContextAsync<TContext>(this IApplicationBuilder app, Func<DatabaseFacade, CancellationToken?, Task>? postMigration = null, CancellationToken cancellationToken = default) where TContext : DbContext
         {
-            try
+            using var scope = app.ApplicationServices.CreateScope();
+            var services = scope.ServiceProvider;
+            var logger = services.GetRequiredService<ILogger<TContext>>();
+            var context = services.GetService<TContext>();
+            if (context is not null)
             {
-                var strategy = context.Database.CreateExecutionStrategy();
-
-                logger.LogInformation("Migrating database associated with context {DbContextName}", typeof(TContext).Name);
-                await strategy.ExecuteAsync(async () =>
+                try
                 {
-                    await context.Database.MigrateAsync(cancellationToken);
-                });
-                logger.LogInformation("Migrated database associated with context {DbContextName}", typeof(TContext).Name);
+                    var strategy = context.Database.CreateExecutionStrategy();
 
-                if (postMigration != null)
-                {
-                    try
+                    logger.LogInformation("Migrating database associated with context {DbContextName}", typeof(TContext).Name);
+                    await strategy.ExecuteAsync(async () =>
                     {
-                        logger.LogInformation("Invoking postMigration function...");
+                        await context.Database.MigrateAsync(cancellationToken);
+                    });
+                    logger.LogInformation("Migrated database associated with context {DbContextName}", typeof(TContext).Name);
 
-                        await postMigration.Invoke(context.Database, cancellationToken);
-                    }
-                    catch (Exception ex)
+                    if (postMigration != null)
                     {
-                        logger.LogError(ex, "Error invoking postMigration function");
+                        try
+                        {
+                            logger.LogInformation("Invoking postMigration function...");
+
+                            await postMigration.Invoke(context.Database, cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Error invoking postMigration function");
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
-            }
-        }
 
-        return app;
+            return app;
+        }
     }
 }

@@ -1,18 +1,17 @@
 ﻿using FluentValidation.TestHelper;
 using IAMService.Application.Features.Auth.Commands.Login;
-
 namespace IAMService.Application.Test.Features.Auth.Commands.Login
 {
     [TestFixture]
     public class LoginCommandValidatorTests
     {
-        private LoginCommandValidator _validator = null!;
 
         [SetUp]
         public void SetUp()
         {
             _validator = new LoginCommandValidator();
         }
+        private LoginCommandValidator _validator = null!;
 
         [Test]
         public void Should_Have_Error_When_Email_Is_Empty()

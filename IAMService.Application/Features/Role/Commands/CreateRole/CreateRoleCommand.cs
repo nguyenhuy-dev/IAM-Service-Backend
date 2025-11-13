@@ -3,7 +3,7 @@ using MediatR;
 namespace IAMService.Application.Features.Role.Commands.CreateRole
 {
     /// <summary>
-    /// The create role command
+    ///     The create role command
     /// </summary>
     public record CreateRoleCommand(
         string RoleName,

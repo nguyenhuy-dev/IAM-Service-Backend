@@ -3,18 +3,14 @@ using IAMService.Application.Features.User.Commands.DeleteUser;
 using IAMService.Application.Interfaces;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
-using NUnit.Framework;
-
 namespace IAMService.Application.Test.Features.User.Commands.DeleteUser
 {
     /// <summary>
-    /// Unit tests for <see cref="DeleteUserCommandValidator"/>
+    ///     Unit tests for <see cref="DeleteUserCommandValidator" />
     /// </summary>
     [TestFixture]
     public class DeleteUserCommandValidatorTests
     {
-        private IUserRepository _userRepository;
-        private DeleteUserCommandValidator _validator;
 
         [SetUp]
         public void Setup()
@@ -22,6 +18,8 @@ namespace IAMService.Application.Test.Features.User.Commands.DeleteUser
             _userRepository = Substitute.For<IUserRepository>();
             _validator = new DeleteUserCommandValidator(_userRepository);
         }
+        private IUserRepository _userRepository;
+        private DeleteUserCommandValidator _validator;
 
         [Test]
         public async Task Validate_ValidUserId_ShouldPass()

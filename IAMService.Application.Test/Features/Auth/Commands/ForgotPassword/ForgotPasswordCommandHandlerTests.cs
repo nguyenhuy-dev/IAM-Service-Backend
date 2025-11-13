@@ -4,20 +4,13 @@ using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.ForgetPassword;
 using IAMService.Domain.Entities;
 using Moq;
-using UserEntity = IAMService.Domain.Entities.User;
+using UserEntity=IAMService.Domain.Entities.User;
 
 namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
 {
     [TestFixture]
     public class ForgotPasswordCommandHandlerTests
     {
-        private Mock<IUserRepository> _userRepositoryMock;
-        private Mock<IEmailService> _emailServiceMock;
-        private Mock<ITokenHasher> _tokenHasherMock;
-        private Mock<IPasswordResetTokenRepository> _tokenRepositoryMock;
-        private Mock<IUnitOfWork> _unitOfWorkMock;
-        private Mock<IStringEncryptionService> _stringEncryptionServiceMock;
-        private ForgotPasswordCommandHandler _handler;
 
         [SetUp]
         public void SetUp()
@@ -38,6 +31,13 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 _stringEncryptionServiceMock.Object
             );
         }
+        private Mock<IUserRepository> _userRepositoryMock;
+        private Mock<IEmailService> _emailServiceMock;
+        private Mock<ITokenHasher> _tokenHasherMock;
+        private Mock<IPasswordResetTokenRepository> _tokenRepositoryMock;
+        private Mock<IUnitOfWork> _unitOfWorkMock;
+        private Mock<IStringEncryptionService> _stringEncryptionServiceMock;
+        private ForgotPasswordCommandHandler _handler;
 
         [Test]
         public async Task Handle_ValidEmail_ShouldReturnTrueAndSendEmail()
@@ -70,10 +70,10 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             _emailServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))  // ← THÊM PARAMETER NÀY
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>())) // ← THÊM PARAMETER NÀY
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -90,7 +90,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Once);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Once); // ← THÊM PARAMETER NÀY
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Never);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Never); // ← THÊM PARAMETER NÀY
             _tokenRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>()), Times.Never);
             _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -146,7 +146,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Never);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Never); // ← THÊM PARAMETER NÀY
             _tokenRepositoryMock.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>()), Times.Never);
         }
 
@@ -176,7 +176,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Never);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Never); // ← THÊM PARAMETER NÀY
         }
 
         [Test]
@@ -208,7 +208,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Never);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Never); // ← THÊM PARAMETER NÀY
         }
 
         [Test]
@@ -237,10 +237,10 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             _emailServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))  // ← THÊM PARAMETER NÀY
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>())) // ← THÊM PARAMETER NÀY
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -257,7 +257,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
             var command = new ForgotPasswordCommand { Email = "test@example.com" };
             var cancellationToken = CancellationToken.None;
 
-            var user = new UserEntity 
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Email = "encrypted_test@example.com",
@@ -275,10 +275,10 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
             _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(1);
             _emailServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))  // ← THÊM PARAMETER NÀY
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>())) // ← THÊM PARAMETER NÀY
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -290,7 +290,7 @@ namespace IAMService.Application.Test.Features.Auth.Commands.ForgotPassword
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<CancellationToken>()), Times.Once);  // ← THÊM PARAMETER NÀY
+                It.IsAny<CancellationToken>()), Times.Once); // ← THÊM PARAMETER NÀY
         }
     }
 }

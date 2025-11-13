@@ -1,17 +1,16 @@
 ﻿using IAMService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace IAMService.Infrastructure.Data.Configurations
 {
     /// <summary>
-    /// Configures the database schema and relationships for the <see cref="PasswordResetToken"/> entity 
-    /// using Fluent API conventions.
+    ///     Configures the database schema and relationships for the <see cref="PasswordResetToken" /> entity
+    ///     using Fluent API conventions.
     /// </summary>
     public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
     {
         /// <summary>
-        /// Configures the entity of type <see cref="PasswordResetToken"/>.
+        ///     Configures the entity of type <see cref="PasswordResetToken" />.
         /// </summary>
         /// <param name="builder">The builder to be used to configure the entity type.</param>
         public void Configure(EntityTypeBuilder<PasswordResetToken> builder)

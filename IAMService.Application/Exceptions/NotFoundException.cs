@@ -1,7 +1,7 @@
 namespace IAMService.Application.Exceptions
 {
     /// <summary>
-    /// Exception thrown when a requested entity is not found
+    ///     Exception thrown when a requested entity is not found
     /// </summary>
     public class NotFoundException : Exception
     {

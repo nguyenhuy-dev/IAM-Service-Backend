@@ -1,18 +1,17 @@
 ﻿using IAMService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-
 namespace IAMService.Infrastructure.Services
 {
     /// <summary>
-    /// Simple audit logging service
+    ///     Simple audit logging service
     /// </summary>
     public class AuditLogService : IAuditLogService
     {
         private readonly ILogger<AuditLogService> _logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuditLogService"/> class.
+        ///     Initializes a new instance of the <see cref="AuditLogService" /> class.
         /// </summary>
         /// <param name="logger">The logger.</param>
         public AuditLogService(ILogger<AuditLogService> logger)
@@ -21,7 +20,7 @@ namespace IAMService.Infrastructure.Services
         }
 
         /// <summary>
-        /// Logs user creation event
+        ///     Logs user creation event
         /// </summary>
         /// <param name="userId">ID of the created user</param>
         /// <param name="email">Email of the created user</param>

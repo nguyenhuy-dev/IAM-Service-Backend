@@ -1,13 +1,13 @@
 ﻿namespace IAMService.Application.Interfaces
 {
     /// <summary>
-    /// Interface for audit logging service
-    /// Records important system events and user actions for compliance and security
+    ///     Interface for audit logging service
+    ///     Records important system events and user actions for compliance and security
     /// </summary>
     public interface IAuditLogService
     {
         /// <summary>
-        /// Logs user creation event
+        ///     Logs user creation event
         /// </summary>
         /// <param name="userId">ID of the created user</param>
         /// <param name="email">Email of the created user</param>
