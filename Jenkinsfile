@@ -15,14 +15,26 @@ pipeline {
     // Configure these variables to match your project.
     environment {
         // --- PLEASE CONFIGURE THESE VALUES ---
+	
         // The path to your solution file (at repo root)
         SOLUTION_FILE_PATH    = 'IAM-Service-Backend.sln'
 		// The credentialsId for jenkins. Change this if you want to use another account
-		GITLAB_CREDENTIAL_ID = '5b91663a-07b4-4fc3-b3b2-102d4303fcb1'
+		GITLAB_CREDENTIAL_ID = 'ae9ce4eb-57e8-45f5-af2d-200d0e7e843f'
         
         // The path to the folder containing your API's Dockerfile (at repo root)
         API_PROJECT_PATH      = 'IAMService.API' 
         APPLICATION_TEST_PROJECT_PATH = 'IAMService.Application.Test'
+        
+		// GCP Service Account Credentials (stored in Jenkins)
+        // Create this credential in Jenkins: Manage Jenkins > Credentials > Add Credentials
+        // Kind: "Secret file", upload your service account JSON key file
+        GCP_CREDENTIALS_ID    = 'gcp-artifact-registry-sa'
+		
+        // --- GOOGLE CLOUD ARTIFACT REGISTRY ---
+        GCP_REGISTRY          = 'asia-southeast1-docker.pkg.dev'
+        GCP_PROJECT_ID        = 'lab-management-team01'
+        GCP_REPOSITORY        = 'lab-management'
+        DOCKER_IMAGE_NAME     = 'iam-service'
         
         // --- TEST PROJECT CONFIGURATION ---
         // Space-separated list of test project .csproj files to run
@@ -282,6 +294,82 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Login to GCP') {
+            steps {
+                script {
+                    echo "Authenticating Docker with GCP Artifact Registry..."
+                    
+                    // Use Jenkins credentials to authenticate
+                    withCredentials([file(credentialsId: env.GCP_CREDENTIALS_ID, variable: 'GCP_KEY_FILE')]) {
+                        sh """
+                            # Activate service account using the key file
+                            gcloud auth activate-service-account --key-file="\${GCP_KEY_FILE}"
+                            
+                            # Set the project
+                            gcloud config set project ${GCP_PROJECT_ID}
+                            
+                            # Login to Docker using gcloud
+                            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin ${GCP_REGISTRY}
+                            
+                            echo "✅ Successfully authenticated with GCP Artifact Registry"
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+                    def imageTag = "${BUILD_NUMBER}"
+                    def fullImagePath = "${GCP_REGISTRY}/${GCP_PROJECT_ID}/${GCP_REPOSITORY}/${DOCKER_IMAGE_NAME}"
+                    
+                    sh """
+                            # Build the Docker image
+                            docker build -t ${DOCKER_IMAGE_NAME}:${imageTag} -f ${API_PROJECT_PATH}/Dockerfile .
+                            
+                            # Tag for GCP Artifact Registry with build number
+                            docker tag ${DOCKER_IMAGE_NAME}:${imageTag} ${fullImagePath}:${imageTag}
+                            
+                            # Tag for GCP Artifact Registry with latest
+                            docker tag ${DOCKER_IMAGE_NAME}:${imageTag} ${fullImagePath}:latest
+                            
+                            echo "Docker image built and tagged successfully:"
+                            echo "  - ${fullImagePath}:${imageTag}"
+                            echo "  - ${fullImagePath}:latest"
+                            docker images | grep ${DOCKER_IMAGE_NAME}
+                        """
+                    
+                    // Store image info for potential deployment
+                    env.DOCKER_IMAGE_TAG = imageTag
+                    env.FULL_IMAGE_PATH = fullImagePath
+                    echo "Docker Image: ${fullImagePath}:${imageTag}"
+                }
+            }
+        }
+        
+        stage('Push to GCP Artifact Registry') {
+            steps {
+                script {
+                    echo "Pushing Docker images to GCP Artifact Registry..."
+                    def fullImagePath = "${GCP_REGISTRY}/${GCP_PROJECT_ID}/${GCP_REPOSITORY}/${DOCKER_IMAGE_NAME}"
+                    
+                    sh """
+                            # Push the tagged image
+                            docker push ${fullImagePath}:${BUILD_NUMBER}
+                            
+                            # Push the latest tag
+                            docker push ${fullImagePath}:latest
+                            
+                            echo "✅ Successfully pushed images to GCP Artifact Registry:"
+                            echo "  - ${fullImagePath}:${BUILD_NUMBER}"
+                            echo "  - ${fullImagePath}:latest"
+                        """
+                }
+            }
+        }
         
         stage('Security Scan') {
             steps {
@@ -312,6 +400,17 @@ pipeline {
     
     post {
         always {
+			script {
+               echo "Cleaning up build-specific Docker resources..."
+               def fullImagePath = "${GCP_REGISTRY}/${GCP_PROJECT_ID}/${GCP_REPOSITORY}/${DOCKER_IMAGE_NAME}"
+               // Remove local images to free up space
+               sh """
+                   docker rmi ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} || true
+                   docker rmi ${fullImagePath}:${BUILD_NUMBER} || true
+                   docker rmi ${fullImagePath}:latest || true
+                   docker image prune -f || true
+               """
+            }
             cleanWs()
         }
         success {

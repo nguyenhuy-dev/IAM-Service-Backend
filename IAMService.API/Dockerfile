@@ -1,34 +1,44 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# Optimized for Google Kubernetes Engine (GKE)
+# Using Ubuntu Chiseled images for better GCP compatibility and security
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-chiseled AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["IAMService.API/IAMService.API.csproj", "IAMService.API/"]
-COPY ["IAMService.Application.Test/IAMService.Application.Test.csproj", "IAMService.Application.Test/"]
-COPY ["IAMService.Application/IAMService.Application.csproj", "IAMService.Application/"]
+
+# Copy only project files first for better layer caching
 COPY ["IAMService.Domain/IAMService.Domain.csproj", "IAMService.Domain/"]
+COPY ["IAMService.Application/IAMService.Application.csproj", "IAMService.Application/"]
 COPY ["IAMService.Infrastructure/IAMService.Infrastructure.csproj", "IAMService.Infrastructure/"]
-RUN dotnet restore "./IAMService.API/IAMService.API.csproj"
+COPY ["IAMService.API/IAMService.API.csproj", "IAMService.API/"]
+
+# Restore dependencies - this layer is cached unless project files change
+# Ignore test projects to avoid missing assets errors
+RUN dotnet restore "IAMService.API/IAMService.API.csproj" --ignore-failed-sources
+
+# Copy the rest of the source code
 COPY . .
+
+# Build and publish
 WORKDIR "/src/IAMService.API"
-RUN dotnet build "./IAMService.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet publish "IAMService.API.csproj" \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./IAMService.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+# This stage is used in production or when running from VS in regular mode
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Copy published files from build stage
+COPY --from=build /app/publish .
+
 ENTRYPOINT ["dotnet", "IAMService.API.dll"]
