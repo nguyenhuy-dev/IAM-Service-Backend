@@ -6,7 +6,7 @@ package user;
 
 // Service definition
 service UserService {
-  rpc GetAllUsers (GetAllUsersRequest) returns (GetAllUsersResponse);
+    rpc GetAllUsers (GetAllUsersRequest) returns (GetAllUsersResponse);
 }
 
 // Request message
@@ -15,13 +15,13 @@ message GetAllUsersRequest {
 
 // Response message
 message GetAllUsersResponse {
-  repeated UserMessage users = 1;
+    repeated UserMessage users = 1;
 }
 
 // User message
 message UserMessage {
-  string user_id = 1;
-  string full_name = 2;
-  string email = 3;
-  bool is_active = 4;
+    string user_id = 1;
+    string full_name = 2;
+    string email = 3;
+    bool is_active = 4;
 }
