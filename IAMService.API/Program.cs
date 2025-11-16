@@ -96,6 +96,7 @@ else
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
+builder.Services.AddGrpc();
 builder.Services.AddCorsLab("AllowExternal", ["http://localhost:5173"]);
 builder.Services.AddCors(options =>
 {
@@ -121,6 +122,7 @@ app.UseAuthorization();
 app.MapGrpcService<PrivilegeGrpcService>();
 
 app.MapControllers();
+app.MapGrpcService<UserGrpcService>();
 
 app.MapGet("/", () => Results.Ok("Welcome to IAM Service")).AllowAnonymous();
 

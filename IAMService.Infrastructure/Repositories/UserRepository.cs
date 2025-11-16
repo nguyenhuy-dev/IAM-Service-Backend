@@ -174,5 +174,14 @@ namespace IAMService.Infrastructure.Repositories
                 .ThenInclude(r => r.Privileges)
                 .AsQueryable();
         }
+        /// <summary>
+        ///     Gets all users asynchronous.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken)
+        {
+            return await _context.Users.ToListAsync(cancellationToken);
+        }
     }
 }
