@@ -5,7 +5,7 @@ namespace IAMService.Application.Services
     ///     A no-op encryption service used primarily for tests or when DI isn't providing a real implementation.
     ///     It simply returns the input unchanged for both EncryptString and DecryptString.
     /// </summary>
-    internal class NoOpStringEncryptionService : IStringEncryptionService
+    public class NoOpStringEncryptionService : IStringEncryptionService
     {
         public string DecryptString(string base64CipherText)
         {

@@ -15,11 +15,17 @@ namespace IAMService.Infrastructure.Repositories
         ///     The context
         /// </summary>
         private readonly IAMServiceDbContext _context;
+
+        /// <summary>
+        ///     The string encryption service
+        /// </summary>
         private readonly IStringEncryptionService _stringEncryptionService;
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="context">The context.</param>
+        /// <param name="stringEncryptionService">The string encryption service.</param>
         /// <exception cref="System.ArgumentNullException">context</exception>
         public UserRepository(IAMServiceDbContext context, IStringEncryptionService stringEncryptionService)
         {
@@ -32,18 +38,10 @@ namespace IAMService.Infrastructure.Repositories
         {
             ArgumentNullException.ThrowIfNull(user);
             await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            var createdUser = await _context.Users
-                .Include(u => u.Role)
-                .ThenInclude(r => r.Privileges)
-                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
-            if (createdUser == null)
-            {
-                throw new InvalidOperationException($"Failed to retrieve created user with ID {user.UserId}");
-            }
             return user;
         }
+
         /// <inheritdoc />
         public async Task<bool> ExistsByEmailAsync(string email)
         {
@@ -53,6 +51,7 @@ namespace IAMService.Infrastructure.Repositories
             return await _context.Users
                 .AnyAsync(u => u.Email == encryptedEmail);
         }
+
         /// <inheritdoc />
         public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber)
         {
