@@ -116,5 +116,12 @@ namespace IAMService.Infrastructure.Repositories
 
             return count == idsList.Count;
         }
+
+        public async Task<IEnumerable<Privilege>> GetPrivilegesIncludeRolesAsync(CancellationToken cancellationToken)
+        {
+            return await _context.Privileges
+                .Include(p => p.Roles)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace IAMService.Infrastructure.AuthenticationHelpers
 
             var refreshTokenString = Guid.CreateVersion7().ToString();
 
-            JwtToken jwtToken = new JwtToken
+            var jwtToken = new JwtToken
             {
                 Id = Guid.CreateVersion7(),
                 AccessToken = accessTokenString,

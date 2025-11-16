@@ -1,11 +1,15 @@
 ﻿using FluentValidation;
+using IAMService.API.gRPC.Services;
 using IAMService.API.Middleware;
 using IAMService.Application;
 using IAMService.Application.Behaviors;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.AccessToken;
+using IAMService.Application.Interfaces.EventBus;
 using IAMService.Application.Interfaces.ForgetPassword;
 using IAMService.Application.Mappings;
+using IAMService.Infrastructure.EventBus;
+using IAMService.Infrastructure.EventBus.Kafka;
 using IAMService.Infrastructure.Repositories;
 using IAMService.Infrastructure.Repositories.ForgetPassword;
 using IAMService.Infrastructure.Services;
@@ -80,6 +84,15 @@ builder.Services.AddAuthentication("Token")
     );
 builder.Services.AddLabAuthorization();
 
+builder.Services.AddGrpc();
+
+builder.AddKafkaProducer("kafka");
+var kafkaTopic = configuration["EVENT_PUBLISHING_TOPICS"];
+if (!string.IsNullOrEmpty(kafkaTopic))
+    builder.AddKafkaEventPublisher(kafkaTopic);
+else
+    builder.Services.AddTransient<IEventPublisher, NullEventPublisher>();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
@@ -95,10 +108,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.MapOpenApi();
 
 app.UseCors("AllowExternal");
 
@@ -108,10 +118,12 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthorization();
 
+app.MapGrpcService<PrivilegeGrpcService>();
+
 app.MapControllers();
 
 app.MapGet("/", () => Results.Ok("Welcome to IAM Service")).AllowAnonymous();
 
 await app.MigrateDbContextAsync<IAMServiceDbContext>();
 
-app.Run();
+await app.RunAsync();

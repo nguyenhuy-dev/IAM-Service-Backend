@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "IAMService.API.gRPC.Protos";
+
+package iam;
+
+service Privilege {
+    rpc GetAllPrivileges (Empty) returns (PrivilegeListResponse);
+}
+
+message Empty {}
+
+message PrivilegeResponse {
+    int32 PrivilegeId = 1;
+    string PrivilegeName = 2;
+    repeated RoleResponse roles = 3;
+}
+
+message RoleResponse {
+    int32 RoleId = 1;
+    string RoleCode = 2;
+}
+
+message PrivilegeListResponse {
+    repeated PrivilegeResponse privileges = 1;
+}
