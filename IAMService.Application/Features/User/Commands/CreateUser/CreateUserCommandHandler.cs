@@ -2,9 +2,12 @@
 using FluentValidation;
 using FluentValidation.Results;
 using IAMService.Application.DTOs;
+using IAMService.Application.IntegrationEvents;
 using IAMService.Application.Interfaces;
-using IAMService.Application.Services;
+using IAMService.Application.Interfaces.EventBus;
+using Mapster;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using System.Globalization;
 namespace IAMService.Application.Features.User.Commands.CreateUser
 {
@@ -21,6 +24,10 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         ///     The email service
         /// </summary>
         private readonly IEmailService _emailService;
+
+        private readonly IEventPublisher _eventPublisher;
+
+        private readonly ILogger<CreateUserCommandHandler> _logger;
         /// <summary>
         ///     The mapper
         /// </summary>
@@ -33,15 +40,16 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         ///     The privilege repository
         /// </summary>
         private readonly IPrivilegeRepository _privilegeRepository;
-        /// <summary>
-        ///     The role repository
-        /// </summary>
-        private readonly IRoleRepository _roleRepository;
+
         private readonly IStringEncryptionService _stringEncryptionService;
+
+        private readonly IUnitOfWork _unitOfWork;
         /// <summary>
         ///     The user repository
         /// </summary>
         private readonly IUserRepository _userRepository;
+
+        //private readonly 
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="CreateUserCommandHandler" /> class.
@@ -53,20 +61,29 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// <param name="emailService">The email service.</param>
         /// <param name="auditLogService">The audit log service.</param>
         /// <param name="mapper">The mapper.</param>
-        public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper)
-            : this(userRepository, roleRepository, privilegeRepository, passwordHasher, emailService, auditLogService, mapper, new NoOpStringEncryptionService())
-        {
-        }
-        public CreateUserCommandHandler(IUserRepository userRepository, IRoleRepository roleRepository, IPrivilegeRepository privilegeRepository, IPasswordHasher passwordHasher, IEmailService emailService, IAuditLogService auditLogService, IMapper mapper, IStringEncryptionService stringEncryptionService)
+        public CreateUserCommandHandler(
+            IUserRepository userRepository,
+            IRoleRepository roleRepository,
+            IPrivilegeRepository privilegeRepository,
+            IPasswordHasher passwordHasher,
+            IEmailService emailService,
+            IAuditLogService auditLogService,
+            IMapper mapper,
+            IEventPublisher eventPublisher,
+            IUnitOfWork unitOfWork,
+            IStringEncryptionService stringEncryption,
+            ILogger<CreateUserCommandHandler> logger)
         {
             _userRepository = userRepository;
-            _roleRepository = roleRepository;
             _privilegeRepository = privilegeRepository;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
             _auditLogService = auditLogService;
             _mapper = mapper;
-            _stringEncryptionService = stringEncryptionService;
+            _eventPublisher = eventPublisher;
+            _unitOfWork = unitOfWork;
+            _stringEncryptionService = stringEncryption;
+            _logger = logger;
         }
 
         /// <summary>
@@ -161,6 +178,7 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
                 request.IsPatient
             );
 
+            var newUserHold = newUser.Adapt<Domain.Entities.User>();
 
             newUser.FullName = _stringEncryptionService.EncryptString(newUser.FullName);
             newUser.PhoneNumber = _stringEncryptionService.EncryptString(newUser.PhoneNumber);
@@ -168,10 +186,18 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             newUser.IdentityNumber = _stringEncryptionService.EncryptString(newUser.IdentityNumber);
             newUser.Address = _stringEncryptionService.EncryptString(newUser.Address);
 
-
-
-            //Save user to database
+            // Save user to database
+            // Manage transaction
             var createdUser = await _userRepository.CreateAsync(newUser);
+            _logger.LogInformation("Create user successfully: {UserId}", createdUser.UserId);
+            if (newUserHold.IsPatient)
+            {
+                // Publish event to 
+                var userCreatedIntegration = newUserHold.Adapt<UserCreatedIntegrationEvent>();
+                await _eventPublisher.PublishAsync(userCreatedIntegration);
+            }
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
             //Send notifications and log audit trail
             // Decrypt values for outbound operations (emails, audit logs, DTOs)
             var decryptedEmail = _stringEncryptionService.DecryptString(createdUser.Email);

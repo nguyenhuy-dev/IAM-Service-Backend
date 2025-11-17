@@ -9,20 +9,28 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="15.1.0" />
-        <PackageReference Include="FluentValidation" Version="12.1.0" />
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+        <PackageReference Include="AutoMapper" Version="15.1.0"/>
+        <PackageReference Include="FluentValidation" Version="12.1.0"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11"/>
+        <PackageReference Include="Google.Protobuf" Version="3.33.1"/>
+        <PackageReference Include="Grpc" Version="2.46.6"/>
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0"/>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.71.0"/>
+        <PackageReference Include="Grpc.Tools" Version="2.76.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.10"/>
-        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.11"/>
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1"/>
         <PackageReference Include="Ocelot" Version="24.0.1"/>
-        <PackageReference Include="Scalar.AspNetCore" Version="2.10.1" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.10.3"/>
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0"/>
     </ItemGroup>
 
@@ -31,6 +39,11 @@
         <ProjectReference Include="..\IAMService.Application\IAMService.Application.csproj"/>
         <ProjectReference Include="..\IAMService.Domain\IAMService.Domain.csproj"/>
         <ProjectReference Include="..\IAMService.Infrastructure\IAMService.Infrastructure.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="gRPC\Protos\privilege.proto" GrpcServices="Server"/>
+        <Protobuf Include="gRPC\Protos\UserProto\user.proto" GrpcServices="Server"/>
     </ItemGroup>
 
 </Project>

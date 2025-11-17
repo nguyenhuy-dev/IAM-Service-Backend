@@ -75,5 +75,11 @@ namespace IAMService.Application.Interfaces
         /// </summary>
         /// <returns>IQueryable of users for deferred execution</returns>
         IQueryable<User> GetUsersQueryable();
+        /// <summary>
+        ///     Gets all users asynchronous.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken);
     }
 }

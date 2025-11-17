@@ -1,0 +1,27 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "IAMService.API.gRPC.Protos.UserProto";
+
+package user;
+
+// Service definition
+service UserService {
+    rpc GetAllUsers (GetAllUsersRequest) returns (GetAllUsersResponse);
+}
+
+// Request message
+message GetAllUsersRequest {
+}
+
+// Response message
+message GetAllUsersResponse {
+    repeated UserMessage users = 1;
+}
+
+// User message
+message UserMessage {
+    string user_id = 1;
+    string full_name = 2;
+    string email = 3;
+    bool is_active = 4;
+}

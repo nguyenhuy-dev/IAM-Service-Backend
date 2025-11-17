@@ -124,7 +124,7 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         [TestCase(""), TestCase("123456789"), TestCase("12345678901"), TestCase("1234567890")]
         // 9 digits
         // 11 digits
-         // Doesn't start with 0
+        // Doesn't start with 0
         public async Task Validate_InvalidPhoneNumber_ShouldHaveValidationError(string invalidPhone)
         {
             // Arrange
@@ -156,7 +156,7 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         [TestCase(""), TestCase("12345678901"), TestCase("1234567890123"), TestCase("12345abcd890")]
         // 11 digits
         // 13 digits
-         // Contains letters
+        // Contains letters
         public async Task Validate_InvalidIdentityNumber_ShouldHaveValidationError(string invalidId)
         {
             // Arrange
