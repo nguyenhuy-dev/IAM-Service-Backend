@@ -1,4 +1,4 @@
-﻿using IAMService.Application.Interfaces;
+using IAMService.Application.Interfaces;
 using IAMService.Infrastructure.Settings;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -13,13 +13,21 @@ namespace IAMService.Infrastructure.Services
     /// </summary>
     public class EmailService : IEmailService
     {
+        /// <summary>
+        ///     The logger
+        /// </summary>
         private readonly ILogger<EmailService> _logger;
+        /// <summary>
+        ///     The settings
+        /// </summary>
         private readonly EmailSettings _settings;
 
         /// <summary>
-        ///     Constructor with dependency injection
+        ///     Initializes a new instance of the <see cref="EmailService" /> class
         /// </summary>
-        /// <param name="logger">Logger instance</param>
+        /// <param name="settings">The settings</param>
+        /// <param name="logger">The logger</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public EmailService(IOptions<EmailSettings> settings, ILogger<EmailService> logger)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
@@ -219,6 +227,14 @@ namespace IAMService.Infrastructure.Services
                 throw;
             }
         }
+        /// <summary>
+        ///     Sends the password reset email using the specified to email
+        /// </summary>
+        /// <param name="toEmail">The to email</param>
+        /// <param name="subject">The subject</param>
+        /// <param name="callbackUrl">The callback url</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <exception cref="InvalidOperationException">Không thể gửi email khôi phục mật khẩu đến {toEmail}. Lỗi: {ex.Message} </exception>
         public async Task SendPasswordResetEmailAsync(string toEmail, string subject, string callbackUrl, CancellationToken cancellationToken = default)
         {
             // Cần phải bọc toàn bộ logic trong một khối try-catch để log lỗi gửi mail

@@ -3,6 +3,7 @@ using FluentAssertions;
 using IAMService.Application.Features.User.Queries.GetAllUser;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Mappings;
+using IAMService.Domain.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
 using MockQueryable;
 using NSubstitute;
@@ -36,8 +37,30 @@ namespace IAMService.Application.Test.Features.User.Queries.GetAllUser
 
             _handler = new GetUsersQueryHandler(_userRepository, _mapper, _stringEncryptionService);
 
-            var roleAdmin = new Domain.Entities.Role { RoleId = 1, RoleName = "Admin" };
-            var roleUser = new Domain.Entities.Role { RoleId = 2, RoleName = "User" };
+            var runTestPrivilege = new Privilege { PrivilegeId = 50, PrivilegeName = "run_test_order" };
+            var viewUserPrivilege = new Privilege { PrivilegeId = 51, PrivilegeName = "view_user" };
+
+            var roleAdmin = new Domain.Entities.Role
+            {
+                RoleId = 1,
+                RoleName = "Admin",
+                RoleCode = "ADMIN",
+                Privileges = new List<Privilege> { runTestPrivilege, viewUserPrivilege }
+            };
+            var roleUser = new Domain.Entities.Role
+            {
+                RoleId = 2,
+                RoleName = "User",
+                RoleCode = "USER",
+                Privileges = new List<Privilege>()
+            };
+            var roleTechnician = new Domain.Entities.Role
+            {
+                RoleId = 3,
+                RoleName = "Lab Technician",
+                RoleCode = "LAB_TECHNICIAN",
+                Privileges = new List<Privilege> { runTestPrivilege }
+            };
 
             _testUsers = new List<Domain.Entities.User>
             {
@@ -46,30 +69,45 @@ namespace IAMService.Application.Test.Features.User.Queries.GetAllUser
                     UserId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
                     FullName = "Alice",
                     Email = "alice@example.com",
-                    Role = roleAdmin
+                    Role = roleAdmin,
+                    RoleId = roleAdmin.RoleId
                 },
                 new Domain.Entities.User
                 {
                     UserId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                     FullName = "Bob",
                     Email = "bob@example.com",
-                    Role = roleUser
+                    Role = roleUser,
+                    RoleId = roleUser.RoleId
                 },
                 new Domain.Entities.User
                 {
                     UserId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
                     FullName = "Charlie",
                     Email = "charlie@example.com",
-                    Role = roleUser
+                    Role = roleUser,
+                    RoleId = roleUser.RoleId
                 },
                 new Domain.Entities.User
                 {
                     UserId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
                     FullName = "David",
                     Email = "david@example.com",
-                    Role = roleAdmin
+                    Role = roleAdmin,
+                    RoleId = roleAdmin.RoleId
+                },
+                new Domain.Entities.User
+                {
+                    UserId = Guid.Parse("55555555-5555-5555-5555-555555555555"),
+                    FullName = "Erin",
+                    Email = "erin@example.com",
+                    Role = roleTechnician,
+                    RoleId = roleTechnician.RoleId
                 }
             };
+
+            // Mark Charlie as patient for filtering scenarios
+            SetIsPatient(_testUsers[2], true);
         }
         private IUserRepository _userRepository;
         private IMapper _mapper;
@@ -81,16 +119,15 @@ namespace IAMService.Application.Test.Features.User.Queries.GetAllUser
         public async Task Handle_NoFilters_ReturnsAllUsersPaginated()
         {
             var query = new GetUsersQuery(null, null, null);
-
             var mockQueryable = _testUsers.BuildMock();
             _userRepository.GetUsersQueryable().Returns(mockQueryable);
 
             var result = await _handler.Handle(query, CancellationToken.None);
 
             result.Should().NotBeNull();
-            result.Items.Should().HaveCount(4);
+            result.Items.Should().HaveCount(5);
             result.PageNumber.Should().Be(1);
-            result.TotalCount.Should().Be(4);
+            result.TotalCount.Should().Be(5);
             _userRepository.Received(1).GetUsersQueryable();
         }
 
@@ -212,6 +249,57 @@ namespace IAMService.Application.Test.Features.User.Queries.GetAllUser
 
             result.Should().NotBeNull();
             _userRepository.Received(1).GetUsersQueryable();
+        }
+
+        [Test]
+        public async Task Handle_WithRoleCodes_FiltersMatchingRoles()
+        {
+            var query = new GetUsersQuery(null, null, null, 1, 10, ["LAB_TECHNICIAN"]);
+
+            var mockQueryable = _testUsers.BuildMock();
+            _userRepository.GetUsersQueryable().Returns(mockQueryable);
+
+            var result = await _handler.Handle(query, CancellationToken.None);
+
+            result.Items.Should().HaveCount(1);
+            result.Items[0].Role.RoleCode.Should().Be("LAB_TECHNICIAN");
+        }
+
+        [Test]
+        public async Task Handle_WithPrivilegeNames_FiltersMatchingPrivileges()
+        {
+            var query = new GetUsersQuery(null, null, null, 0, 0, [], new List<string> { "run_test_order" });
+
+            var mockQueryable = _testUsers.BuildMock();
+            _userRepository.GetUsersQueryable().Returns(mockQueryable);
+
+            var result = await _handler.Handle(query, CancellationToken.None);
+
+            result.Items.Should().OnlyContain(u =>
+                u.Role.Privileges.Any(p =>
+                    p.PrivilegeName.Equals("run_test_order", StringComparison.OrdinalIgnoreCase)));
+        }
+
+        [Test]
+        public async Task Handle_ExcludePatients_RemovesPatientAccounts()
+        {
+            var query = new GetUsersQuery(null, null, null, 0, 0, [], [], true);
+
+            var mockQueryable = _testUsers.BuildMock();
+            _userRepository.GetUsersQueryable().Returns(mockQueryable);
+
+            var result = await _handler.Handle(query, CancellationToken.None);
+
+            result.Items.Should().NotContain(u => u.FullName == "Charlie");
+        }
+
+        private static void SetIsPatient(Domain.Entities.User user, bool value)
+        {
+            var setMethod = typeof(Domain.Entities.User)
+                .GetProperty(nameof(Domain.Entities.User.IsPatient))?
+                .GetSetMethod(true);
+
+            setMethod?.Invoke(user, new object[] { value });
         }
     }
 }

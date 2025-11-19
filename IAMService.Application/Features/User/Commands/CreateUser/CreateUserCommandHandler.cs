@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
 using IAMService.Application.DTOs;
@@ -25,8 +25,14 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// </summary>
         private readonly IEmailService _emailService;
 
+        /// <summary>
+        ///     The event publisher
+        /// </summary>
         private readonly IEventPublisher _eventPublisher;
 
+        /// <summary>
+        ///     The logger
+        /// </summary>
         private readonly ILogger<CreateUserCommandHandler> _logger;
         /// <summary>
         ///     The mapper
@@ -41,26 +47,34 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
         /// </summary>
         private readonly IPrivilegeRepository _privilegeRepository;
 
+        /// <summary>
+        ///     The string encryption service
+        /// </summary>
         private readonly IStringEncryptionService _stringEncryptionService;
 
+        /// <summary>
+        ///     The unit of work
+        /// </summary>
         private readonly IUnitOfWork _unitOfWork;
         /// <summary>
         ///     The user repository
         /// </summary>
         private readonly IUserRepository _userRepository;
 
-        //private readonly 
-
         /// <summary>
-        ///     Initializes a new instance of the <see cref="CreateUserCommandHandler" /> class.
+        ///     Initializes a new instance of the <see cref="CreateUserCommandHandler" /> class
         /// </summary>
-        /// <param name="userRepository">The user repository.</param>
-        /// <param name="roleRepository">The role repository.</param>
-        /// <param name="privilegeRepository">The privilege repository.</param>
-        /// <param name="passwordHasher">The password hasher.</param>
-        /// <param name="emailService">The email service.</param>
-        /// <param name="auditLogService">The audit log service.</param>
-        /// <param name="mapper">The mapper.</param>
+        /// <param name="userRepository">The user repository</param>
+        /// <param name="roleRepository">The role repository</param>
+        /// <param name="privilegeRepository">The privilege repository</param>
+        /// <param name="passwordHasher">The password hasher</param>
+        /// <param name="emailService">The email service</param>
+        /// <param name="auditLogService">The audit log service</param>
+        /// <param name="mapper">The mapper</param>
+        /// <param name="eventPublisher">The event publisher</param>
+        /// <param name="unitOfWork">The unit of work</param>
+        /// <param name="stringEncryption">The string encryption</param>
+        /// <param name="logger">The logger</param>
         public CreateUserCommandHandler(
             IUserRepository userRepository,
             IRoleRepository roleRepository,

@@ -66,7 +66,7 @@ namespace IAMService.API.Middleware.Authorization
             if (privilege == null)
                 throw new ForbiddenAccessException("Privilege does not exist.");
 
-            var roleCodes = privilege.Roles.Select(r => r.RoleName);
+            var roleCodes = privilege.Roles.Select(r => r.RoleCode);
             AuthorizationPolicy policy;
             try
             {

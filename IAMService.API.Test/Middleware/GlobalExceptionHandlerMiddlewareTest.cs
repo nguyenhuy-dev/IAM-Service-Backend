@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Text.Json;
-namespace IAMService.API.Test
+namespace IAMService.API.Test.Middleware
 {
     [TestFixture]
     public class GlobalExceptionHandlerMiddlewareTests
