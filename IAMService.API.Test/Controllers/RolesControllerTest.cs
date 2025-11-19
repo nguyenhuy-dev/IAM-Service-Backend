@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-namespace IAMService.API.Test
+namespace IAMService.API.Test.Controllers
 {
     [TestFixture]
     public class RolesControllerTests

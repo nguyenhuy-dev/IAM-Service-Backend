@@ -9,12 +9,15 @@ namespace IAMService.Domain.Entities
         /// <summary>
         ///     Initializes a new instance of the <see cref="Privilege" /> class
         /// </summary>
-        /// <param name="privilegeName">The privilege name</param>
-        /// <exception cref="ArgumentException">Privilege Name cannot be null or empty </exception>
         public Privilege()
         {
             // Parameterless constructor for EF Core
         }
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="Privilege" /> class
+        /// </summary>
+        /// <param name="privilegeName">The privilege name</param>
+        /// <exception cref="ArgumentException">Privilege Name cannot be null or empty </exception>
         public Privilege(string privilegeName)
         {
             if (string.IsNullOrWhiteSpace(privilegeName))

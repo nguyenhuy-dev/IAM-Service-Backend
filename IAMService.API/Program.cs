@@ -117,6 +117,7 @@ app.MapScalarApiReference().AllowAnonymous();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGrpcService<PrivilegeGrpcService>();

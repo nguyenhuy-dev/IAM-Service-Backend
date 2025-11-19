@@ -31,7 +31,7 @@
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1"/>
         <PackageReference Include="Ocelot" Version="24.0.1"/>
         <PackageReference Include="Scalar.AspNetCore" Version="2.10.3"/>
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0"/>
     </ItemGroup>
 
     <ItemGroup>

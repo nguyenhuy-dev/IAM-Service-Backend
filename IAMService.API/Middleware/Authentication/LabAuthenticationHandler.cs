@@ -6,8 +6,6 @@ namespace IAMService.API.Middleware.Authentication
     /// </summary>
     /// <seealso
     ///     cref="Microsoft.AspNetCore.Authentication.AuthenticationHandler&lt;IAMService.API.Middleware.Authentication.LabAuthenticationSchemeOptions&gt;" />
-    /// <seealso
-    ///     cref="Microsoft.AspNetCore.Authentication.AuthenticationHandler&lt;IAMService.API.Middleware.Authentication.LabAuthenticationSchemeOptions&gt;" />
     public class LabAuthenticationHandler : AuthenticationHandler<LabAuthenticationSchemeOptions>
     {
         /// <summary>

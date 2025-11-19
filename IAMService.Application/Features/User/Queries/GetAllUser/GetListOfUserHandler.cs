@@ -25,9 +25,30 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
         {
             var usersQueryable = _userRepository.GetUsersQueryable();
 
+            if (request.ExcludePatients)
+            {
+                usersQueryable = usersQueryable.Where(u => !u.IsPatient);
+            }
+
+            var normalizedRoleCodes = Normalize(request.RoleCodes);
+            if (normalizedRoleCodes?.Count > 0)
+            {
+                usersQueryable = usersQueryable.Where(u =>
+                    u.Role != null &&
+                    normalizedRoleCodes.Contains(u.Role.RoleCode.ToUpper()));
+            }
+
+            var normalizedPrivilegeNames = Normalize(request.PrivilegeNames);
+            if (normalizedPrivilegeNames?.Count > 0)
+            {
+                usersQueryable = usersQueryable.Where(u =>
+                    u.Role != null &&
+                    u.Role.Privileges.Any(p =>
+                        normalizedPrivilegeNames.Contains(p.PrivilegeName.ToUpper())));
+            }
+
             // Lấy tất cả user trước (vì dữ liệu trong DB là mã hóa)
             var users = await usersQueryable
-                .Include(u => u.Role)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
@@ -87,6 +108,15 @@ namespace IAMService.Application.Features.User.Queries.GetAllUser
                 request.PageNumber,
                 request.PageSize
             );
+        }
+
+        private static List<string>? Normalize(IEnumerable<string>? values)
+        {
+            return values?
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim().ToUpper())
+                .Distinct()
+                .ToList();
         }
     }
 }

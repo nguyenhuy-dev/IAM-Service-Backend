@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using NSubstitute;
 using System.Security.Claims;
-namespace IAMService.API.Test
+namespace IAMService.API.Test.Controllers
 {
     [TestFixture]
     public class UsersControllerTests

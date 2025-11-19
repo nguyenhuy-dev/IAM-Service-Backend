@@ -9,7 +9,7 @@ namespace IAMService.Application.Interfaces
         ///     Generates a new JSON Web Token (JWT) access token with embedded user claims.
         /// </summary>
         /// <param name="userId">The unique identifier of the user to be included in the token claims.</param>
-        /// <param name="roles">A list of roles for the user to be included in the token claims.</param>
+        /// <param name="roleCode">Role code to be included in the token claims</param>
         /// <returns>
         ///     A tuple containing the generated **Access Token** string and the token's **Expiration Time in Seconds**.
         /// </returns>

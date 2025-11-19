@@ -53,7 +53,7 @@ namespace IAMService.Infrastructure.Services
         ///     Generates a new JWT Access Token containing user ID and roles.
         /// </summary>
         /// <param name="userId">The ID of the user for the 'sub' (subject) claim.</param>
-        /// <param name="roles">A list of user roles to be included in the claims.</param>
+        /// <param name="roleCode">Role code to be included in token claim</param>
         /// <returns>A tuple containing the generated token string and its validity duration in seconds.</returns>
         public (string Token, int ExpiresInSeconds) GenerateAccessToken(Guid userId, string roleCode)
         {

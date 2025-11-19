@@ -72,9 +72,9 @@ namespace IAMService.API.Controllers
         ///     Gets the roles.
         /// </summary>
         /// <param name="query">The query.</param>
-        /// <returns></returns>
-        /// PaginatedList
-        /// <GetRoleRequest>
+        /// <returns>
+        ///     PaginatedList
+        /// </returns>
         [HttpGet, ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetRoles([FromQuery] GetRoleQuery query)
         {
