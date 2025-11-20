@@ -1,5 +1,6 @@
 using AutoMapper;
 using IAMService.Application.DTOs;
+using IAMService.Application.IntegrationEvents;
 using IAMService.Domain.Entities;
 namespace IAMService.Application.Mappings
 {
@@ -37,6 +38,21 @@ namespace IAMService.Application.Mappings
                     opt => opt.MapFrom(src => src.Role != null
                         ? src.Role.Privileges.Select(p => p.PrivilegeName).ToList()
                         : new List<string>()));
+
+            CreateMap<UpdateUserRequestDto, UserUpdatedIsPatientIntegrationEvent>()
+                .ForMember(dest => dest.DateOfBirth, opt => opt.Ignore())
+                .ForMember(dest => dest.EventId, opt => opt.Ignore())
+                .ForMember(dest => dest.EventCreationDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForAllMembers(options =>
+                    options.Condition((src, dest, srcMember) => srcMember != null)
+                );
+
+            CreateMap<User, UserUpdatedIsPatientIntegrationEvent>()
+                .ForMember(dest => dest.EventId, opt => opt.Ignore())
+                .ForMember(dest => dest.EventCreationDate, opt => opt.Ignore());
+
+            CreateMap<User, User>();
         }
     }
 }

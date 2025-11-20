@@ -54,7 +54,6 @@ builder.Services.AddTransient<IInvalidationService, InvalidationAccessTokenServi
 builder.Services.AddTransient<ITokenDecoderService, TokenDecoderService>();
 var encryptionPassphrase = configuration["ENCRYPTION_PASSPHRASE"] ??
                            Environment.GetEnvironmentVariable("ENCRYPTION_PASSPHRASE");
-
 if (string.IsNullOrEmpty(encryptionPassphrase))
 {
     throw new InvalidOperationException(
@@ -96,7 +95,7 @@ else
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
-builder.Services.AddGrpc();
+
 builder.Services.AddCorsLab("AllowExternal", ["http://localhost:5173"]);
 builder.Services.AddCors(options =>
 {

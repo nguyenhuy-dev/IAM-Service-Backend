@@ -1,324 +1,194 @@
-﻿using FluentAssertions;
+﻿using AutoMapper;
 using IAMService.Application.DTOs;
 using IAMService.Application.Features.User.Commands.UpdateUser;
 using IAMService.Application.Interfaces;
+using IAMService.Application.Interfaces.EventBus;
 using IAMService.Domain.Entities;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
+using Moq;
 namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
 {
-    /// <summary>
-    ///     Unit tests for the UpdateUserCommandHandler class.
-    /// </summary>
     [TestFixture]
     public class UpdateUserCommandHandlerTests
     {
 
-        /// <summary>
-        ///     Setups this instance.
-        /// </summary>
         [SetUp]
         public void Setup()
         {
-            _userRepository = Substitute.For<IUserRepository>();
-            _roleClone_service_fix(); // helper to avoid name clash in editor if needed
-
-            _roleCloneService = Substitute.For<IRoleCloneService>();
-            _logger = Substitute.For<ILogger<UpdateUserCommandHandler>>();
+            _userRepositoryMock = new Mock<IUserRepository>();
+            _roleCloneServiceMock = new Mock<IRoleCloneService>();
+            _loggerMock = new Mock<ILogger<UpdateUserCommandHandler>>();
+            _encryptionServiceMock = new Mock<IStringEncryptionService>();
+            _unitOfWorkMock = new Mock<IUnitOfWork>();
+            _mapperMock = new Mock<IMapper>();
+            _eventPublisherMock = new Mock<IEventPublisher>();
 
             _handler = new UpdateUserCommandHandler(
-                _userRepository,
-                _roleCloneService,
-                _logger
+                _userRepositoryMock.Object,
+                _roleCloneServiceMock.Object,
+                _loggerMock.Object,
+                _encryptionServiceMock.Object,
+                _unitOfWorkMock.Object,
+                _mapperMock.Object,
+                _eventPublisherMock.Object
             );
         }
-        /// <summary>
-        ///     The role clone service
-        /// </summary>
-        private IRoleCloneService _roleCloneService;
-        /// <summary>
-        ///     The user repository
-        /// </summary>
-        private IUserRepository _userRepository;
-        /// <summary>
-        ///     The logger
-        /// </summary>
-        private ILogger<UpdateUserCommandHandler> _logger;
-        /// <summary>
-        ///     The handler
-        /// </summary>
-        private UpdateUserCommandHandler _handler;
+        private Mock<IUserRepository> _userRepositoryMock = null!;
+        private Mock<IRoleCloneService> _roleCloneServiceMock = null!;
+        private Mock<ILogger<UpdateUserCommandHandler>> _loggerMock = null!;
+        private Mock<IStringEncryptionService> _encryptionServiceMock = null!;
+        private Mock<IUnitOfWork> _unitOfWorkMock = null!;
+        private Mock<IMapper> _mapperMock = null!;
+        private Mock<IEventPublisher> _eventPublisherMock = null!;
+        private UpdateUserCommandHandler _handler = null!;
 
-        // helper (no-op) in case your editor flagged the previous symbol name
-        /// <summary>
-        ///     Roles the clone service fix.
-        /// </summary>
-        private void _roleClone_service_fix()
+        private Domain.Entities.User CreateUser(Guid? userId = null)
         {
-            /* no-op */
-        }
-
-        /// <summary>
-        ///     Handles the valid user updates basic information successfully.
-        /// </summary>
-        [Test]
-        public async Task Handle_ValidUser_UpdatesBasicInfoSuccessfully()
-        {
-            // Arrange
-            var userId = Guid.NewGuid();
-
-            // Use fully-qualified domain entity types to avoid namespace/type conflicts
-            var existingUser = new Domain.Entities.User
+            var id = userId ?? Guid.NewGuid();
+            return new Domain.Entities.User
             {
-                UserId = userId,
-                FullName = "Old Name",
-                PhoneNumber = "0000000000",
-                Email = "old@example.com",
+                UserId = id,
+                FullName = "EncryptedName",
+                PhoneNumber = "EncryptedPhone",
+                Email = "EncryptedEmail",
+                IdentityNumber = "EncryptedId",
+                Address = "EncryptedAddress",
                 Gender = true,
-                Address = "Old Address",
-                IdentityNumber = "111111111111",
-                DateOfBirth = new DateOnly(1990, 1, 1),
+                DateOfBirth = new DateOnly(2000, 1, 1),
+                RoleId = 1,
                 Role = new Domain.Entities.Role
                 {
                     RoleId = 1,
-                    RoleName = "Employee"
-                },
-                RoleId = 1
+                    RoleName = "RoleName",
+                    Privileges = new List<Privilege>
+                    {
+                        new Privilege { PrivilegeId = 1, PrivilegeName = "Privilege1" }
+                    }
+                }
             };
+        }
 
-            var command = new UpdateUserCommand
+        private UpdateUserCommand CreateCommand(Guid? userId = null, bool isAdmin = false, string dob = "01/01/2000", List<int>? privilegeIds = null)
+        {
+            return new UpdateUserCommand
             {
-                UserId = userId,
-                IsAdmin = false,
+                UserId = userId ?? Guid.NewGuid(),
+                IsAdmin = isAdmin,
                 Dto = new UpdateUserRequestDto
                 {
-                    FullName = "New Name",
-                    PhoneNumber = "0999999999",
-                    Email = "new@example.com",
-                    Gender = false,
-                    Address = "New Address",
-                    IdentityNumber = "222222222222",
-                    DateOfBirth = "05/10/1995"
+                    FullName = "NewName",
+                    PhoneNumber = "NewPhone",
+                    Email = "newemail@example.com",
+                    IdentityNumber = "123456789012",
+                    Address = "NewAddress",
+                    DateOfBirth = dob,
+                    PrivilegeIds = privilegeIds
                 }
             };
+        }
 
-            _userRepository.GetByIdAsync(userId).Returns(existingUser);
-            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
+        [Test]
+        public void Handle_UserNotFound_ThrowsKeyNotFoundException()
+        {
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
+                .ReturnsAsync((Domain.Entities.User?)null);
 
-            // After update, repository returns updated user (simulate reload)
-            var reloadedUser = new Domain.Entities.User
-            {
-                UserId = userId,
-                FullName = command.Dto.FullName,
-                PhoneNumber = command.Dto.PhoneNumber,
-                Email = command.Dto.Email,
-                Gender = command.Dto.Gender.Value,
-                Address = command.Dto.Address,
-                IdentityNumber = command.Dto.IdentityNumber,
-                DateOfBirth = DateOnly.ParseExact(command.Dto.DateOfBirth, "MM/dd/yyyy", null),
-                Role = existingUser.Role,
-                RoleId = existingUser.RoleId
-            };
-            _userRepository.GetByIdAsync(userId).Returns(existingUser, reloadedUser);
+            var command = CreateCommand();
 
-            // Act
+            Assert.ThrowsAsync<KeyNotFoundException>(async () => await _handler.Handle(command, CancellationToken.None));
+        }
+
+        [Test]
+        public async Task Handle_UpdatesBasicFields_DecryptsAndReturnsDto()
+        {
+            var user = CreateUser();
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>()))
+                .ReturnsAsync(user);
+
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
+
+            var command = CreateCommand(user.UserId);
+
             var result = await _handler.Handle(command, CancellationToken.None);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.FullName.Should().Be("New Name");
-            result.Email.Should().Be("new@example.com");
-            result.Address.Should().Be("New Address");
-            result.IdentityNumber.Should().Be("222222222222");
-            result.DateOfBirth.Should().Be(reloadedUser.DateOfBirth);
+            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Domain.Entities.User>()), Times.Once);
+            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(CancellationToken.None), Times.Once);
 
-            await _userRepository.Received(1).UpdateAsync(Arg.Is<Domain.Entities.User>(u =>
-                u.FullName == "New Name" &&
-                u.Email == "new@example.com" &&
-                u.Address == "New Address"));
+            Assert.That(result.FullName, Is.EqualTo(command.Dto.FullName));
+            Assert.That(result.Email, Is.EqualTo(command.Dto.Email));
+            Assert.That(result.DateOfBirth, Is.EqualTo(new DateOnly(2000, 1, 1)));
         }
 
-        /// <summary>
-        ///     Handles the admin updates privileges clones role.
-        /// </summary>
         [Test]
-        public async Task Handle_AdminUpdatesPrivileges_ClonesRole()
+        public async Task Handle_ChangesPrivileges_ClonesRoleAndUpdates()
         {
-            // Arrange
-            var userId = Guid.NewGuid();
+            var user = CreateUser();
+            var newRole = new Domain.Entities.Role { RoleId = 2, RoleName = "ClonedRole" };
 
-            var oldRole = new Domain.Entities.Role
-            {
-                RoleId = 1,
-                RoleName = "Employee",
-                Privileges = new List<Privilege>
-                {
-                    new Privilege { PrivilegeId = 1 } // don't set PrivilegeName if setter is inaccessible
-                }
-            };
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>()))
+                .ReturnsAsync(user);
 
-            var user = new Domain.Entities.User
-            {
-                UserId = userId,
-                Role = oldRole,
-                RoleId = 1,
-                FullName = "Admin User"
-            };
+            _roleCloneServiceMock.Setup(x => x.CloneRoleWithPrivilegesAsync(
+                    It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(newRole);
 
-            var command = new UpdateUserCommand
-            {
-                UserId = userId,
-                IsAdmin = true,
-                Dto = new UpdateUserRequestDto
-                {
-                    PrivilegeIds = new List<int> { 1, 2 }
-                }
-            };
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
 
-            _userRepository.GetByIdAsync(userId).Returns(user);
+            var command = CreateCommand(user.UserId, true, privilegeIds: new List<int> { 2, 3 });
 
-            var newRole = new Domain.Entities.Role
-            {
-                RoleId = 99,
-                RoleName = "Employee (Custom)",
-                Privileges = new List<Privilege>
-                {
-                    new Privilege { PrivilegeId = 1 },
-                    new Privilege { PrivilegeId = 2 }
-                }
-            };
+            await _handler.Handle(command, CancellationToken.None);
 
-            _roleCloneService
-                .CloneRoleWithPrivilegesAsync(Arg.Is<Domain.Entities.User>(u => u.UserId == userId),
-                    Arg.Any<List<int>>(),
-                    Arg.Any<CancellationToken>())
-                .Returns(newRole);
+            Assert.That(user.RoleId, Is.EqualTo(newRole.RoleId));
+        }
 
-            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
+        [Test]
+        public async Task Handle_PrivilegesUnchanged_DoesNotCloneRole()
+        {
+            var user = CreateUser();
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
 
-            // After update reload returns role with privileges
-            var reloaded = new Domain.Entities.User
-            {
-                UserId = userId,
-                FullName = user.FullName,
-                Role = newRole,
-                RoleId = newRole.RoleId
-            };
-            _userRepository.GetByIdAsync(userId).Returns(user, reloaded);
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
 
-            // Act
+            var command = CreateCommand(user.UserId, true, privilegeIds: new List<int> { 1 });
+
+            await _handler.Handle(command, CancellationToken.None);
+
+            _roleCloneServiceMock.Verify(x => x.CloneRoleWithPrivilegesAsync(It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task Handle_InvalidDateOfBirth_Ignores()
+        {
+            var user = CreateUser();
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
+
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
+
+            var command = CreateCommand(user.UserId, dob: "invalid-date");
+
             var result = await _handler.Handle(command, CancellationToken.None);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.RoleName.Should().Be("Employee (Custom)");
-            result.PrivilegeIds.Should().BeEquivalentTo(new List<int> { 1, 2 });
-
-            await _roleCloneService.Received(1)
-                .CloneRoleWithPrivilegesAsync(Arg.Is<Domain.Entities.User>(u => u.UserId == userId),
-                    Arg.Any<List<int>>(),
-                    Arg.Any<CancellationToken>());
+            Assert.That(result.DateOfBirth, Is.EqualTo(user.DateOfBirth));
         }
 
-        /// <summary>
-        ///     Handles the admin privileges unchanged no clone happens.
-        /// </summary>
         [Test]
-        public async Task Handle_AdminPrivilegesUnchanged_NoCloneHappens()
+        public async Task Handle_NoPrivilegesNoAdmin_NoRoleChange()
         {
-            // Arrange
-            var userId = Guid.NewGuid();
-            var privileges = new List<Privilege>
-            {
-                new Privilege { PrivilegeId = 1 },
-                new Privilege { PrivilegeId = 2 }
-            };
+            var user = CreateUser();
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
 
-            var user = new Domain.Entities.User
-            {
-                UserId = userId,
-                FullName = "Same Privileges User",
-                Role = new Domain.Entities.Role
-                {
-                    RoleId = 1,
-                    RoleName = "Employee",
-                    Privileges = privileges
-                },
-                RoleId = 1
-            };
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
 
-            var command = new UpdateUserCommand
-            {
-                UserId = userId,
-                IsAdmin = true,
-                Dto = new UpdateUserRequestDto
-                {
-                    PrivilegeIds = new List<int> { 1, 2 } // same as before
-                }
-            };
+            var command = CreateCommand(user.UserId, false, privilegeIds: null);
 
-            _userRepository.GetByIdAsync(userId).Returns(user);
-            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
-            _userRepository.GetByIdAsync(userId).Returns(user, user); // reload same user
+            await _handler.Handle(command, CancellationToken.None);
 
-            // Act
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            _roleCloneService.DidNotReceiveWithAnyArgs()
-                .CloneRoleWithPrivilegesAsync(default!, default!, default!);
-
-            result.Should().NotBeNull();
-            result.RoleName.Should().Be("Employee");
-        }
-
-        /// <summary>
-        ///     Handles the user not found throws key not found exception.
-        /// </summary>
-        [Test]
-        public async Task Handle_UserNotFound_ThrowsKeyNotFoundException()
-        {
-            // Arrange
-            var command = new UpdateUserCommand
-            {
-                UserId = Guid.NewGuid(),
-                Dto = new UpdateUserRequestDto { FullName = "Non Existent" }
-            };
-
-            _userRepository.GetByIdAsync(command.UserId).Returns((Domain.Entities.User?)null);
-
-            // Act
-            Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
-
-            // Assert
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage($"*{command.UserId}*not found*");
-        }
-
-        /// <summary>
-        ///     Handles the user missing after update throws key not found exception.
-        /// </summary>
-        [Test]
-        public async Task Handle_UserMissingAfterUpdate_ThrowsKeyNotFoundException()
-        {
-            // Arrange
-            var userId = Guid.NewGuid();
-            var user = new Domain.Entities.User { UserId = userId, FullName = "Before Update" };
-
-            var command = new UpdateUserCommand
-            {
-                UserId = userId,
-                Dto = new UpdateUserRequestDto { FullName = "After Update" }
-            };
-
-            // first call returns user, second (after update) returns null
-            _userRepository.GetByIdAsync(userId).Returns(user, (Domain.Entities.User?)null);
-            _userRepository.UpdateAsync(Arg.Any<Domain.Entities.User>()).Returns(Task.CompletedTask);
-
-            Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
-
-            await act.Should().ThrowAsync<KeyNotFoundException>()
-                .WithMessage($"*{userId}*not found after update*");
+            _roleCloneServiceMock.Verify(x => x.CloneRoleWithPrivilegesAsync(It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }

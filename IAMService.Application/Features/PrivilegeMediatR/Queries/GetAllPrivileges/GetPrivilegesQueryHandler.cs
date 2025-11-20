@@ -6,8 +6,7 @@ namespace IAMService.Application.Features.PrivilegeMediatR.Queries.GetAllPrivile
     /// <summary>
     ///     Get Privileges Handler.
     /// </summary>
-    /// <seealso
-    ///     cref="IAMService.Application.Interfaces.Messaging.IQueryHandler&lt;IAMService.Application.Features.PrivilegeMediatR.Queries.GetAllPrivileges.GetPrivilegesQuery, System.Collections.Generic.List&lt;IAMService.Domain.Entities.Privilege&gt;&gt;" />
+    /// <seealso cref="IQueryHandler{GetPrivilegesQuery,List}" />
     public class GetPrivilegesQueryHandler(IPrivilegeRepository privilegeRepository) : IQueryHandler<GetPrivilegesQuery, List<Privilege>>
     {
         /// <summary>
@@ -25,7 +24,7 @@ namespace IAMService.Application.Features.PrivilegeMediatR.Queries.GetAllPrivile
         {
             var privileges = await _privilegeRepository.GetPrivilegesIncludeRolesAsync(cancellationToken);
 
-            return [..privileges];
+            return [.. privileges];
         }
     }
 }

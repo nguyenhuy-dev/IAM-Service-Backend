@@ -1,6 +1,8 @@
-﻿using IAMService.Application.DTOs;
+﻿using AutoMapper;
+using IAMService.Application.DTOs;
+using IAMService.Application.IntegrationEvents;
 using IAMService.Application.Interfaces;
-using IAMService.Application.Services;
+using IAMService.Application.Interfaces.EventBus;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
@@ -11,18 +13,36 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
     /// </summary>
     /// <seealso
     ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
+    /// <seealso
+    ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserResponseDto>
     {
+
+        /// <summary>
+        ///     The event publisher
+        /// </summary>
+        private readonly IEventPublisher _eventPublisher;
         /// <summary>
         ///     The logger
         /// </summary>
         private readonly ILogger<UpdateUserCommandHandler> _logger;
+
+        /// <summary>
+        ///     The mapper
+        /// </summary>
+        private readonly IMapper _mapper;
         /// <summary>
         ///     The role clone service
         /// </summary>
         private readonly IRoleCloneService _roleCloneService;
+        /// <summary>
+        ///     The string encryption service
+        /// </summary>
         private readonly IStringEncryptionService _stringEncryptionService;
-        private readonly IUnitOfWork? _unitOfWork;
+        /// <summary>
+        ///     The unit of work
+        /// </summary>
+        private readonly IUnitOfWork _unitOfWork;
         /// <summary>
         ///     The user repository
         /// </summary>
@@ -34,33 +54,26 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         /// <param name="userRepository">The user repository.</param>
         /// <param name="roleCloneService">The role clone service.</param>
         /// <param name="logger">The logger.</param>
-        public UpdateUserCommandHandler(
-            IUserRepository userRepository,
-            IRoleCloneService roleCloneService,
-            ILogger<UpdateUserCommandHandler> logger)
-            : this(
-                userRepository,
-                roleCloneService,
-                logger,
-                new NoOpStringEncryptionService(),
-                null
-            )
-        {
-        }
-
-
+        /// <param name="stringEncryptionService">The string encryption service.</param>
+        /// <param name="unitOfWork">The unit of work.</param>
+        /// <param name="mapper">The mapper.</param>
+        /// <param name="eventPublisher">The event publisher.</param>
         public UpdateUserCommandHandler(
             IUserRepository userRepository,
             IRoleCloneService roleCloneService,
             ILogger<UpdateUserCommandHandler> logger,
             IStringEncryptionService stringEncryptionService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IEventPublisher eventPublisher)
         {
             _userRepository = userRepository;
             _roleCloneService = roleCloneService;
             _logger = logger;
             _stringEncryptionService = stringEncryptionService;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _eventPublisher = eventPublisher;
         }
 
         /// <summary>
@@ -83,6 +96,9 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             // 1️⃣ Retrieve user
             var user = await _userRepository.GetByIdAsync(request.UserId)
                     ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
+
+            // Hold data of original user
+            var holdedUser = MapAndDecryptUser(user);
 
             // 2️⃣ Update basic info (encrypt sensitive fields before storing)
             user.FullName = request.Dto.FullName != null
@@ -165,10 +181,18 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             // 6️⃣ Persist user (RoleId and basic info)
             await _userRepository.UpdateAsync(user);
 
-            if (_unitOfWork != null)
+            // Publish event with kafka, if user is patient.
+            if (user.IsPatient) // Only object 'user' have right IsPatient field.
             {
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                // Map user changed.
+                var updatedUserIsPatientIntegrationEvent = _mapper.Map<UserUpdatedIsPatientIntegrationEvent>(holdedUser);
+                _mapper.Map(request.Dto, updatedUserIsPatientIntegrationEvent);
+                updatedUserIsPatientIntegrationEvent.DateOfBirth = !string.IsNullOrWhiteSpace(request.Dto.DateOfBirth) ? user.DateOfBirth : updatedUserIsPatientIntegrationEvent.DateOfBirth;
+
+                await _eventPublisher.PublishAsync(updatedUserIsPatientIntegrationEvent);
             }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("💾 User {UserId} successfully updated and saved.", user.UserId);
 
@@ -202,6 +226,30 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 PrivilegeIds = privilegeIds,
                 PrivilegeNames = privilegeNames
             };
+        }
+
+        /// <summary>
+        ///     Maps the and decrypt user.
+        /// </summary>
+        /// <param name="user">The user.</param>
+        /// <returns></returns>
+        private Domain.Entities.User MapAndDecryptUser(Domain.Entities.User user)
+        {
+            var decryptedUser = new Domain.Entities.User();
+            decryptedUser.UserId = user.UserId;
+            decryptedUser.FullName = _stringEncryptionService.DecryptString(user.FullName);
+            decryptedUser.IsActive = user.IsActive;
+            decryptedUser.PhoneNumber = _stringEncryptionService.DecryptString(user.PhoneNumber);
+            decryptedUser.Email = _stringEncryptionService.DecryptString(user.Email);
+            decryptedUser.HashedPassword = user.HashedPassword;
+            decryptedUser.Gender = user.Gender;
+            decryptedUser.IdentityNumber = _stringEncryptionService.DecryptString(user.IdentityNumber);
+            decryptedUser.DateOfBirth = user.DateOfBirth;
+            decryptedUser.Address = _stringEncryptionService.DecryptString(user.Address);
+            decryptedUser.RoleId = user.RoleId;
+            decryptedUser.Role = user.Role;
+
+            return decryptedUser;
         }
     }
 }

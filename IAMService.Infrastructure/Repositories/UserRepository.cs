@@ -49,7 +49,8 @@ namespace IAMService.Infrastructure.Repositories
                 throw new ArgumentException("Email cannot be null or empty", nameof(email));
             var encryptedEmail = _stringEncryptionService.EncryptString(email);
             return await _context.Users
-                .AnyAsync(u => u.Email == encryptedEmail);
+                .AnyAsync(u => u.Email == encryptedEmail &&
+                               u.IsActive);
         }
 
         /// <inheritdoc />
@@ -58,7 +59,8 @@ namespace IAMService.Infrastructure.Repositories
             if (string.IsNullOrWhiteSpace(identityNumber))
                 throw new ArgumentException("Identity number cannot be null or empty", nameof(identityNumber));
             return await _context.Users
-                .AnyAsync(u => u.IdentityNumber == identityNumber);
+                .AnyAsync(u => u.IdentityNumber == identityNumber &&
+                               u.IsActive);
         }
 
         /// <inheritdoc />
@@ -174,6 +176,7 @@ namespace IAMService.Infrastructure.Repositories
                 .ThenInclude(r => r.Privileges)
                 .AsQueryable();
         }
+
         /// <summary>
         ///     Gets all users asynchronous.
         /// </summary>

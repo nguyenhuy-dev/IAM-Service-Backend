@@ -21,6 +21,7 @@ namespace IAMService.Infrastructure.EventBus.Kafka
         ///     The producer
         /// </summary>
         private readonly IProducer<string, MessageEnvelop> _producer = producer;
+
         /// <summary>
         ///     The topic
         /// </summary>
