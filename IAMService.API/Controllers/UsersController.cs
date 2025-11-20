@@ -124,8 +124,8 @@ namespace IAMService.API.Controllers
 
             // 5️⃣ Determine user permissions
             var isAdminOrManager =
-                currentRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
-                currentRole.Equals("Manager", StringComparison.OrdinalIgnoreCase);
+                currentRole.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+                currentRole.Equals("manager", StringComparison.OrdinalIgnoreCase);
 
             var isOwner = currentUserId == userId;
 
