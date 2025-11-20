@@ -5,6 +5,8 @@ using IAMService.Application.DTOs;
 using IAMService.Application.IntegrationEvents;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.EventBus;
+using IAMService.Domain.Enums;
+using IAMService.Domain.Services;
 using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -134,11 +136,13 @@ namespace IAMService.Application.Features.User.Commands.CreateUser
             var privilegeIds = new List<int>();
             if (request.PrivilegeIds == null || !request.PrivilegeIds.Any())
             {
-                privilegeIds.Add(1);
+                privilegeIds.Add((int)PrivilegeEnum.ReadOnly);
             }
             else
             {
                 privilegeIds.AddRange(request.PrivilegeIds);
+
+                PrivilegeEnforcer.EnsureDependencies(privilegeIds);
             }
             if (!await _privilegeRepository.AllExistAsync(privilegeIds))
             {

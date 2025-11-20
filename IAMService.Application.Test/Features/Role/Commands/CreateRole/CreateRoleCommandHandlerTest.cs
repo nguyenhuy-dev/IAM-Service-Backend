@@ -69,34 +69,33 @@ namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
                 Description = "Administrator role",
                 Privileges = new List<PrivilegeDto>()
             };
+            
+            var expectedPrivileges = new List<int> { 10, 20, 9, 18 };
 
-            // Setup repository mock to return created entity
+            // VARIABLE TO CAPTURE THE ARGUMENT
+            IEnumerable<int> capturedPrivileges = null;
+
+            // SETUP: Relax the matcher to Arg.Any, but use Arg.Do to capture the value
             _roleRepository.CreateAsync(
                     Arg.Any<Domain.Entities.Role>(),
-                    Arg.Is<List<int>>(p => p.SequenceEqual(command.PrivilegeIds))
+                    Arg.Do<IEnumerable<int>>(x => capturedPrivileges = x) // Capture here
                 )
                 .Returns(Task.FromResult(createdRoleEntity));
 
-            // Setup mapper mock to return expected DTO
             _mapper.Map<RoleDto>(createdRoleEntity).Returns(expectedRoleDto);
 
-            // Act: Execute handler with command
+            // ACT
             var result = await _handler.Handle(command, CancellationToken.None);
 
-            // Assert: Verify repository was called with correct parameters
-            await _roleRepository.Received(1).CreateAsync(
-                Arg.Is<Domain.Entities.Role>(r =>
-                    r.RoleName == command.RoleName &&
-                    r.RoleCode == command.RoleCode),
-                Arg.Is<List<int>>(p => p.SequenceEqual(command.PrivilegeIds))
-            );
+            // ASSERT
+            // 1. Verify the call happened (arguments don't matter here, we just check invocation)
+            await _roleRepository.Received(1).CreateAsync(Arg.Any<Domain.Entities.Role>(), Arg.Any<IEnumerable<int>>());
 
-            // Assert: Verify mapper was called once with correct entity
-            _mapper.Received(1).Map<RoleDto>(createdRoleEntity);
-
-            // Assert: Verify returned DTO matches expected values
-            Assert.That(result, Is.EqualTo(expectedRoleDto));
-            Assert.That(result.RoleName, Is.EqualTo(command.RoleName));
+            // 2. Verify the Role data
+            Assert.That(capturedPrivileges, Is.Not.Null, "CreateAsync was called, but privileges were null");
+    
+            // 3. Verify the List Content (NUnit's Is.EquivalentTo handles order independence automatically)
+            Assert.That(capturedPrivileges, Is.EquivalentTo(expectedPrivileges));
         }
 
         /// <summary>

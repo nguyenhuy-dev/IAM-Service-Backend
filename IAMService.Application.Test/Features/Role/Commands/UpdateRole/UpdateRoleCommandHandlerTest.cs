@@ -45,11 +45,25 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
         {
             // ## Arrange ##
             var command = new UpdateRoleCommand(1, "New Name", "NEW_CODE", "New Desc", new List<int> { 10 });
-            var existingRole = new Domain.Entities.Role(1, "Old Name", "OLD_CODE", "Old Desc"); // IsDefault is false by default
-            var expectedDto = new RoleDto { RoleId = 1, RoleName = "New Name", Privileges = [], RoleCode = "NEW_CODE", Description = "New Desc" };
+            var existingRole = new Domain.Entities.Role(1, "Old Name", "OLD_CODE", "Old Desc");
+            var expectedDto = new RoleDto { RoleId = 1, RoleName = "New Name", Privileges = new List<PrivilegeDto>(), RoleCode = "NEW_CODE", Description = "New Desc" };
+
+            // We expect the Repo to receive the command IDs + Enforced dependencies.
+            var expectedPrivileges = new List<int> { 10, 9 };
+
+            // Variables to capture what is actually passed to the repository
+            Domain.Entities.Role capturedRole = null;
+            IEnumerable<int> capturedPrivileges = null;
 
             _roleRepository.GetByIdAsync(command.RoleId).Returns(existingRole);
-            _roleRepository.UpdateAsync(Arg.Any<Domain.Entities.Role>(), Arg.Any<List<int>>()).Returns(existingRole);
+
+            // Setup: Relax strict matching to ensure Mock returns, but CAPTURE the data
+            _roleRepository.UpdateAsync(
+                    Arg.Do<Domain.Entities.Role>(r => capturedRole = r),
+                    Arg.Do<IEnumerable<int>>(p => capturedPrivileges = p)
+                )
+                .Returns(existingRole);
+
             _mapper.Map<RoleDto>(existingRole).Returns(expectedDto);
 
             // ## Act ##
@@ -57,10 +71,17 @@ namespace IAMService.Application.Test.Features.Role.Commands.UpdateRole
 
             // ## Assert ##
             Assert.That(result, Is.EqualTo(expectedDto));
-            await _roleRepository.Received(1).UpdateAsync(
-                Arg.Is<Domain.Entities.Role>(r => r.RoleName == command.RoleName && r.RoleCode == command.RoleCode),
-                Arg.Is<List<int>>(p => p.SequenceEqual(command.PrivilegeIds))
-            );
+
+            // 1. Verify call happened
+            await _roleRepository.Received(1).UpdateAsync(Arg.Any<Domain.Entities.Role>(), Arg.Any<IEnumerable<int>>());
+
+            // 2. Check properties on the captured role object
+            Assert.That(capturedRole, Is.Not.Null);
+            Assert.That(capturedRole.RoleName, Is.EqualTo(command.RoleName));
+            Assert.That(capturedRole.RoleCode, Is.EqualTo(command.RoleCode));
+
+            // 3. Check privileges (Order independent check)
+            Assert.That(capturedPrivileges, Is.EquivalentTo(expectedPrivileges));
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 using IAMService.Application.Exceptions;
 using IAMService.Application.Interfaces;
 using IAMService.Domain.Entities;
+using IAMService.Domain.Services;
 using IAMService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 namespace IAMService.Infrastructure.Repositories
@@ -22,6 +23,8 @@ namespace IAMService.Infrastructure.Repositories
 
             if (privilegeIdsList.Count != 0)
             {
+                PrivilegeEnforcer.EnsureDependencies(privilegeIdsList);
+
                 var privileges = await _context.Privileges
                     .Where(p => privilegeIdsList.Contains(p.PrivilegeId))
                     .ToListAsync();
@@ -64,6 +67,9 @@ namespace IAMService.Infrastructure.Repositories
             // Check privilege list validity
             var privilegeIdsList = privilegeIds.ToList();
             if (privilegeIdsList.Count == 0) throw new ValidationException("Empty privilege list");
+
+            PrivilegeEnforcer.EnsureDependencies(privilegeIdsList);
+
             var privileges = await _context.Privileges
                 .Where(p => privilegeIdsList.Contains(p.PrivilegeId))
                 .ToListAsync();
