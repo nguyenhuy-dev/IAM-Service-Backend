@@ -3,6 +3,8 @@ using FluentValidation;
 using IAMService.Application.DTOs;
 using IAMService.Application.Exceptions;
 using IAMService.Application.Interfaces;
+using IAMService.Domain.Enums;
+using IAMService.Domain.Services;
 using MediatR;
 namespace IAMService.Application.Features.Role.Commands.UpdateRole
 {
@@ -43,7 +45,9 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
             // Handle privilege IDs
             var privilegeIds = request.PrivilegeIds?.Any() == true
                 ? request.PrivilegeIds.ToList()
-                : [1];
+                : [(int)PrivilegeEnum.ReadOnly];
+            
+            PrivilegeEnforcer.EnsureDependencies(privilegeIds);
 
             var updatedRole = await roleRepository.UpdateAsync(existingRole, privilegeIds);
 

@@ -1,6 +1,8 @@
 using AutoMapper;
 using IAMService.Application.DTOs;
 using IAMService.Application.Interfaces;
+using IAMService.Domain.Enums;
+using IAMService.Domain.Services;
 using MediatR;
 namespace IAMService.Application.Features.Role.Commands.CreateRole
 {
@@ -37,7 +39,9 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
             // Handle privilege IDs
             var privilegeIds = request.PrivilegeIds?.Any() == true
                 ? request.PrivilegeIds.ToList()
-                : [1];
+                : [(int)PrivilegeEnum.ReadOnly];
+            
+            PrivilegeEnforcer.EnsureDependencies(privilegeIds);
 
             // Create role with associated privileges
             var createdRole = await roleRepository.CreateAsync(newRole, privilegeIds);

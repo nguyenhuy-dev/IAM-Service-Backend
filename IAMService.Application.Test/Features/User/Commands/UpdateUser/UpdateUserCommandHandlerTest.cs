@@ -184,7 +184,7 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
             _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
             _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
 
-            var command = CreateCommand(user.UserId, false, privilegeIds: null);
+            var command = CreateCommand(user.UserId);
 
             await _handler.Handle(command, CancellationToken.None);
 

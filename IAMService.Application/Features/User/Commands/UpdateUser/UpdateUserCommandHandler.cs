@@ -3,6 +3,8 @@ using IAMService.Application.DTOs;
 using IAMService.Application.IntegrationEvents;
 using IAMService.Application.Interfaces;
 using IAMService.Application.Interfaces.EventBus;
+using IAMService.Domain.Enums;
+using IAMService.Domain.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
@@ -12,9 +14,9 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
     ///     Handles updating user information (basic info + privileges if admin).
     /// </summary>
     /// <seealso
-    ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
+    ///     cref="UserResponseDto" />
     /// <seealso
-    ///     cref="MediatR.IRequestHandler&lt;IAMService.Application.Features.User.Commands.UpdateUser.UpdateUserCommand, IAMService.Application.DTOs.UserResponseDto&gt;" />
+    ///     cref="UserResponseDto" />
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserResponseDto>
     {
 
@@ -138,7 +140,7 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 var currentPrivileges = user.Role?.Privileges?
                     .Select(p => p.PrivilegeId)
                     .OrderBy(x => x)
-                    .ToList() ?? new List<int>();
+                    .ToList() ?? [(int)PrivilegeEnum.ReadOnly];
 
                 var newPrivileges = request.Dto.PrivilegeIds
                     .Distinct()
@@ -150,6 +152,8 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
                 if (privilegesChanged)
                 {
                     _logger.LogInformation("⚙️ Privileges changed — cloning/reusing role for user {UserId}", user.UserId);
+
+                    PrivilegeEnforcer.EnsureDependencies(newPrivileges);
 
                     var newRole = await _roleCloneService.CloneRoleWithPrivilegesAsync(
                         user,
