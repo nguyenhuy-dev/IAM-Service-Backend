@@ -40,7 +40,7 @@ namespace IAMService.Application.Features.Role.Commands.CreateRole
             var privilegeIds = request.PrivilegeIds?.Any() == true
                 ? request.PrivilegeIds.ToList()
                 : [(int)PrivilegeEnum.ReadOnly];
-            
+
             PrivilegeEnforcer.EnsureDependencies(privilegeIds);
 
             // Create role with associated privileges

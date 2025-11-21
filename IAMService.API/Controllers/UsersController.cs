@@ -15,7 +15,9 @@ namespace IAMService.API.Controllers
     ///     Controller for user management operations
     ///     Handles user creation, retrieval, and management
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json")]
+    [ApiController]
+    [Route("api/[controller]")]
+    [Produces("application/json")]
     public class UsersController : ControllerBase
     {
         private readonly ISender _sender;
@@ -35,7 +37,12 @@ namespace IAMService.API.Controllers
         /// <param name="command">User creation command containing all required information</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Created user information</returns>
-        [HttpPost, ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateUser(
             [FromBody] CreateUserCommand command,
             CancellationToken cancellationToken)
@@ -60,10 +67,18 @@ namespace IAMService.API.Controllers
         /// <param name="dto">The dto.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        [Authorize, HttpPut("{userId:guid}"), ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        [Authorize]
+        [HttpPut("{userId:guid}")]
+        [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateUser(
             Guid userId,
-            [FromBody, BindingBehavior(BindingBehavior.Optional)] UpdateUserRequestDto dto,
+            [FromBody] [BindingBehavior(BindingBehavior.Optional)]
+            UpdateUserRequestDto dto,
             CancellationToken cancellationToken)
         {
             //  1. Validate the request body
@@ -164,7 +179,12 @@ namespace IAMService.API.Controllers
         /// <param name="userId">The ID of the user to view.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns></returns>
-        [HttpGet("{userId:guid}"), Authorize, ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [HttpGet("{userId:guid}")]
+        [Authorize]
+        [ProducesResponseType(typeof(ApiResponse<UserResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUserById(Guid userId, CancellationToken cancellationToken)
         {
             // 🔹 Kiểm tra xác thực
@@ -237,7 +257,12 @@ namespace IAMService.API.Controllers
         /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [HttpDelete("{id:guid}"), ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteUser(
             [FromRoute] Guid id,
             CancellationToken cancellationToken)
@@ -259,7 +284,11 @@ namespace IAMService.API.Controllers
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        [HttpGet, Authorize(Policy = "view_user"), ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status401Unauthorized), ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [HttpGet]
+        [Authorize(Policy = "view_user")]
+        [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetUsers([FromQuery] GetUsersQuery query)
         {
             var result = await _sender.Send(query);

@@ -13,7 +13,9 @@ namespace IAMService.API.Controllers
     ///     The roles controller class
     /// </summary>
     /// <seealso cref="ControllerBase" />
-    [ApiController, Route("api/[controller]"), Produces("application/json")]
+    [ApiController]
+    [Route("api/[controller]")]
+    [Produces("application/json")]
     public class RolesController(ISender sender) : ControllerBase
     {
         /// <summary>
@@ -22,7 +24,12 @@ namespace IAMService.API.Controllers
         /// <param name="command">The command</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>A task containing the action result</returns>
-        [HttpPost, ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status201Created), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), Authorize("create_role")]
+        [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [Authorize("create_role")]
         public async Task<IActionResult> CreateRole(
             [FromBody] CreateRoleCommand command,
             CancellationToken cancellationToken)
@@ -44,7 +51,13 @@ namespace IAMService.API.Controllers
         /// <param name="request">The request</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>A task containing the action result</returns>
-        [HttpPut("{roleId}"), ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound), Authorize("update_role")]
+        [HttpPut("{roleId}")]
+        [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [Authorize("update_role")]
         public async Task<IActionResult> UpdateRole(
             [FromRoute] int roleId,
             [FromBody] UpdateRoleRequest request,
@@ -75,7 +88,12 @@ namespace IAMService.API.Controllers
         /// <returns>
         ///     PaginatedList
         /// </returns>
-        [HttpGet, ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), Authorize("view_role")]
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<PaginatedList<GetRoleRequest>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [Authorize("view_role")]
         public async Task<IActionResult> GetRoles([FromQuery] GetRoleQuery query)
         {
             var result = await sender.Send(query);
@@ -99,7 +117,13 @@ namespace IAMService.API.Controllers
         /// <returns>
         ///     <br />
         /// </returns>
-        [HttpDelete("{roleId}"), ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound), Authorize("delete_role")]
+        [HttpDelete("{roleId}")]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [Authorize("delete_role")]
         public async Task<IActionResult> DeleteRole(
             [FromRoute] int roleId,
             CancellationToken cancellationToken)

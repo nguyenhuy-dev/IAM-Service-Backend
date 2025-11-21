@@ -42,7 +42,12 @@ namespace IAMService.API.gRPC.Services
                     UserId = user.UserId.ToString(),
                     FullName = decryptedFullName,
                     Email = decryptedEmail,
-                    IsActive = user.IsActive
+                    IsActive = user.IsActive,
+                    Role = new RoleResponse
+                    {
+                        RoleId = user.Role.RoleId,
+                        RoleName = user.Role.RoleName
+                    }
                 };
 
                 response.Users.Add(userMessage);

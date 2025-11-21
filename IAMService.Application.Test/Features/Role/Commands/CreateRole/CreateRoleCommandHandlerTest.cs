@@ -69,7 +69,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
                 Description = "Administrator role",
                 Privileges = new List<PrivilegeDto>()
             };
-            
+
             var expectedPrivileges = new List<int> { 10, 20, 9, 18 };
 
             // VARIABLE TO CAPTURE THE ARGUMENT
@@ -93,7 +93,7 @@ namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
 
             // 2. Verify the Role data
             Assert.That(capturedPrivileges, Is.Not.Null, "CreateAsync was called, but privileges were null");
-    
+
             // 3. Verify the List Content (NUnit's Is.EquivalentTo handles order independence automatically)
             Assert.That(capturedPrivileges, Is.EquivalentTo(expectedPrivileges));
         }
@@ -164,7 +164,8 @@ namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
         ///     Business Rule: Role name is mandatory and cannot be empty or whitespace
         ///     This serves as a final safety check even after validation
         /// </summary>
-        [TestCase(""), TestCase("   ")]
+        [TestCase("")]
+        [TestCase("   ")]
         public void Handle_Should_ThrowArgumentException_WhenRoleNameIsInvalid(string invalidName)
         {
             // Arrange: Create command with invalid role name

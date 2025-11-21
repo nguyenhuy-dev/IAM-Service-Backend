@@ -46,7 +46,7 @@ namespace IAMService.Application.Features.Role.Commands.UpdateRole
             var privilegeIds = request.PrivilegeIds?.Any() == true
                 ? request.PrivilegeIds.ToList()
                 : [(int)PrivilegeEnum.ReadOnly];
-            
+
             PrivilegeEnforcer.EnsureDependencies(privilegeIds);
 
             var updatedRole = await roleRepository.UpdateAsync(existingRole, privilegeIds);
