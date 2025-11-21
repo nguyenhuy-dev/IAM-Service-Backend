@@ -50,6 +50,7 @@ artifacts/
 **/*.trx
 **/*.coverage
 **/TestResults/
+**/CoverageReport/
 
 # ==============================================================================
 # Version Control

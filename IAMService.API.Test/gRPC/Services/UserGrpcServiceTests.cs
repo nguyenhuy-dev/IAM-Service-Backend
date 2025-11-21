@@ -42,7 +42,12 @@ namespace IAMService.API.Test.gRPC.Services
                 )
                 {
                     UserId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                    IsActive = true
+                    IsActive = true,
+                    Role = new Role
+                    {
+                        RoleId = 1,
+                        RoleName = "Patient" // Or whatever mock name you prefer
+                    }
                 },
                 new User(
                     "encrypted_Jane_Smith",
@@ -58,7 +63,12 @@ namespace IAMService.API.Test.gRPC.Services
                 )
                 {
                     UserId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                    IsActive = false
+                    IsActive = false,
+                    Role = new Role
+                    {
+                        RoleId = 2,
+                        RoleName = "Patient" // Or whatever mock name you prefer
+                    }
                 }
             };
 
@@ -142,7 +152,12 @@ namespace IAMService.API.Test.gRPC.Services
             )
             {
                 UserId = Guid.NewGuid(),
-                IsActive = true
+                IsActive = true,
+                Role = new Role
+                {
+                    RoleId = 1,
+                    RoleName = "Patient" // Or whatever mock name you prefer
+                }
             };
 
             _mockSender.Setup(s => s.Send(It.IsAny<GetAllUsersQuery>(), It.IsAny<CancellationToken>()))
@@ -184,7 +199,12 @@ namespace IAMService.API.Test.gRPC.Services
             )
             {
                 UserId = Guid.NewGuid(),
-                IsActive = true
+                IsActive = true,
+                Role = new Role
+                {
+                    RoleId = 1,
+                    RoleName = "Patient" // Or whatever mock name you prefer
+                }
             };
 
             _mockSender.Setup(s => s.Send(It.IsAny<GetAllUsersQuery>(), It.IsAny<CancellationToken>()))
@@ -227,7 +247,12 @@ namespace IAMService.API.Test.gRPC.Services
             )
             {
                 UserId = userId,
-                IsActive = true
+                IsActive = true,
+                Role = new Role
+                {
+                    RoleId = 1,
+                    RoleName = "Patient" // Or whatever mock name you prefer
+                }
             };
 
             _mockSender.Setup(s => s.Send(It.IsAny<GetAllUsersQuery>(), It.IsAny<CancellationToken>()))

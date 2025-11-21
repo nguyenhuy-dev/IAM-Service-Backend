@@ -92,7 +92,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the invalid email should have validation error.
         /// </summary>
         /// <param name="invalidEmail">The invalid email.</param>
-        [TestCase(""), TestCase("invalid"), TestCase("invalid@"), TestCase("@invalid.com")]
+        [TestCase("")]
+        [TestCase("invalid")]
+        [TestCase("invalid@")]
+        [TestCase("@invalid.com")]
         public async Task Validate_InvalidEmail_ShouldHaveValidationError(string invalidEmail)
         {
             // Arrange
@@ -121,7 +124,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the invalid phone number should have validation error.
         /// </summary>
         /// <param name="invalidPhone">The invalid phone.</param>
-        [TestCase(""), TestCase("123456789"), TestCase("12345678901"), TestCase("1234567890")]
+        [TestCase("")]
+        [TestCase("123456789")]
+        [TestCase("12345678901")]
+        [TestCase("1234567890")]
         // 9 digits
         // 11 digits
         // Doesn't start with 0
@@ -153,7 +159,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the invalid identity number should have validation error.
         /// </summary>
         /// <param name="invalidId">The invalid identifier.</param>
-        [TestCase(""), TestCase("12345678901"), TestCase("1234567890123"), TestCase("12345abcd890")]
+        [TestCase("")]
+        [TestCase("12345678901")]
+        [TestCase("1234567890123")]
+        [TestCase("12345abcd890")]
         // 11 digits
         // 13 digits
         // Contains letters
@@ -185,7 +194,10 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the invalid gender should have validation error.
         /// </summary>
         /// <param name="invalidGender">The invalid gender.</param>
-        [TestCase(""), TestCase("Other"), TestCase("M"), TestCase("F")]
+        [TestCase("")]
+        [TestCase("Other")]
+        [TestCase("M")]
+        [TestCase("F")]
         public async Task Validate_InvalidGender_ShouldHaveValidationError(string invalidGender)
         {
             // Arrange
@@ -214,7 +226,11 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the invalid date of birth should have validation error.
         /// </summary>
         /// <param name="invalidDate">The invalid date.</param>
-        [TestCase(""), TestCase("13/13/2020"), TestCase("2020/01/01"), TestCase("01-01-2020"), TestCase("invalid")]
+        [TestCase("")]
+        [TestCase("13/13/2020")]
+        [TestCase("2020/01/01")]
+        [TestCase("01-01-2020")]
+        [TestCase("invalid")]
         public async Task Validate_InvalidDateOfBirth_ShouldHaveValidationError(string invalidDate)
         {
             // Arrange
@@ -299,7 +315,11 @@ namespace IAMService.Application.Test.Features.User.Commands.CreateUser
         ///     Validates the weak password should have validation error.
         /// </summary>
         /// <param name="weakPassword">The weak password.</param>
-        [TestCase("short"), TestCase("nouppercase123!"), TestCase("NOLOWERCASE123!"), TestCase("NoSpecialChar123"), TestCase("No@Numbers")]
+        [TestCase("short")]
+        [TestCase("nouppercase123!")]
+        [TestCase("NOLOWERCASE123!")]
+        [TestCase("NoSpecialChar123")]
+        [TestCase("No@Numbers")]
         public async Task Validate_WeakPassword_ShouldHaveValidationError(string weakPassword)
         {
             // Arrange

@@ -184,7 +184,9 @@ namespace IAMService.Infrastructure.Repositories
         /// <returns></returns>
         public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
-            return await _context.Users.ToListAsync(cancellationToken);
+            return await _context.Users
+                .Include(u => u.Role)
+                .ToListAsync(cancellationToken);
         }
     }
 }

@@ -15,7 +15,9 @@ namespace IAMService.API.Controllers
     ///     Authentication controllers.
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
-    [Route("api/auth"), ApiController, Produces("application/json")]
+    [Route("api/auth")]
+    [ApiController]
+    [Produces("application/json")]
     public class AuthsController(ISender sender) : ControllerBase
     {
         /// <summary>
@@ -29,7 +31,11 @@ namespace IAMService.API.Controllers
         /// <param name="command">The command.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        [HttpPost("log-in"), AllowAnonymous, ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [HttpPost("log-in")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<LoginResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
         {
             var loginResponse = await _sender.Send(command, cancellationToken);
@@ -50,7 +56,11 @@ namespace IAMService.API.Controllers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">userId - Logout failed! User id invalid.</exception>
-        [HttpGet("log-out"), Authorize, ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [HttpGet("log-out")]
+        [Authorize]
+        [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Logout(CancellationToken cancellationToken)
         {
             var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -72,7 +82,10 @@ namespace IAMService.API.Controllers
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="System.UnauthorizedAccessException">Missing Bearer header...</exception>
-        [HttpGet("refresh"), AllowAnonymous, ProducesResponseType(typeof(ApiResponse<RefreshTokenResponse>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [HttpGet("refresh")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
         {
             var oldAccessToken = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
@@ -95,7 +108,9 @@ namespace IAMService.API.Controllers
         /// <summary>
         ///     Initiates the password recovery process by sending a reset link to the user's email.
         /// </summary>
-        [HttpPost("forgot-password"), AllowAnonymous, ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request, CancellationToken cancellationToken)
         {
             var command = new ForgotPasswordCommand { Email = request.Email };
@@ -112,7 +127,10 @@ namespace IAMService.API.Controllers
         /// <summary>
         ///     Executes the password reset process using the unique token and new password.
         /// </summary>
-        [HttpPost("reset-password"), AllowAnonymous, ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK), ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request, CancellationToken cancellationToken)
         {
             if (request.NewPassword != request.ConfirmPassword)

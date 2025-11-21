@@ -63,7 +63,8 @@ namespace IAMService.Application.Test.Features.Role.Commands.CreateRole
         ///     Test: Empty or whitespace role name should trigger validation error
         ///     Business Rule: Role name is mandatory and cannot be empty
         /// </summary>
-        [TestCase(""), TestCase("   ")]
+        [TestCase("")]
+        [TestCase("   ")]
         public async Task Should_Have_Error_When_RoleName_Is_Empty(string roleName)
         {
             // Arrange: Create command with invalid role name
