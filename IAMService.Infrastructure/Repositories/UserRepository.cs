@@ -47,9 +47,8 @@ namespace IAMService.Infrastructure.Repositories
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be null or empty", nameof(email));
-            var encryptedEmail = _stringEncryptionService.EncryptString(email);
             return await _context.Users
-                .AnyAsync(u => u.Email == encryptedEmail &&
+                .AnyAsync(u => u.Email == email &&
                                u.IsActive);
         }
 
