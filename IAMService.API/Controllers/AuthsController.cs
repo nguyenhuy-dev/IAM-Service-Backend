@@ -55,15 +55,21 @@ namespace IAMService.API.Controllers
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
+        /// <exception cref="IAMService.Application.Exceptions.NotFoundException">
+        ///     The '{nameof(userId)}' is not existed. Logout
+        ///     failed!
+        /// </exception>
         /// <exception cref="System.ArgumentNullException">userId - Logout failed! User id invalid.</exception>
         [HttpGet("log-out")]
-        [Authorize]
         [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Logout(CancellationToken cancellationToken)
         {
-            var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var authHeader = HttpContext.Request.Headers.Authorization.ToString();
+            var claimsPrincipal = ReadClaimsFromJwtToken(authHeader);
+
+            var userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var isUserIdGuid = Guid.TryParse(userId, out var userIdGuid);
             if (!isUserIdGuid)
                 throw new NotFoundException($"The '{nameof(userId)}' is not existed. Logout failed!");
@@ -165,6 +171,19 @@ namespace IAMService.API.Controllers
                 StatusCode = StatusCodes.Status400BadRequest,
                 Message = "Password reset failed. Token may be invalid, expired, or account is locked."
             });
+        }
+
+        /// <summary>
+        ///     Reads the claims from JWT token.
+        /// </summary>
+        /// <param name="authHeader">The authentication header.</param>
+        /// <returns></returns>
+        private static ClaimsPrincipal ReadClaimsFromJwtToken(string authHeader)
+        {
+            var token = authHeader.Replace("Bearer ", "");
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+            return new ClaimsPrincipal(new ClaimsIdentity(jwt.Claims));
         }
     }
 }

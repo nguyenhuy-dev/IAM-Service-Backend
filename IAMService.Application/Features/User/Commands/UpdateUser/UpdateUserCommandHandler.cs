@@ -41,8 +41,9 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
         ///     The string encryption service
         /// </summary>
         private readonly IStringEncryptionService _stringEncryptionService;
+
         /// <summary>
-        ///     The unit of work
+        ///     The user repository
         /// </summary>
         private readonly IUnitOfWork _unitOfWork;
         /// <summary>
