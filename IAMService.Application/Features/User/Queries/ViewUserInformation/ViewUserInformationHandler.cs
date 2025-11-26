@@ -60,8 +60,8 @@ namespace IAMService.Application.Features.User.Queries.ViewUserInformation
 
             var current = request.CurrentUser;
 
-            var isAdminOrManager = current.RoleName.Equals("Admin", StringComparison.OrdinalIgnoreCase)
-                                || current.RoleName.Equals("Manager", StringComparison.OrdinalIgnoreCase);
+            var role = current.RoleName?.ToLowerInvariant() ?? "user";
+            var isAdminOrManager = role == "admin" || role == "manager";
 
             if (!isAdminOrManager && current.UserId != request.TargetUserId)
                 throw new ForbiddenAccessException("You do not have permission to view other users' information.");

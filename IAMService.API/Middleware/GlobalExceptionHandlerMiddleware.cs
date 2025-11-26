@@ -90,6 +90,11 @@ namespace IAMService.API.Middleware
 
                     logger.LogWarning(forbiddenException, "Forbidden access attempt");
                     break;
+                case InvalidOperationException invalidOp:
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    response.Message = invalidOp.Message;
+                    break;
 
                 default:
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
