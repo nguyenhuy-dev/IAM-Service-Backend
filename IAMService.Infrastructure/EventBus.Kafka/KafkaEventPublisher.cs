@@ -16,7 +16,6 @@ namespace IAMService.Infrastructure.EventBus.Kafka
         ///     The logger
         /// </summary>
         private readonly ILogger _logger = logger;
-
         /// <summary>
         ///     The producer
         /// </summary>
