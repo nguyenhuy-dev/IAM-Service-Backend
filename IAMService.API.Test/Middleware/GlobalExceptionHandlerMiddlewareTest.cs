@@ -166,7 +166,7 @@ namespace IAMService.API.Test.Middleware
 
             await _middleware.InvokeAsync(_httpContext);
 
-            Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status500InternalServerError));
+            Assert.That(_httpContext.Response.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]

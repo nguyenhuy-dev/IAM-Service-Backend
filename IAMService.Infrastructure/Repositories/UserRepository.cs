@@ -57,8 +57,12 @@ namespace IAMService.Infrastructure.Repositories
         {
             if (string.IsNullOrWhiteSpace(identityNumber))
                 throw new ArgumentException("Identity number cannot be null or empty", nameof(identityNumber));
+
+            // MUST encrypt, because the DB stores encrypted IdentityNumber
+            var encryptedIdentity = _stringEncryptionService.EncryptString(identityNumber);
+
             return await _context.Users
-                .AnyAsync(u => u.IdentityNumber == identityNumber &&
+                .AnyAsync(u => u.IdentityNumber == encryptedIdentity &&
                                u.IsActive);
         }
 
@@ -186,6 +190,31 @@ namespace IAMService.Infrastructure.Repositories
             return await _context.Users
                 .Include(u => u.Role)
                 .ToListAsync(cancellationToken);
+        }
+        public async Task<bool> ExistsByEmailAsync(string email, Guid excludeUserId)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+
+            var encryptedEmail = _stringEncryptionService.EncryptString(email.Trim().ToLowerInvariant());
+
+            return await _context.Users
+                .AnyAsync(u => u.Email == encryptedEmail &&
+                               u.UserId != excludeUserId &&
+                               u.IsActive);
+        }
+
+        public async Task<bool> ExistsByIdentityNumberAsync(string identityNumber, Guid excludeUserId)
+        {
+            if (string.IsNullOrWhiteSpace(identityNumber))
+                throw new ArgumentException("Identity number cannot be null or empty", nameof(identityNumber));
+
+            var encryptedIdentity = _stringEncryptionService.EncryptString(identityNumber.Trim());
+
+            return await _context.Users
+                .AnyAsync(u => u.IdentityNumber == encryptedIdentity &&
+                               u.UserId != excludeUserId &&
+                               u.IsActive);
         }
     }
 }

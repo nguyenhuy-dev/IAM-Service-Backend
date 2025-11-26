@@ -123,7 +123,8 @@ namespace IAMService.API.Controllers
                                   ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             var currentRole =
-                User.FindFirst(ClaimTypes.Role)?.Value
+                User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value
+             ?? User.FindFirst(ClaimTypes.Role)?.Value
              ?? User.FindFirst("role")?.Value
              ?? User.FindFirst("roles")?.Value
              ?? "User";
@@ -199,11 +200,16 @@ namespace IAMService.API.Controllers
 
             // 🔹 Lấy thông tin từ JWT thật
             var currentUserIdClaim =
-                User.FindFirst("sub")?.Value ??
-                User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ??
-                Request.Headers["X-User-Id"].FirstOrDefault();
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+             ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+             ?? User.FindFirst("sub")?.Value;
 
-            var currentRole = User.FindFirst("role")?.Value ?? "User";
+            var currentRole =
+                User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value
+             ?? User.FindFirst(ClaimTypes.Role)?.Value
+             ?? User.FindFirst("role")?.Value
+             ?? User.FindFirst("roles")?.Value
+             ?? "User";
 
             if (string.IsNullOrEmpty(currentUserIdClaim) || !Guid.TryParse(currentUserIdClaim, out var currentUserId))
             {
@@ -217,7 +223,7 @@ namespace IAMService.API.Controllers
             var currentUser = new CurrentUserDto
             {
                 UserId = currentUserId,
-                RoleName = currentRole
+                RoleName = currentRole.ToLowerInvariant()
             };
 
             // 🔹 Tạo query và gửi qua MediatR

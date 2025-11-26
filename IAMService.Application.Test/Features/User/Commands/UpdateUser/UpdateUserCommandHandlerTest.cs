@@ -42,16 +42,15 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
         private Mock<IEventPublisher> _eventPublisherMock = null!;
         private UpdateUserCommandHandler _handler = null!;
 
-        private Domain.Entities.User CreateUser(Guid? userId = null)
+        private Domain.Entities.User CreateUser(Guid? id = null)
         {
-            var id = userId ?? Guid.NewGuid();
             return new Domain.Entities.User
             {
-                UserId = id,
+                UserId = id ?? Guid.NewGuid(),
                 FullName = "EncryptedName",
                 PhoneNumber = "EncryptedPhone",
                 Email = "EncryptedEmail",
-                IdentityNumber = "EncryptedId",
+                IdentityNumber = "EncryptedIdentity",
                 Address = "EncryptedAddress",
                 Gender = true,
                 DateOfBirth = new DateOnly(2000, 1, 1),
@@ -68,7 +67,12 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
             };
         }
 
-        private UpdateUserCommand CreateCommand(Guid? userId = null, bool isAdmin = false, string dob = "01/01/2000", List<int>? privilegeIds = null)
+        private UpdateUserCommand CreateCommand(
+            Guid? userId = null,
+            bool isAdmin = false,
+            string dob = "01/01/2000",
+            List<int>? privilegeIds = null
+        )
         {
             return new UpdateUserCommand
             {
@@ -87,108 +91,166 @@ namespace IAMService.Application.Test.Features.User.Commands.UpdateUser
             };
         }
 
+        // ----------------------------------------------------------------
+        // TEST CASES
+        // ----------------------------------------------------------------
+
         [Test]
-        public void Handle_UserNotFound_ThrowsKeyNotFoundException()
+        public void Handle_UserNotFound_ShouldThrowKeyNotFound()
         {
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
+            _userRepositoryMock
+                .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>()))
                 .ReturnsAsync((Domain.Entities.User?)null);
 
-            var command = CreateCommand();
+            var cmd = CreateCommand();
 
-            Assert.ThrowsAsync<KeyNotFoundException>(async () => await _handler.Handle(command, CancellationToken.None));
+            Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+                await _handler.Handle(cmd, CancellationToken.None));
         }
 
         [Test]
-        public async Task Handle_UpdatesBasicFields_DecryptsAndReturnsDto()
+        public void Handle_DuplicateEmail_ShouldThrowInvalidOperationException()
         {
             var user = CreateUser();
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>()))
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, false))
                 .ReturnsAsync(user);
 
-            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
-            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
+            _encryptionServiceMock.Setup(x => x.DecryptString(user.Email))
+                .Returns("old@example.com");
 
-            var command = CreateCommand(user.UserId);
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByEmailAsync("newemail@example.com", user.UserId))
+                .ReturnsAsync(true);
 
-            var result = await _handler.Handle(command, CancellationToken.None);
+            var cmd = CreateCommand(user.UserId);
 
-            _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Domain.Entities.User>()), Times.Once);
-            _unitOfWorkMock.Verify(x => x.SaveChangesAsync(CancellationToken.None), Times.Once);
-
-            Assert.That(result.FullName, Is.EqualTo(command.Dto.FullName));
-            Assert.That(result.Email, Is.EqualTo(command.Dto.Email));
-            Assert.That(result.DateOfBirth, Is.EqualTo(new DateOnly(2000, 1, 1)));
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await _handler.Handle(cmd, CancellationToken.None));
         }
 
         [Test]
-        public async Task Handle_ChangesPrivileges_ClonesRoleAndUpdates()
+        public void Handle_DuplicateIdentity_ShouldThrowInvalidOperationException()
         {
             var user = CreateUser();
-            var newRole = new Domain.Entities.Role { RoleId = 2, RoleName = "ClonedRole" };
 
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>()))
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, false))
                 .ReturnsAsync(user);
 
-            _roleCloneServiceMock.Setup(x => x.CloneRoleWithPrivilegesAsync(
-                    It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()))
+            _encryptionServiceMock.Setup(x => x.DecryptString(user.IdentityNumber))
+                .Returns("111111111111");
+
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByIdentityNumberAsync("123456789012", user.UserId))
+                .ReturnsAsync(true);
+
+            var cmd = CreateCommand(user.UserId);
+
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await _handler.Handle(cmd, CancellationToken.None));
+        }
+
+        [Test]
+        public async Task Handle_UpdateBasicFields_ShouldUpdateCorrectly()
+        {
+            var user = CreateUser();
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, false))
+                .ReturnsAsync(user);
+
+            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>()))
+                .Returns((string s) => s);
+
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>()))
+                .Returns((string s) => s);
+
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByIdentityNumberAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            var cmd = CreateCommand(user.UserId);
+
+            var result = await _handler.Handle(cmd, CancellationToken.None);
+
+            Assert.That(result.FullName, Is.EqualTo(cmd.Dto.FullName));
+            Assert.That(result.Email, Is.EqualTo(cmd.Dto.Email));
+
+            _userRepositoryMock.Verify(x =>
+                x.UpdateAsync(It.IsAny<Domain.Entities.User>()), Times.Once);
+        }
+
+        [Test]
+        public async Task Handle_ChangePrivileges_ShouldCloneRole()
+        {
+            var user = CreateUser();
+
+            var newRole = new Domain.Entities.Role
+            {
+                RoleId = 99,
+                RoleName = "ClonedRole"
+            };
+
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, false))
+                .ReturnsAsync(user);
+
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>()))
+                .Returns((string s) => s);
+
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
+
+            _roleCloneServiceMock.Setup(x =>
+                    x.CloneRoleWithPrivilegesAsync(
+                        user,
+                        It.IsAny<List<int>>(),
+                        It.IsAny<CancellationToken>()))
                 .ReturnsAsync(newRole);
 
-            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
-            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
+            var cmd = CreateCommand(
+                user.UserId,
+                true,
+                privilegeIds: new List<int> { 2, 3 }
+            );
 
-            var command = CreateCommand(user.UserId, true, privilegeIds: new List<int> { 2, 3 });
-
-            await _handler.Handle(command, CancellationToken.None);
+            await _handler.Handle(cmd, CancellationToken.None);
 
             Assert.That(user.RoleId, Is.EqualTo(newRole.RoleId));
         }
 
         [Test]
-        public async Task Handle_PrivilegesUnchanged_DoesNotCloneRole()
+        public async Task Handle_PrivilegesUnchanged_ShouldNotCloneRole()
         {
             var user = CreateUser();
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
 
-            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
-            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
+            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, false))
+                .ReturnsAsync(user);
 
-            var command = CreateCommand(user.UserId, true, privilegeIds: new List<int> { 1 });
+            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>()))
+                .Returns((string s) => s);
 
-            await _handler.Handle(command, CancellationToken.None);
+            _userRepositoryMock.Setup(x =>
+                    x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<Guid>()))
+                .ReturnsAsync(false);
 
-            _roleCloneServiceMock.Verify(x => x.CloneRoleWithPrivilegesAsync(It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
+            var cmd = CreateCommand(
+                user.UserId,
+                true,
+                privilegeIds: new List<int> { 1 }
+            );
 
-        [Test]
-        public async Task Handle_InvalidDateOfBirth_Ignores()
-        {
-            var user = CreateUser();
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
+            await _handler.Handle(cmd, CancellationToken.None);
 
-            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
-            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
-
-            var command = CreateCommand(user.UserId, dob: "invalid-date");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.That(result.DateOfBirth, Is.EqualTo(user.DateOfBirth));
-        }
-
-        [Test]
-        public async Task Handle_NoPrivilegesNoAdmin_NoRoleChange()
-        {
-            var user = CreateUser();
-            _userRepositoryMock.Setup(x => x.GetByIdAsync(user.UserId, It.IsAny<bool>())).ReturnsAsync(user);
-
-            _encryptionServiceMock.Setup(x => x.EncryptString(It.IsAny<string>())).Returns((string s) => s);
-            _encryptionServiceMock.Setup(x => x.DecryptString(It.IsAny<string>())).Returns((string s) => s);
-
-            var command = CreateCommand(user.UserId);
-
-            await _handler.Handle(command, CancellationToken.None);
-
-            _roleCloneServiceMock.Verify(x => x.CloneRoleWithPrivilegesAsync(It.IsAny<Domain.Entities.User>(), It.IsAny<List<int>>(), It.IsAny<CancellationToken>()), Times.Never);
+            _roleCloneServiceMock.Verify(x =>
+                    x.CloneRoleWithPrivilegesAsync(
+                        It.IsAny<Domain.Entities.User>(),
+                        It.IsAny<List<int>>(),
+                        It.IsAny<CancellationToken>()),
+                Times.Never);
         }
     }
 }

@@ -11,24 +11,29 @@ namespace IAMService.Application.Interfaces
         ///     Creates a new user in the database
         /// </summary>
         /// <param name="user">The user.</param>
-        /// <returns>The created user with generated ID</returns>
+        /// <returns>
+        ///     The created user with generated ID
+        /// </returns>
         Task<User> CreateAsync(User user);
 
         /// <summary>
         ///     Checks if an email address is already registered
         /// </summary>
         /// <param name="email">Email address to check</param>
-        /// <returns>>True if email exists, false otherwise</returns>
+        /// <returns>
+        ///     &gt;True if email exists, false otherwise
+        /// </returns>
         Task<bool> ExistsByEmailAsync(string email);
 
         /// <summary>
         ///     Existses the by identity number asynchronous.
         /// </summary>
         /// <param name="identityNumber">The identity number.</param>
-        /// <returns>True if identity number exists, false otherwise</returns>
+        /// <returns>
+        ///     True if identity number exists, false otherwise
+        /// </returns>
         Task<bool> ExistsByIdentityNumberAsync(string identityNumber);
 
-        /// Gets a user by their ID
         /// <summary>
         ///     Gets a user by their unique identifier.
         /// </summary>
@@ -37,13 +42,16 @@ namespace IAMService.Application.Interfaces
         /// <returns>
         ///     The <see cref="User" /> entity if found; otherwise, <c>null</c>.
         /// </returns>
+        /// Gets a user by their ID
         Task<User?> GetByIdAsync(Guid userId, bool tracking = false);
 
         /// <summary>
         ///     Gets a user by their email address
         /// </summary>
         /// <param name="email">The email.</param>
-        /// <returns>User if found, null otherwise</returns>
+        /// <returns>
+        ///     User if found, null otherwise
+        /// </returns>
         Task<User?> GetByEmailAsync(string email);
 
         /// <summary>
@@ -55,8 +63,11 @@ namespace IAMService.Application.Interfaces
         /// </returns>
         Task UpdateAsync(User user);
 
-        /// <summary>Gets the by role identifier asynchronous.</summary>
+        /// <summary>
+        ///     Gets the by role identifier asynchronous.
+        /// </summary>
         /// <param name="roleId">The role identifier.</param>
+        /// <returns></returns>
         Task<List<User>> GetByRoleIdAsync(int roleId);
 
         /// <summary>
@@ -73,7 +84,9 @@ namespace IAMService.Application.Interfaces
         /// <summary>
         ///     Gets a queryable collection of users with their roles
         /// </summary>
-        /// <returns>IQueryable of users for deferred execution</returns>
+        /// <returns>
+        ///     IQueryable of users for deferred execution
+        /// </returns>
         IQueryable<User> GetUsersQueryable();
         /// <summary>
         ///     Gets all users asynchronous.
@@ -81,5 +94,19 @@ namespace IAMService.Application.Interfaces
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
         Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken cancellationToken);
+        /// <summary>
+        ///     Existses the by email asynchronous.
+        /// </summary>
+        /// <param name="email">The email.</param>
+        /// <param name="excludeUserId">The exclude user identifier.</param>
+        /// <returns></returns>
+        Task<bool> ExistsByEmailAsync(string email, Guid excludeUserId);
+        /// <summary>
+        ///     Existses the by identity number asynchronous.
+        /// </summary>
+        /// <param name="identityNumber">The identity number.</param>
+        /// <param name="excludeUserId">The exclude user identifier.</param>
+        /// <returns></returns>
+        Task<bool> ExistsByIdentityNumberAsync(string identityNumber, Guid excludeUserId);
     }
 }

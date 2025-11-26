@@ -98,6 +98,29 @@ namespace IAMService.Application.Features.User.Commands.UpdateUser
             // 1️⃣ Retrieve user
             var user = await _userRepository.GetByIdAsync(request.UserId)
                     ?? throw new KeyNotFoundException($"User with ID {request.UserId} not found.");
+            // 🔍 Decrypt current values for comparison
+            var currentEmail = _stringEncryptionService.DecryptString(user.Email);
+            var currentIdentity = _stringEncryptionService.DecryptString(user.IdentityNumber);
+
+            // Normalize incoming values
+            var newEmail = request.Dto.Email?.Trim().ToLowerInvariant();
+            var newIdentity = request.Dto.IdentityNumber?.Trim();
+
+            // 1️⃣ CHECK EMAIL DUPLICATE
+            if (!string.IsNullOrWhiteSpace(newEmail) && newEmail != currentEmail)
+            {
+                var emailExists = await _userRepository.ExistsByEmailAsync(newEmail, user.UserId);
+                if (emailExists)
+                    throw new InvalidOperationException($"Email '{newEmail}' is already in use by another user.");
+            }
+
+            // 2️⃣ CHECK IDENTITY NUMBER DUPLICATE
+            if (!string.IsNullOrWhiteSpace(newIdentity) && newIdentity != currentIdentity)
+            {
+                var identityExists = await _userRepository.ExistsByIdentityNumberAsync(newIdentity, user.UserId);
+                if (identityExists)
+                    throw new InvalidOperationException($"Identity number '{newIdentity}' is already in use by another user.");
+            }
 
             // Hold data of original user
             var holdedUser = MapAndDecryptUser(user);
