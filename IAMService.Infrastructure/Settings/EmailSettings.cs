@@ -31,5 +31,10 @@
         ///     SMTP password or App Password
         /// </summary>
         public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        ///     Public URL of the client application for emails
+        /// </summary>
+        public string PublicAppBaseUrl { get; set; } = string.Empty;
     }
 }

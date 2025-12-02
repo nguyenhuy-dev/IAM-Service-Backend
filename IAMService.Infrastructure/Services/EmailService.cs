@@ -22,6 +22,11 @@ namespace IAMService.Infrastructure.Services
         /// </summary>
         private readonly EmailSettings _settings;
 
+        private readonly string _patientPortalUrl;
+
+        private const string DefaultPatientPortalUrl =
+            "https://server.desmana-neon.ts.net/app/mock-project/";
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="EmailService" /> class
         /// </summary>
@@ -32,6 +37,9 @@ namespace IAMService.Infrastructure.Services
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _logger = logger;
+            _patientPortalUrl = string.IsNullOrWhiteSpace(_settings.PublicAppBaseUrl)
+                ? DefaultPatientPortalUrl
+                : _settings.PublicAppBaseUrl.TrimEnd('/');
         }
 
         /// <summary>
@@ -83,7 +91,7 @@ namespace IAMService.Infrastructure.Services
 
         <h3>📋 Các bước tiếp theo:</h3>
         <ol>
-            <li>Truy cập hệ thống tại: <a href='https://healthcare-system.com' style='color: #0066cc;'>https://healthcare-system.com</a></li>
+            <li>Truy cập hệ thống tại: <a href='{_patientPortalUrl}' style='color: #0066cc;'>Link here</a></li>
             <li>Đăng nhập bằng email và mật khẩu tạm thời ở trên</li>
             <li>Đổi mật khẩu trong phần Cài đặt tài khoản</li>
             <li>Cập nhật thông tin cá nhân của bạn</li>

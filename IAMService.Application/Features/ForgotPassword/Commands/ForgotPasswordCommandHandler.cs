@@ -67,7 +67,9 @@ namespace IAMService.Application.Features.ForgotPassword.Commands
             await _tokenRepository.AddAsync(resetToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var callbackUrl = $"http://localhost:5173/reset-password?userId={user.UserId}&token={Uri.EscapeDataString(rawToken)}";
+            var appBaseUrl = "https://server.desmana-neon.ts.net/app/mock-project";
+            var callbackUrl =
+                $"{appBaseUrl.TrimEnd('/')}/reset-password?userId={user.UserId}&token={Uri.EscapeDataString(rawToken)}";
 
             await _emailService.SendPasswordResetEmailAsync(
                 decryptedEmail,
